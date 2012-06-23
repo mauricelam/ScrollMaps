@@ -2,15 +2,15 @@ var ScrollableMap = function (div, type) {
     var self = this;
 
     var mapClicked; // whether the map has ever been clicked (to activate the map)
-    function mapRequiresActivation () {
-        var bodyScrolls;
-        if (type != ScrollableMap.TYPE_IFRAME) {
-            bodyScrolls = (document.body.scrollHeight > window.innerHeight && $(document.body).css('overflow') != 'hidden');
-        } else {
-            bodyScrolls = document.URL.match(/bodyScrolls=(true|false)/)[1] == 'true';
-        }
-        return bodyScrolls;
-    }
+    var bodyScrolls = false;
+    setTimeout( function () {
+        chrome.extension.sendRequest({action: 'getBodyScrolls'}, function (response) { setBodyScrolls(response); });
+    }, 500);
+    chrome.extension.onRequest.addListener(function(request, sender, sendResponse){
+        if (request.action == 'setBodyScrolls') setBodyScrolls(request.value);
+    });
+    function setBodyScrolls (scrolls) { bodyScrolls = scrolls; (bodyScrolls) ? hideControls() : showControls(); }
+    function mapRequiresActivation () { return bodyScrolls; };
 
     var States = { idle: 0, scrolling: 1, zooming: 2 };
     var state = States.idle;
