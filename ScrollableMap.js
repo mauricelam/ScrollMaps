@@ -1,8 +1,16 @@
-var ScrollableMap = function (div, type, object) {
+var ScrollableMap = function (div, type) {
     var self = this;
 
     var mapClicked; // whether the map has ever been clicked (to activate the map)
-    var mapRequiresActivation = document.body.scrollHeight > $(document.body).innerHeight() && $(document.body).css('overflow') != 'hidden';
+    function mapRequiresActivation () {
+        var bodyScrolls;
+        if (type != ScrollableMap.TYPE_IFRAME) {
+            bodyScrolls = (document.body.scrollHeight > window.innerHeight && $(document.body).css('overflow') != 'hidden');
+        } else {
+            bodyScrolls = document.URL.match(/bodyScrolls=(true|false)/)[1] == 'true';
+        }
+        return bodyScrolls;
+    }
 
     var States = { idle: 0, scrolling: 1, zooming: 2 };
     var state = States.idle;
@@ -22,13 +30,13 @@ var ScrollableMap = function (div, type, object) {
 
     function initFrame (div) {
         mapClicked = false;
-        if(mapRequiresActivation){
+        PrefReader.onPreferenceChanged("frameRequireFocus", function(pair){
+            (pair.value) ? hideControls() : showControls();
+        });
+        div.addEventListener('click', showControls, true);
+        $(div).mouseleave(hideControls);
+        if(mapRequiresActivation()){
             setTimeout(hideControls, 500);
-            PrefReader.onPreferenceChanged("frameRequireFocus", function(pair){
-                (pair.value) ? hideControls() : showControls();
-            });
-            div.addEventListener('click', showControls, true);
-            $(div).mouseleave(hideControls);
         }
     }
 
@@ -40,7 +48,7 @@ var ScrollableMap = function (div, type, object) {
         }
     }
     function hideControls(){
-        if (pref('frameRequireFocus')) {
+        if (mapRequiresActivation() && pref('enabled') && pref('frameRequireFocus')) {
             mapClicked = false;
             $(div).find('.gmnoprint').fadeOut(200);
         }
@@ -133,13 +141,13 @@ var ScrollableMap = function (div, type, object) {
     self.handleWheelEvent = function (e) {
         if (!pref("enabled")) return;
         if ((self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API) && !pref('enableForFrames') ) return;
-        if (pref('frameRequireFocus') && mapRequiresActivation && !mapClicked) { e.stopPropagation(); return; }
+        if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) { e.stopPropagation(); return; }
         if (e.screenX == -88 && e.screenY == -88) return; // backdoor for zooming
 
         var target = e.target || e.srcElement;
         var isAccelerating = (!pref("isolateZoomScroll") || accelero.isAccelerating(e.wheelDeltaX, e.wheelDeltaY, e.timeStamp));
 
-        if (lastTarget) target = lastTarget;
+        if (lastTarget && $(lastTarget).parents().index(div) >= 0) target = lastTarget;
         else lastTarget = target;
 
 

@@ -14,9 +14,6 @@ var ScrollMaps = new (function _ScrollMaps(){
                 return mapobj;
             };
         }
-        function newMapNotifierv3 (Map) {
-            f
-        }
         swapFunctions ('GMap', newMapNotifier);
         swapFunctions ('GMap2', newMapNotifier);
         swapFunctions ('google.maps.Map2', newMapNotifier);

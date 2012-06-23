@@ -19,3 +19,18 @@ document.addEventListener('load', function (event) {
         new ScrollableMap(event.detail, ScrollableMap.TYPE_API);
     }, false);
 }, true);
+
+document.addEventListener('DOMContentLoaded', function () {
+    var iframes = document.getElementsByTagName('iframe');
+    for (var i in iframes) {
+        if (isMapsURL(iframes[i].src)) {
+            var bodyScrolls = (document.body.scrollHeight > window.innerHeight && $(document.body).css('overflow') != 'hidden');
+            iframes[i].src += '#bodyScrolls=' + bodyScrolls;
+        }
+    }
+}, true);
+
+function isMapsURL(url) {
+    var regex = /(map[sy]|ditu)\.google\.com/;
+    return regex.test(url);
+}
