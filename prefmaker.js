@@ -62,7 +62,6 @@ var PrefMaker = new (function _PrefMaker(){
         function updateView(){
             slider.val(pref(key));
             preview.text(pref(key));
-            console.log(pref(key));
         }
 
         return div;

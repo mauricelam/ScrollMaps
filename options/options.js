@@ -24,7 +24,7 @@ var Options = {};
         var frameRequireFocusCheckbox = PrefMaker.makeBooleanCheckbox("frameRequireFocus", "Embedded maps require activation", "Disable maps scrolling by default until map is clicked");
         box.append(frameRequireFocusCheckbox);
 
-        var isolateZoomScrollCheckbox = PrefMaker.makeBooleanCheckbox("isolateZoomScroll", "Detect Finger Lift <span style='color: #999; font-size: 12px;'>(slightly unstable)</span>", "To isolate scrolling gestures from zooming");
+        var isolateZoomScrollCheckbox = PrefMaker.makeBooleanCheckbox("isolateZoomScroll", "Detect Finger Lift", "To isolate scrolling gestures from zooming");
         box.append(isolateZoomScrollCheckbox);
 
         box.append('<div id="zoomhint">Cmd-scroll to zoom</div>');

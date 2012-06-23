@@ -1,36 +1,43 @@
-function injectScript(src) {
-    var script = document.createElement('script');
-    script.src = chrome.extension.getURL(src);
-    return script;
-}
+var SM = SM || {};
+SM.scriptInjected = false;
 
-var scriptInjected = false;
 document.addEventListener('load', function (event) {
-    if (scriptInjected) return;
-    scriptInjected = true;
+    if (SM.scriptInjected) return;
+    SM.scriptInjected = true;
 
-    if (document.head.firstChild) {
-        document.head.insertBefore(injectScript('inject_content.js'), document.head.firstChild);
-    } else {
-        document.head.appendChild(injectScript('inject_content.js'));
-    }
+    SM.prepend(document.head, SM.injectScript('inject_content.js'));
 
     window.addEventListener('mapsFound', function (event) {
         new ScrollableMap(event.detail, ScrollableMap.TYPE_API);
     }, false);
 }, true);
 
-document.addEventListener('DOMContentLoaded', function () {
-    var iframes = document.getElementsByTagName('iframe');
-    for (var i in iframes) {
-        if (isMapsURL(iframes[i].src)) {
+if (window.top == window) {
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.addEventListener('DOMSubtreeModified', updateBodyScrolls, false);
+        window.addEventListener('resize', updateBodyScrolls, false);
+        window.addEventListener('load', function () { setTimeout(updateBodyScrolls, 1000); }, false);
+        function updateBodyScrolls () {
             var bodyScrolls = (document.body.scrollHeight > window.innerHeight && $(document.body).css('overflow') != 'hidden');
-            iframes[i].src += '#bodyScrolls=' + bodyScrolls;
+            if (SM.bodyScrolls !== bodyScrolls) {
+                SM.bodyScrolls = bodyScrolls;
+                chrome.extension.sendRequest({action: 'setBodyScrolls', value: bodyScrolls});
+            }
         }
-    }
-}, true);
-
-function isMapsURL(url) {
-    var regex = /(map[sy]|ditu)\.google\.com/;
-    return regex.test(url);
+        updateBodyScrolls();
+    }, true);
 }
+
+SM.injectScript = function(src) {
+    var script = document.createElement('script');
+    script.src = chrome.extension.getURL(src);
+    return script;
+};
+
+SM.prepend = function (parent, child) {
+    if (parent.firstChild) {
+        parent.insertBefore(child, parent.firstChild);
+    } else {
+        parent.appendChild(child);
+    }
+};
