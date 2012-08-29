@@ -3,6 +3,7 @@ var ScrollMapsOptionsPanel = new (function _ScrollMapsOptionsPanel(){
 
     self.createButton = function(){
         var bg = chrome.extension.getURL("button_active.png");
+        console.log(bg);
         var div = $('<div id="SCROLLMAP_optionsbutton" style="display: block; height: 20px; position: absolute; bottom: 19px; right: 0px; background: #FFF; z-index: 999999; border: 1px solid #999; box-sizing: border-box;"></div>');
         var button = $('<a href="#" style="float: left; z-index: 999; position: relative; background-color: white; height: 18px;"><img src="'+bg+'" style="width: 18px; height: 18px;" /></a>');
         var optionsLink = chrome.extension.getURL("options/options.html");

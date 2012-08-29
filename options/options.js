@@ -18,7 +18,7 @@ var Options = {};
         var invertScrollCheckbox = PrefMaker.makeBooleanCheckbox("invertScroll", "Invert Scroll", "Use the opposite scrolling direction as you do in your OS");
         box.append(invertScrollCheckbox);
 
-        var invertZoomCheckbox = PrefMaker.makeBooleanCheckbox("invertZoom", "Invert Zoom", "Recommended for users who use 'natural' scrolling direction");
+        var invertZoomCheckbox = PrefMaker.makeBooleanCheckbox("invertZoom", "Invert Zoom", "Pull fingers down to zoom in instead");
         box.append(invertZoomCheckbox);
 
         var frameRequireFocusCheckbox = PrefMaker.makeBooleanCheckbox("frameRequireFocus", "Embedded maps require activation", "Disable maps scrolling by default until map is clicked");

@@ -7,7 +7,9 @@ var ScrollableMap = function (div, type) {
         chrome.extension.sendRequest({action: 'getBodyScrolls'}, function (response) { setBodyScrolls(response); });
     }, 500);
     chrome.extension.onRequest.addListener(function(request, sender, sendResponse){
-        if (request.action == 'setBodyScrolls') setBodyScrolls(request.value);
+        if (request.action == 'setBodyScrolls') {
+            setBodyScrolls(request.value);
+        }
     });
     function setBodyScrolls (scrolls) { bodyScrolls = scrolls; (bodyScrolls) ? hideControls() : showControls(); }
     function mapRequiresActivation () { return bodyScrolls; };
@@ -24,6 +26,8 @@ var ScrollableMap = function (div, type) {
         self.type = type;
         div.addEventListener("mousewheel", function (event) { self.handleWheelEvent(event); }, true);
         initFrame(div);
+        document.body.style.overflow = "scroll";
+        document.getElementsByTagName('html')[0].style.overflow = "scroll";
     }
 
     self.init(div, type);
@@ -147,7 +151,7 @@ var ScrollableMap = function (div, type) {
         var target = e.target || e.srcElement;
         var isAccelerating = (!pref("isolateZoomScroll") || accelero.isAccelerating(e.wheelDeltaX, e.wheelDeltaY, e.timeStamp));
 
-        if (lastTarget && $(lastTarget).parents().index(div) >= 0) target = lastTarget;
+        if (lastTarget && arrayContainsElement($(lastTarget).parents(), div)) target = lastTarget;
         else lastTarget = target;
 
 
@@ -159,6 +163,9 @@ var ScrollableMap = function (div, type) {
             switch (state) {
                 case States.zooming: 
                     var factor = (pref("invertZoom")) ? -1 : 1;
+                    if (e.webkitDirectionInvertedFromDevice) {
+                        factor *= -1;
+                    }
                     if(e.wheelDeltaY * factor > 3){
                         self.zoomIn(mousePos, target);
                     }else if(e.wheelDeltaY * factor < -3){
@@ -185,6 +192,14 @@ var ScrollableMap = function (div, type) {
         e.preventDefault();
     }
 
+}
+
+function arrayContainsElement (array, element) {
+    if (!array) return false;
+    for (var i in array) {
+        if (element.isSameNode(array[i])) return true;
+    }
+    return false;
 }
 
 function setTimer (timerID, newFunction, newDelay) {
