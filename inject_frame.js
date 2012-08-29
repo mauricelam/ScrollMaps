@@ -1,5 +1,4 @@
 // global variables to store state of the maps. Another version injected only in main page sets SCROLLMAPS_inframe to false
-//if(SCROLLMAPS_inframe === undefined) var SCROLLMAPS_inframe = true;
 SCROLLMAPS_inframe = (window.top !== window);
 
 function inject_frame() {
