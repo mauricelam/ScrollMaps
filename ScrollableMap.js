@@ -37,11 +37,16 @@ var ScrollableMap = function (div, type) {
         PrefReader.onPreferenceChanged("frameRequireFocus", function(pair){
             (pair.value) ? hideControls() : showControls();
         });
-        div.addEventListener('click', showControls, true);
+        div.addEventListener('click', didClickMap, true);
         $(div).mouseleave(hideControls);
         if(mapRequiresActivation()){
             setTimeout(hideControls, 500);
         }
+    }
+
+    function didClickMap (event) {
+        showControls(event);
+        lastTarget = null;
     }
 
     function showControls(event){
