@@ -1,11 +1,13 @@
-// global variables to store state of the maps. Another version injected only in main page sets SCROLLMAPS_inframe to false
-SCROLLMAPS_inframe = (window.top !== window);
+/*global ScrollableMap */
 
-function inject_frame() {
+var SM = SM || {};
+SM.inframe = (window.top !== window);
+
+function injectFrame() {
     // dont activate this thing at all if the frame has no map
     if(document.getElementById('map')){
-        new ScrollableMap(document.getElementById('map'), (SCROLLMAPS_inframe) ? ScrollableMap.TYPE_IFRAME : ScrollableMap.TYPE_WEB);
+        new ScrollableMap(document.getElementById('map'), (SM.inframe) ? ScrollableMap.TYPE_IFRAME : ScrollableMap.TYPE_WEB);
     }
 }
 
-window.addEventListener('DOMContentLoaded', inject_frame, false);
+window.addEventListener('DOMContentLoaded', injectFrame, false);

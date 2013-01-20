@@ -3,16 +3,19 @@ var ScrollMaps = new (function _ScrollMaps(){
 
     function init() {
         function newMapNotifier (Map) {
-            return function (container, opts) {
+            var newMap = function (container, opts) {
                 if (opts) opts.scrollwheel = true; // force mousewheel
                 window.dispatchEvent(createEvent('mapsFound', container));
                 var mapobj = new Map(container, opts);
+
                 if (typeof mapobj.enableScrollWheelZoom == 'function') {
                     mapobj.enableScrollWheelZoom();
-                    mapobj.disableScrollWheelZoom = function () { console.log('cannot disable scroll wheel') };
+                    mapobj.disableScrollWheelZoom = function () { console.log('cannot disable scroll wheel'); };
                 }
                 return mapobj;
             };
+            newMap.prototype = Map.prototype;
+            return newMap;
         }
         swapFunctions ('GMap', newMapNotifier);
         swapFunctions ('GMap2', newMapNotifier);
@@ -21,8 +24,8 @@ var ScrollMaps = new (function _ScrollMaps(){
     }
 
     function swapFunctions (chain, fn) {
-        if (typeof chain == 'string') chain = chain.split('.');
-        if (chain[0] == 'window') chain.shift();
+        if (typeof chain === 'string') chain = chain.split('.');
+        if (chain[0] === 'window') chain.shift();
         swapFunctionsRecursive(window, chain, fn);
     }
 
@@ -41,7 +44,7 @@ var ScrollMaps = new (function _ScrollMaps(){
     function onPropertySet (object, properties, fn) {
         createFunction(0)(object);
 
-        function createFunction(i){
+        function createFunction (i){
             if (i >= properties.length) return fn;
             return function (obj) {
                 onImmediatePropertySet(obj, properties[i], createFunction(i+1));
@@ -53,11 +56,13 @@ var ScrollMaps = new (function _ScrollMaps(){
     function onImmediatePropertySet (object, property, fn) {
         var descriptor = Object.getOwnPropertyDescriptor(object, property);
         var setter = (descriptor) ? 
-              function (value) { descriptor.set(value); this['_'+property] = fn(value); }
-            : function (value) { this['_'+property] = fn(value); };
+              function (value) { descriptor.set(value); this['..' + property] = fn(value); }
+            : function (value) { this['..' + property] = fn(value); };
         Object.defineProperty(object, property, {
-            get: function () { return this['_'+property]; },
-            set: setter, configurable: true
+            get: function () { return this['..' + property]; },
+            set: setter,
+            configurable: true,
+            enumerable: true
         });
     }
 
