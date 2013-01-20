@@ -1,13 +1,18 @@
-var bodyScrolls = {};
-chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
-    switch (request.action) {
+/*global chrome */
+
+// var bodyScrolls = {};
+chrome.extension.onMessage.addListener(function (message, sender, sendResponse) {
+    switch (message.action) {
         case 'setBodyScrolls':
             // reflect the message to all content scripts in tab
-            chrome.tabs.sendRequest(sender.tab.id, request);
-            bodyScrolls[sender.tab.id] = request.value;
+            chrome.tabs.sendMessage(sender.tab.id, message);
+            // bodyScrolls[sender.tab.id] = message.value;
             break;
-        case 'getBodyScrolls':
-            sendResponse(bodyScrolls[sender.tab.id]);
+        // case 'getBodyScrolls':
+        //     sendResponse(bodyScrolls[sender.tab.id]);
+        //     break;
+        case 'listenBodyScrolls':
+            chrome.tabs.sendMessage(sender.tab.id, message);
             break;
     }
 });

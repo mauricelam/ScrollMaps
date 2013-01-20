@@ -1,3 +1,5 @@
+/*global $ chrome */
+
 /**
 
   Uses chrome message passing mechanism to read preference values from the context of the extension. This class has a cache of its own to provide all required preference values instantly. 
@@ -12,37 +14,35 @@ function pref(key){
 }
 
 (function(){
-	var m = PrefReader;
+    
+    PrefReader.options = {};
 
-    m.options = {};
-
-    chrome.extension.onRequest.addListener(function(request, sender, sendResponse){
+    chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
         switch(request.action){
-            case "preferenceChanged":
-                m.options[request.key] = request.value;
-                $(window).trigger("preferenceChanged", [{key: request.key, value: request.value}]);
-                sendResponse({});
+            case 'preferenceChanged':
+                PrefReader.options[request.key] = request.value;
+                $(window).trigger('preferenceChanged', [{key: request.key, value: request.value}]);
                 break;
-            default: 
+            default:
                 //console.log("Message not recognized: ", request.action);
         }
     });
 
     $(function(){
-        chrome.extension.sendRequest({action: "getAllPreferences"}, function(_options){
-            $.extend(m.options, _options);
-            document.prefs = m.options;
+        chrome.extension.sendMessage({action: 'getAllPreferences'}, function(_options){
+            $.extend(PrefReader.options, _options);
+            document.prefs = PrefReader.options;
         });
     });
 
-    m.getOption = function(key){
-        return m.options[key];
-    }
+    PrefReader.getOption = function(key){
+        return PrefReader.options[key];
+    };
 
-    m.onPreferenceChanged = function(key, func){
-        $(window).bind("preferenceChanged", function(event, pair){
+    PrefReader.onPreferenceChanged = function(key, func){
+        $(window).bind('preferenceChanged', function(event, pair){
             if(pair.key == key)
                 func(pair);
-        })
-    }
+        });
+    };
 })();
