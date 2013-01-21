@@ -1,13 +1,13 @@
-/*global chrome */
+/*global Message */
 
-chrome.extension.onMessage.addListener(function (message, sender, sendResponse) {
-    switch (message.action) {
+Message.extension.addListener(function (action, data, sender, sendResponse) {
+    switch(action) {
         case 'setBodyScrolls':
             // reflect the message to all content scripts in tab
-            chrome.tabs.sendMessage(sender.tab.id, message);
+            Message.tab.sendMessage(sender, action, data);
             break;
         case 'listenBodyScrolls':
-            chrome.tabs.sendMessage(sender.tab.id, message);
+            Message.tab.sendMessage(sender, action, data);
             break;
     }
 });

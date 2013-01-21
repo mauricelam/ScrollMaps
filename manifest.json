@@ -29,15 +29,15 @@
       "persistent": false
   },
   "web_accessible_resources":[
-    "button_active.png",
-    "button_inactive.png",
+    "images/button_active.png",
+    "images/button_inactive.png",
     "inject_content.js"
   ],
   "options_page": "options/options.html",
   "icons": {
-    "16": "maps_16.png",
-    "48": "maps_48.png",
-    "128": "maps_128.png"
+    "16": "images/maps_16.png",
+    "48": "images/maps_48.png",
+    "128": "images/maps_128.png"
   },
   "permissions": [
     "tabs",

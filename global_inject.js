@@ -1,4 +1,4 @@
-/*global $ chrome ScrollableMap */
+/*global $ Message ScrollableMap */
 
 var SM = SM || {};
 SM.scriptInjected = false;
@@ -14,8 +14,8 @@ document.addEventListener('load', function (event) {
     }, false);
 }, true);
 
-chrome.extension.onMessage.addListener(function (message, sender, sendResponse) {
-    switch (message.action) {
+Message.extension.addListener(function (action, data, sender, sendResponse) {
+    switch (action) {
         case 'listenBodyScrolls':
             if (window.top == window) {
                 document.body.addEventListener('DOMSubtreeModified', SM.updateBodyScrolls, false);
@@ -31,13 +31,13 @@ SM.updateBodyScrolls = function () {
     var bodyScrolls = (document.body.scrollHeight > window.innerHeight && $(document.body).css('overflow') != 'hidden');
     if (SM.bodyScrolls !== bodyScrolls) {
         SM.bodyScrolls = bodyScrolls;
-        chrome.extension.sendMessage({action: 'setBodyScrolls', value: bodyScrolls});
+        Message.extension.sendMessage('setBodyScrolls', bodyScrolls);
     }
 };
 
 SM.injectScript = function(src) {
     var script = document.createElement('script');
-    script.src = chrome.extension.getURL(src);
+    script.src = Extension.getURL(src);
     return script;
 };
 
