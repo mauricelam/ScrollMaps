@@ -57,7 +57,7 @@ var PrefMaker = new (function _PrefMaker(){
         var prefChange = false;
         function updateOption(){
             prefChange = true;
-            this.setOption(key, slider.val());
+            Pref.setOption(key, slider.val());
             preview.text(pref(key));
         }
         function updateView(){
