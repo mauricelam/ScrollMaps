@@ -1,4 +1,4 @@
-/*global $ chrome ScrollableMap */
+/*global $ safari ScrollableMap */
 
 var SM = SM || {};
 SM.scriptInjected = false;
@@ -14,30 +14,28 @@ document.addEventListener('load', function (event) {
     }, false);
 }, true);
 
-chrome.extension.onMessage.addListener(function (message, sender, sendResponse) {
-    switch (message.action) {
-        case 'listenBodyScrolls':
-            if (window.top == window) {
-                document.body.addEventListener('DOMSubtreeModified', SM.updateBodyScrolls, false);
-                window.addEventListener('resize', SM.updateBodyScrolls, false);
-                window.addEventListener('load', function () { setTimeout(SM.updateBodyScrolls, 1000); }, false);
-                SM.updateBodyScrolls();
-            }
-            break;
+safari.self.addEventListener('message', function (event) {
+    if (event.name === 'listenBodyScrolls') {
+        if (window.top == window) {
+            document.body.addEventListener('DOMSubtreeModified', SM.updateBodyScrolls, false);
+            window.addEventListener('resize', SM.updateBodyScrolls, false);
+            window.addEventListener('load', function () { setTimeout(SM.updateBodyScrolls, 1000); }, false);
+            SM.updateBodyScrolls();
+        }
     }
-});
+}, false);
 
 SM.updateBodyScrolls = function () {
     var bodyScrolls = (document.body.scrollHeight > window.innerHeight && $(document.body).css('overflow') != 'hidden');
     if (SM.bodyScrolls !== bodyScrolls) {
         SM.bodyScrolls = bodyScrolls;
-        chrome.extension.sendMessage({action: 'setBodyScrolls', value: bodyScrolls});
+        safari.self.tab.dispatchMessage('setBodyScrolls', bodyScrolls);
     }
 };
 
 SM.injectScript = function(src) {
     var script = document.createElement('script');
-    script.src = chrome.extension.getURL(src);
+    script.src = safari.extension.baseURI + src;
     return script;
 };
 
