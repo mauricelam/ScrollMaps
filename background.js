@@ -1,18 +1,12 @@
-/*global chrome */
+/*global safari */
 
-// var bodyScrolls = {};
-chrome.extension.onMessage.addListener(function (message, sender, sendResponse) {
-    switch (message.action) {
-        case 'setBodyScrolls':
-            // reflect the message to all content scripts in tab
-            chrome.tabs.sendMessage(sender.tab.id, message);
-            // bodyScrolls[sender.tab.id] = message.value;
-            break;
-        // case 'getBodyScrolls':
-        //     sendResponse(bodyScrolls[sender.tab.id]);
-        //     break;
-        case 'listenBodyScrolls':
-            chrome.tabs.sendMessage(sender.tab.id, message);
-            break;
+var bodyScrolls = {};
+safari.application.addEventListener('message', function (event) {
+    if (event.name == 'listenBodyScrolls') {
+        event.target.page.dispatchMessage('listenBodyScrolls', null);
     }
-});
+    if (event.name == 'setBodyScrolls') {
+        bodyScrolls[event.target] = event.message;
+        event.target.page.dispatchMessage('setBodyScrolls', bodyScrolls[event.target]);
+    }
+}, false);
