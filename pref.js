@@ -1,6 +1,7 @@
-/*global $ chrome console */
+/*global $ console */
 
 var PrefManager = {};
+var Pref = PrefManager;
 
 function pref(label){
     return PrefManager.getOption(label);
@@ -63,18 +64,13 @@ function pref(label){
     // support for PrefReader which reads preferences from content scripts (which do not have access to localStorage of the extension)
 
     $(window).bind('preferenceChanged', function(event, pair){
-        chrome.windows.getAll({populate: true}, function(windows){
-            for(var i in windows){
-                var tabs = windows[i].tabs;
-                for(var j in tabs){
-                    chrome.tabs.sendMessage(tabs[j].id, {action: 'preferenceChanged', key: pair.key, value: pair.value});
-                }
-            }
+        Extension.forAllTabs(function (tab) {
+            Message.tab.sendMessage(tab, {action: 'preferenceChanged', key: pair.key, value: pair.value});
         });
     });
 
-    chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
-        switch(request.action){
+    Message.extension.addListener(function(action, data, sender, sendResponse){
+        switch(action){
             case 'getAllPreferences':
                 var allOptions = $.extend(defaults, PrefManager.getAllOptions());
                 sendResponse(allOptions);

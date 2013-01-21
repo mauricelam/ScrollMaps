@@ -1,4 +1,4 @@
-/*global $ chrome pref */
+/*global $ Message pref */
 
 var ScrollableMap = function (div, type) {
     var self = this;
@@ -6,11 +6,11 @@ var ScrollableMap = function (div, type) {
     var mapClicked; // whether the map has ever been clicked (to activate the map)
     var bodyScrolls = false;
     setTimeout( function () {
-        chrome.extension.sendMessage({ 'action': 'listenBodyScrolls' });
+        Message.extension.sendMessage('listenBodyScrolls', {});
     }, 500);
-    chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
-        if (request.action == 'setBodyScrolls') {
-            setBodyScrolls(request.value);
+    Message.extension.addListener(function(action, data, sender, sendResponse){
+        if (action === 'setBodyScrolls') {
+            setBodyScrolls(data);
         }
     });
     function setBodyScrolls (scrolls) { bodyScrolls = scrolls; (bodyScrolls) ? hideControls() : showControls(); }
@@ -36,7 +36,7 @@ var ScrollableMap = function (div, type) {
 
     function initFrame (div) {
         mapClicked = false;
-        PrefReader.onPreferenceChanged('frameRequireFocus', function(pair){
+        Pref.onPreferenceChanged('frameRequireFocus', function(pair){
             (pair.value) ? hideControls() : showControls();
         });
         div.addEventListener('click', didClickMap, true);

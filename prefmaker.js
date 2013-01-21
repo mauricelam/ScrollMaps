@@ -1,4 +1,4 @@
-/*global $ */
+/*global $ Pref pref */
 
 /**
 
@@ -20,7 +20,7 @@ var PrefMaker = new (function _PrefMaker(){
         label.click(updateOption);
         updateView();
 
-        PrefManager.onPreferenceChanged(key, function(pair){
+        Pref.onPreferenceChanged(key, function(pair){
             if(!prefChange)
                 updateView();
             prefChange = false;
@@ -29,7 +29,7 @@ var PrefMaker = new (function _PrefMaker(){
         var prefChange = false;
         function updateOption(){
             prefChange = true;
-            PrefManager.setOption(key, box.prop('checked'));
+            Pref.setOption(key, box.prop('checked'));
         }
         function updateView(){
             box.attr('checked', pref(key)); // convert to string to comply with HTML (otherwise error thrown);
@@ -48,7 +48,7 @@ var PrefMaker = new (function _PrefMaker(){
         slider.change(updateOption);
         updateView();
 
-        PrefManager.onPreferenceChanged(key, function(pair){
+        Pref.onPreferenceChanged(key, function(pair){
             if(!prefChange)
                 updateView();
             prefChange = false;

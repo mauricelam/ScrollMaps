@@ -1,12 +1,13 @@
-/*global $ chrome */
+/*global $ */
 
 /**
 
-  Uses chrome message passing mechanism to read preference values from the context of the extension. This class has a cache of its own to provide all required preference values instantly. 
+  Uses message passing mechanism to read preference values from the context of the extension. This class has a cache of its own to provide all required preference values instantly. 
 
 **/
 
 var PrefReader = {};
+var Pref = PrefReader;
 
 // convenience function
 function pref(key){
@@ -17,19 +18,18 @@ function pref(key){
     
     PrefReader.options = {};
 
-    chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
-        switch(request.action){
+    Message.extension.addListener(function (action, data, sender, sendResponse) {
+        switch (action) {
             case 'preferenceChanged':
-                PrefReader.options[request.key] = request.value;
-                $(window).trigger('preferenceChanged', [{key: request.key, value: request.value}]);
+                PrefReader.options[data.key] = data.value;
+                $(window).trigger('preferenceChanged', [{ key: data.key, value: data.value }]);
                 break;
             default:
-                //console.log("Message not recognized: ", request.action);
         }
     });
 
     $(function(){
-        chrome.extension.sendMessage({action: 'getAllPreferences'}, function(_options){
+        Message.extension.sendMessage('getAllPreferences', {}, function(_options){
             $.extend(PrefReader.options, _options);
             document.prefs = PrefReader.options;
         });
