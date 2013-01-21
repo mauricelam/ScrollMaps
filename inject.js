@@ -35,7 +35,7 @@ var ScrollMapsOptionsPanel = new (function _ScrollMapsOptionsPanel(){
 
     self.hideOptions = function(){
         var panel = $('#SCROLLMAP_optionspanel');
-        panel.animate({'margin-right': '-100'}, {duration: 100, complete: function(){ panel.hide(); } });
+        panel.animate({'margin-right': '-100px'}, {duration: 100, complete: function(){ panel.hide(); } });
     };
 
     $(function(){

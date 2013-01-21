@@ -15,7 +15,7 @@ var Options = {};
         var slider = PrefMaker.makeSlider("scrollSpeed", "Scrolling speed", 100, 1);
         box.append(slider);
 
-        var invertScrollCheckbox = PrefMaker.makeBooleanCheckbox("invertScroll", "Invert Scroll", "Use the opposite scrolling direction as you do in your OS");
+        var invertScrollCheckbox = PrefMaker.makeBooleanCheckbox("invertScroll", "Invert Scroll", "Use the opposite scrolling direction as you do in your system preferences");
         box.append(invertScrollCheckbox);
 
         var invertZoomCheckbox = PrefMaker.makeBooleanCheckbox("invertZoom", "Invert Zoom", "Pull fingers down to zoom in instead");

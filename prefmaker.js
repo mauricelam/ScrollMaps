@@ -1,19 +1,19 @@
 /**
 
-  Create views or widgets to toggle certain preference values. 
+  Create views or widgets to toggle certain preference values.
 
 **/
 
 var PrefMaker = new (function _PrefMaker(){
-	var self = this;
+    var self = this;
 
     self.makeBooleanCheckbox = function(key, label, secondLine){
-        if(typeof secondLine == "string"){
+        if(typeof secondLine == 'string'){
             label = createTwoLineBox(label, secondLine);
         }
         var div = $('<div class="PMcheckbox"></div>');
-        var box = $('<input id="PMcheckbox_'+key+'" type="checkbox" />');
-        var label = $('<label for="PMcheckbox_'+key+'">'+label+'</label>');
+        var box = $('<input id="PMcheckbox_' + key + '" type="checkbox" />');
+        var label = $('<label for="PMcheckbox_' + key + '">' + label + '</label>');
         div.append(box).append(label);
         box.click(updateOption);
         label.click(updateOption);
@@ -28,10 +28,10 @@ var PrefMaker = new (function _PrefMaker(){
         var prefChange = false;
         function updateOption(){
             prefChange = true;
-            PrefManager.setOption(key, box.prop("checked"));
+            PrefManager.setOption(key, box.prop('checked'));
         }
         function updateView(){
-            box.attr("checked", pref(key)); // convert to string to comply with HTML (otherwise error thrown);
+            box.attr('checked', pref(key)); // convert to string to comply with HTML (otherwise error thrown);
         }
 
         return div;
