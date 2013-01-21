@@ -65,7 +65,7 @@ function pref(label){
 
     $(window).bind('preferenceChanged', function(event, pair){
         Extension.forAllTabs(function (tab) {
-            Message.tab.sendMessage(tab, {action: 'preferenceChanged', key: pair.key, value: pair.value});
+            Message.tab.sendMessage(tab.id, {action: 'preferenceChanged', key: pair.key, value: pair.value});
         });
     });
 
