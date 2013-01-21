@@ -7,7 +7,6 @@ var ScrollableMap = function (div, type) {
     var bodyScrolls = false;
     setTimeout( function () {
         chrome.extension.sendMessage({ 'action': 'listenBodyScrolls' });
-        // chrome.extension.sendMessage({action: 'getBodyScrolls'}, function (response) { setBodyScrolls(response); });
     }, 500);
     chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
         if (request.action == 'setBodyScrolls') {
@@ -109,6 +108,7 @@ var ScrollableMap = function (div, type) {
     var MINZOOMINTERVAL = 200;
 
     function zoomInWeb (mousePos, target) {
+        console.log('zoomin', new Date().getTime() - lastZoomTime);
         if(new Date().getTime() - lastZoomTime < MINZOOMINTERVAL) return;
         lastZoomTime = new Date().getTime();
         // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
@@ -171,7 +171,7 @@ var ScrollableMap = function (div, type) {
             switch (state) {
                 case States.zooming:
                     var factor = (pref('invertZoom')) ? -1 : 1;
-                    if (e.webkitDirectionInvertedFromDevice) {
+                    if (window.safari && e.webkitDirectionInvertedFromDevice) {
                         factor *= -1;
                     }
                     if (e.wheelDeltaY * factor > 3){

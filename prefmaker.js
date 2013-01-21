@@ -8,7 +8,7 @@
 
 var PrefMaker = new (function _PrefMaker(){
 
-    PrefMaker.makeBooleanCheckbox = function(key, label, secondLine){
+    this.makeBooleanCheckbox = function(key, label, secondLine){
         if(typeof secondLine == 'string'){
             label = createTwoLineBox(label, secondLine);
         }
@@ -38,7 +38,7 @@ var PrefMaker = new (function _PrefMaker(){
         return div;
     };
 
-    PrefMaker.makeSlider = function(key, label, max, min){
+    this.makeSlider = function(key, label, max, min){
         var div = $('<div class="PMslider"></div>');
         var slider = $('<input type="range" id="PMslider_' + key + '" max="' + max + '" min="' + min + '" />');
         var preview = $('<span id="PMsliderPreview_' + key + '" class="PMsliderPreview"></span>');
@@ -57,7 +57,7 @@ var PrefMaker = new (function _PrefMaker(){
         var prefChange = false;
         function updateOption(){
             prefChange = true;
-            PrefManager.setOption(key, slider.val());
+            this.setOption(key, slider.val());
             preview.text(pref(key));
         }
         function updateView(){
