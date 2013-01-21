@@ -12,44 +12,44 @@ function pref(key){
 }
 
 (function(){
-	var m = PrefProxy;
 
-    m.options = {};
+    PrefProxy.options = {};
 
-    safari.self.addEventListener("message", function(msgEvent){
+    safari.self.addEventListener('message', function(msgEvent){
         var request = msgEvent.message;
         switch(msgEvent.name){
-            case "preferenceChanged":
-                m.options[request.key] = request.value;
-                $(window).trigger("preferenceChanged", [{key: request.key, value: request.value}]);
+            case 'preferenceChanged':
+                PrefProxy.options[request.key] = request.value;
+                $(window).trigger('preferenceChanged', [{key: request.key, value: request.value}]);
                 break;
-            case "returnGetAllPreferences":
+            case 'returnGetAllPreferences':
                 for(var i in request){
-                    $(window).trigger("preferenceChanged", [{key: i, value: request[i]}]);
+                    $(window).trigger('preferenceChanged', [{key: i, value: request[i]}]);
                 }
-                $.extend(m.options, request);
-            default: 
+                $.extend(PrefProxy.options, request);
+                break;
+            default:
                 //console.log("Message not recognized: ", request.action);
         }
     }, false);
 
     $(function(){
-        safari.self.tab.dispatchMessage("getAllPreferences", {returnName: "returnGetAllPreferences"});
+        safari.self.tab.dispatchMessage('getAllPreferences', {returnName: 'returnGetAllPreferences'});
     });
 
-    m.getOption = function(key){
-        return m.options[key];
-    }
+    PrefProxy.getOption = function(key){
+        return PrefProxy.options[key];
+    };
 
-    m.setOption = function(key, value){
-        m.options[key] = value;
-        safari.self.tab.dispatchMessage("setPreference", {key: key, value: value});
-    }
+    PrefProxy.setOption = function(key, value){
+        PrefProxy.options[key] = value;
+        safari.self.tab.dispatchMessage('setPreference', {key: key, value: value});
+    };
 
-    m.onPreferenceChanged = function(key, func){
-        $(window).bind("preferenceChanged", function(event, pair){
+    PrefProxy.onPreferenceChanged = function(key, func){
+        $(window).bind('preferenceChanged', function(event, pair){
             if(pair.key == key)
                 func(pair);
-        })
-    }
+        });
+    };
 })();
