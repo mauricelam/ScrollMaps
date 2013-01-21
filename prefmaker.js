@@ -1,3 +1,5 @@
+/*global $ */
+
 /**
 
   Create views or widgets to toggle certain preference values.
@@ -5,9 +7,8 @@
 **/
 
 var PrefMaker = new (function _PrefMaker(){
-    var self = this;
 
-    self.makeBooleanCheckbox = function(key, label, secondLine){
+    PrefMaker.makeBooleanCheckbox = function(key, label, secondLine){
         if(typeof secondLine == 'string'){
             label = createTwoLineBox(label, secondLine);
         }
@@ -35,14 +36,14 @@ var PrefMaker = new (function _PrefMaker(){
         }
 
         return div;
-    }
+    };
 
-    self.makeSlider = function(key, label, max, min){
+    PrefMaker.makeSlider = function(key, label, max, min){
         var div = $('<div class="PMslider"></div>');
-        var slider = $('<input type="range" id="PMslider_'+key+'" max="'+max+'" min="'+min+'" />');
-        var preview = $('<span id="PMsliderPreview_'+key+'" class="PMsliderPreview"></span>');
-        var label = $('<label for="PMslider_'+key+'">'+label+'</label>');
-        div.append(label).append(slider).append(preview);
+        var slider = $('<input type="range" id="PMslider_' + key + '" max="' + max + '" min="' + min + '" />');
+        var preview = $('<span id="PMsliderPreview_' + key + '" class="PMsliderPreview"></span>');
+        var labelElement = $('<label for="PMslider_' + key + '">' + label + '</label>');
+        div.append(labelElement).append(slider).append(preview);
 
         slider.change(updateOption);
         updateView();
@@ -65,10 +66,11 @@ var PrefMaker = new (function _PrefMaker(){
         }
 
         return div;
-    }
+    };
 
     function createTwoLineBox(label, secondLine){
-        var output = '<div class="PMcheckbox_labelwrap"><div class="PMcheckbox_labeltext">'+label+'</div><div class="PMcheckbox_smalltext">'+secondLine+'</div></div>';
+        var output = '<div class="PMcheckbox_labelwrap"><div class="PMcheckbox_labeltext">' + label + '</div><div class="PMcheckbox_smalltext">' + secondLine + '</div></div>';
         return output;
     }
+
 })();
