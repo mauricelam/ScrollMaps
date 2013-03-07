@@ -108,7 +108,6 @@ var ScrollableMap = function (div, type) {
     var MINZOOMINTERVAL = 200;
 
     function zoomInWeb (mousePos, target) {
-        console.log('zoomin', new Date().getTime() - lastZoomTime);
         if(new Date().getTime() - lastZoomTime < MINZOOMINTERVAL) return;
         lastZoomTime = new Date().getTime();
         // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
@@ -157,7 +156,20 @@ var ScrollableMap = function (div, type) {
         if (e.screenX == -88 && e.screenY == -88) return; // backdoor for zooming
 
         var target = e.target || e.srcElement;
-        var isAccelerating = (!pref('isolateZoomScroll') || accelero.isAccelerating(e.wheelDeltaX, e.wheelDeltaY, e.timeStamp));
+        var isAccelerating = (!pref('isolateZoomScroll') ||
+            accelero.isAccelerating(e.wheelDeltaX, e.wheelDeltaY, e.timeStamp));
+
+        var scrollables = $(target).parentsUntil(div).filter(function () {
+            var isVisible = (this.offsetHeight && this.offsetWidth);
+            var xScroll = this.offsetWidth < this.scrollWidth;
+            var yScroll = this.offsetHeight < this.scrollHeight;
+            return isVisible && (xScroll || yScroll) && this.style.overflow !== 'hidden';
+        });
+
+        if (scrollables.length > 0) {
+            // something is scrollable, let's allow it to scroll
+            return;
+        }
 
         if (lastTarget && arrayContainsElement($(lastTarget).parents(), div)) target = lastTarget;
         else lastTarget = target;
