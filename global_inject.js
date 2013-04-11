@@ -18,7 +18,7 @@ Message.extension.addListener(function (action, data, sender, sendResponse) {
     switch (action) {
         case 'listenBodyScrolls':
             if (window.top == window) {
-                document.body.addEventListener('DOMSubtreeModified', SM.updateBodyScrolls, false);
+                // document.body.addEventListener('DOMSubtreeModified', SM.updateBodyScrolls, false);
                 window.addEventListener('resize', SM.updateBodyScrolls, false);
                 window.addEventListener('load', function () { setTimeout(SM.updateBodyScrolls, 1000); }, false);
                 SM.updateBodyScrolls();
