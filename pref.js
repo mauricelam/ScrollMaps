@@ -56,7 +56,7 @@ function pref(label){
 
     PrefManager.onPreferenceChanged = function(key, func){
         $(window).bind('preferenceChanged', function(event, pair){
-            if(pair.key == key)
+            if(pair.key === key)
                 func(pair);
         });
     };
