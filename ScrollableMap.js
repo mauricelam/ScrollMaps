@@ -8,7 +8,7 @@ var ScrollableMap = function (div, type, id) {
 
     // Whether an element is scrollable
     function scrollable (element) {
-        if (!element || element === document) return false;
+        if (!element || !element.ownerDocument) return false;
         if (element.scrollHeight <= element.clientHeight) return false;
         var overflow = $(element).css('overflow');
         return overflow !== 'hidden' && overflow !== 'visible';
@@ -89,7 +89,48 @@ var ScrollableMap = function (div, type, id) {
         }
     }
 
-    self.move = function (point, dx, dy, target) {
+    var gpoint = [0, 0];
+    var timer;
+    var pretendingMouseDown = false;
+
+    self.moveNewMaps = function (point, dx, dy, target) {
+        if (!pretendingMouseDown) {
+            gpoint = point;
+        }
+        point = gpoint;
+        var diffX = Math.abs(dx), diffY = Math.abs(dy);
+        if (diffX < 3 && diffY < 3) {
+            // scale to make sure at least one of them is > 3
+            // this ensures it's treated as a drag, not a click
+            var scale = 3.2 / Math.max(diffX, diffY);
+            dx *= scale;
+            dy *= scale;
+        }
+
+        if (!pretendingMouseDown) {
+            var downEvent = document.createEvent('MouseEvents');
+            downEvent.initMouseEvent('mousedown', true, true, window, 1, 0, 0, point[0], point[1], false, false, false, false, 0, null);
+            target.dispatchEvent(downEvent);
+            pretendingMouseDown = true;
+        }
+
+        var moveEvent = document.createEvent('MouseEvents');
+        moveEvent.initMouseEvent('mousemove', true, false, window, 0, 0, 0, point[0]+dx, point[1]+dy, false, false, false, false, 0, null);
+        target.dispatchEvent(moveEvent);
+
+        window.clearTimeout(timer);
+        timer = window.setTimeout(function () {
+            var upEvent = document.createEvent('MouseEvents');
+            upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, gpoint[0], gpoint[1], false, false, false, false, 0, null);
+            target.dispatchEvent(upEvent);
+            pretendingMouseDown = false;
+        }, 100);
+
+        gpoint[0] += dx;
+        gpoint[1] += dy;
+    };
+
+    self.moveLegacy = function (point, dx, dy, target) {
         var diffX = Math.abs(dx), diffY = Math.abs(dy);
         if (diffX < 3 && diffY < 3) {
             // scale to make sure at least one of them is > 3
@@ -110,6 +151,14 @@ var ScrollableMap = function (div, type, id) {
         var upEvent = document.createEvent('MouseEvents');
         upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, point[0]+dx, point[1]+dy, false, false, false, false, 0, null);
         target.dispatchEvent(upEvent);
+    };
+
+    self.move = function (point, dx, dy, target) {
+        if (self.type === ScrollableMap.TYPE_NEWWEB) {
+            self.moveNewMaps(point, dx, dy, target);
+        } else {
+            self.moveLegacy(point, dx, dy, target);
+        }
     };
 
     self.zoomIn = function (mousePos, target) {
@@ -255,6 +304,7 @@ function setTimer (timerID, newFunction, newDelay) {
 ScrollableMap.TYPE_WEB = 0;
 ScrollableMap.TYPE_IFRAME = 1;
 ScrollableMap.TYPE_API = 2;
+ScrollableMap.TYPE_NEWWEB = 3;
 
 var SMLowPassFilter = function SMLowPassFilter () { this.init.apply(this, arguments); };
 SMLowPassFilter.SMOOTHING = 0.5;
