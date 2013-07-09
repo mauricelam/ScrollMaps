@@ -115,7 +115,7 @@ var ScrollableMap = function (div, type, id) {
         }
 
         var moveEvent = document.createEvent('MouseEvents');
-        moveEvent.initMouseEvent('mousemove', true, false, window, 0, 0, 0, point[0]+dx, point[1]+dy, false, false, false, false, 0, null);
+        moveEvent.initMouseEvent('mousemove', true, false, window, 88, 0, 0, point[0]+dx, point[1]+dy, false, false, false, false, 0, null);
         target.dispatchEvent(moveEvent);
 
         window.clearTimeout(timer);
@@ -129,6 +129,15 @@ var ScrollableMap = function (div, type, id) {
         gpoint[0] += dx;
         gpoint[1] += dy;
     };
+
+    self.mouseMoved = function () {
+        if (self.type !== ScrollableMap.TYPE_NEWWEB || !lastTarget) return;
+        var upEvent = document.createEvent('MouseEvents');
+        upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, gpoint[0], gpoint[1], false, false, false, false, 0, null);
+        lastTarget.dispatchEvent(upEvent);
+        pretendingMouseDown = false;
+    };
+    Events.listen('realmousemove', self.mouseMoved);
 
     self.moveLegacy = function (point, dx, dy, target) {
         var diffX = Math.abs(dx), diffY = Math.abs(dy);
