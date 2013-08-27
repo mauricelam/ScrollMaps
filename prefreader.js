@@ -1,10 +1,9 @@
 /*global $ */
 
 /**
-
-  Uses message passing mechanism to read preference values from the context of the extension. This class has a cache of its own to provide all required preference values instantly. 
-
-**/
+ * Uses message passing mechanism to read preference values from the context of the extension. This
+ * class has a cache of its own to provide all required preference values instantly.
+ */
 
 var PrefReader = {};
 var Pref = PrefReader;
@@ -24,16 +23,22 @@ function pref(key){
                 PrefReader.options[data.key] = data.value;
                 $(window).trigger('preferenceChanged', [{ key: data.key, value: data.value }]);
                 break;
-            default:
         }
     });
 
     $(function(){
         Message.extension.sendMessage('getAllPreferences', {}, function(_options){
             $.extend(PrefReader.options, _options);
-            document.prefs = PrefReader.options;
+            for (var key in _options) {
+                $(window).trigger('preferenceChanged', [{ key: key, value: _options[key] }]);
+            }
         });
     });
+
+    PrefReader.setOption = function(key, value){
+        PrefReader.options[key] = value;
+        Message.extension.sendMessage('setPreference', {key: key, value: value});
+    };
 
     PrefReader.getOption = function(key){
         return PrefReader.options[key];
