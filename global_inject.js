@@ -31,7 +31,7 @@ SM.updateBodyScrolls = function () {
     var bodyScrolls = (document.body.scrollHeight > window.innerHeight && $(document.body).css('overflow') != 'hidden');
     if (SM.bodyScrolls !== bodyScrolls) {
         SM.bodyScrolls = bodyScrolls;
-        Message.extension.sendMessage('setBodyScrolls', bodyScrolls);
+        Message.extension.sendMessage('setBodyScrolls', { scrolls: bodyScrolls });
     }
 };
 

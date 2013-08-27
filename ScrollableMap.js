@@ -19,11 +19,11 @@ var ScrollableMap = function (div, type, id) {
     }
 
     if (type === ScrollableMap.TYPE_IFRAME) {
-        setTimeout( function () {
+        setTimeout(function () {
             Message.extension.sendMessage('listenBodyScrolls', {});
         }, 500);
         Message.extension.addListener(function(action, data, sender, sendResponse){
-            if (action === 'setBodyScrolls') setBodyScrolls(data);
+            if (action === 'setBodyScrolls') setBodyScrolls(data.scrolls);
         });
     } else {
         window.addEventListener('resize', function () {
@@ -50,7 +50,7 @@ var ScrollableMap = function (div, type, id) {
     
     self.init = function (div, type) {
         self.type = type;
-        div.addEventListener('mousewheel', function (event) { self.handleWheelEvent(event); }, true);
+        div.addEventListener('mousewheel', self.handleWheelEvent, true);
         initFrame(div);
         // Fix for webkit bug
         document.documentElement.style.overflow = 'scroll';
@@ -65,7 +65,7 @@ var ScrollableMap = function (div, type, id) {
         });
         div.addEventListener('click', didClickMap, true);
         $(div).mouseleave(hideControls);
-        if(mapRequiresActivation()){
+        if (mapRequiresActivation()){
             setTimeout(hideControls, 500);
         }
     }
@@ -190,8 +190,8 @@ var ScrollableMap = function (div, type, id) {
     var MINZOOMINTERVAL = 200;
 
     function zoomInWeb (mousePos, target) {
-        if(new Date().getTime() - lastZoomTime < MINZOOMINTERVAL) return;
-        lastZoomTime = new Date().getTime();
+        if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
+        lastZoomTime = Date.now();
         // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
         var e = document.createEvent('WheelEvent');
         e.initWebKitWheelEvent(0, 1, window, -88, -88, mousePos[0], mousePos[1], false, false, false, false);
@@ -199,8 +199,8 @@ var ScrollableMap = function (div, type, id) {
     }
 
     function zoomInFrame(mousePos, target){
-        if(new Date().getTime() - lastZoomTime < MINZOOMINTERVAL) return;
-        lastZoomTime = new Date().getTime();
+        if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
+        lastZoomTime = Date.now();
 
         var event = document.createEvent('MouseEvents');
         event.initMouseEvent('dblclick', true, true, window, 2, 0, 0, mousePos[0], mousePos[1], false, false, false, false, 0, null);
@@ -208,8 +208,8 @@ var ScrollableMap = function (div, type, id) {
     }
 
     function zoomOutWeb (mousePos, target) {
-        if(new Date().getTime() - lastZoomTime < MINZOOMINTERVAL) return;
-        lastZoomTime = new Date().getTime();
+        if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
+        lastZoomTime = Date.now();
         // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
         var e = document.createEvent('WheelEvent');
         e.initWebKitWheelEvent(0, -1, window, -88, -88, mousePos[0], mousePos[1], false, false, false, false);
@@ -217,24 +217,26 @@ var ScrollableMap = function (div, type, id) {
     }
 
     function zoomOutFrame(mousePos, target){
-        if(new Date().getTime() - lastZoomTime < MINZOOMINTERVAL) return;
-        lastZoomTime = new Date().getTime();
+        if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
+        lastZoomTime = Date.now();
 
-        var event = document.createEvent('MouseEvents');
-        event.initMouseEvent('contextmenu', true, true, window, 2, 0, 0, mousePos[0], mousePos[1], false, false, false, false, 2, null);
-        target.dispatchEvent(event);
+        var firstRightClick = document.createEvent('MouseEvents');
+        firstRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0, mousePos[0], mousePos[1], false, false, false, false, 2, null);
+        target.dispatchEvent(firstRightClick);
 
-        var event = document.createEvent('MouseEvents');
-        event.initMouseEvent('contextmenu', true, true, window, 2, 0, 0, mousePos[0], mousePos[1], false, false, false, false, 2, null);
-        target.dispatchEvent(event);
+        var secondRightClick = document.createEvent('MouseEvents');
+        secondRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0, mousePos[0], mousePos[1], false, false, false, false, 2, null);
+        target.dispatchEvent(secondRightClick);
     }
 
     var lastTarget;
 
     self.handleWheelEvent = function (e) {
-        if (!pref('enabled')) return;
+        if (!pref('enabled') && !window.safari) return;
         if ((self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API) && !pref('enableForFrames') ) return;
-        if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) { e.stopPropagation(); return; }
+        if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
+            e.stopPropagation(); return;
+        }
         if (e.screenX == -88 && e.screenY == -88) return; // backdoor for zooming
 
         var target = e.target || e.srcElement;
@@ -253,8 +255,10 @@ var ScrollableMap = function (div, type, id) {
             return;
         }
 
-        if (lastTarget && arrayContainsElement($(lastTarget).parents(), div)) target = lastTarget;
-        else lastTarget = target;
+        if (lastTarget && arrayContainsElement($(lastTarget).parents(), div))
+            target = lastTarget;
+        else
+            lastTarget = target;
 
 
         var destinationState = (e.metaKey) ? States.zooming : States.scrolling;
@@ -325,10 +329,10 @@ SMLowPassFilter.prototype = {
     },
     push: function (data, time) {
         this.data = this.data * SMLowPassFilter.SMOOTHING + data * (1 - SMLowPassFilter.SMOOTHING);
-        this.lastDataTime = time || new Date().getTime();
+        this.lastDataTime = time || Date.now();
     },
     getAverage: function (time) {
-        time = time || new Date().getTime();
+        time = time || Date.now();
         if (this.lastDataTime === 0) {
             return 0;
         }
@@ -346,7 +350,7 @@ SMAccelerationDetector.prototype = {
         this.max = 0;
         this.maxTime = 0;
         this.lastDelta = 0;
-        this.lastTime = new Date().getTime();
+        this.lastTime = Date.now();
     },
     isAccelerating: function(delta, time){
         delta = delta / (time - this.lastTime);
@@ -354,7 +358,7 @@ SMAccelerationDetector.prototype = {
 
         var output = false;
 
-        if(Math.abs(delta) > Math.abs(this.max)){
+        if (Math.abs(delta) > Math.abs(this.max)){
             this.max = delta;
             this.maxTime = time;
             output = true;
@@ -364,7 +368,7 @@ SMAccelerationDetector.prototype = {
 
         var difference = (Math.abs(delta) - Math.abs(prediction));
 
-        if(difference / Math.abs(prediction) > 1.2 && difference > 0.5){
+        if (difference / Math.abs(prediction) > 1.2 && difference > 0.5){
             this.newScrollAction();
             output = true;
         }
