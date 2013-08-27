@@ -51,7 +51,6 @@ var ScrollableMap = function (div, type, id) {
     self.init = function (div, type) {
         self.type = type;
         div.addEventListener('mousewheel', self.handleWheelEvent, true);
-        console.log(self, self.handleWheelEvent);
         initFrame(div);
         // Fix for webkit bug
         document.documentElement.style.overflow = 'scroll';
