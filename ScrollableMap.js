@@ -135,7 +135,7 @@ var ScrollableMap = function (div, type, id) {
         lastTarget.dispatchEvent(upEvent);
         pretendingMouseDown = false;
     };
-    Events.listen('realmousemove', self.mouseMoved);
+    window.addEventListener('realmousemove', self.mouseMoved, true);
 
     self.moveLegacy = function (point, dx, dy, target) {
         var diffX = Math.abs(dx), diffY = Math.abs(dy);
