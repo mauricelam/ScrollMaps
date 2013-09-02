@@ -7,7 +7,8 @@ var retries = 3;
 
 window.addEventListener('mousemove', function (e) {
     if (e.detail !== 88) {
-        Events.dispatch('realmousemove');
+        var event = new Event('realmousemove');
+        window.dispatchEvent(event);
     }
 }, true);
 
@@ -33,17 +34,3 @@ function injectFrame() {
 }
 
 window.addEventListener('DOMContentLoaded', injectFrame, false);
-
-var Events = {
-    callbacks: {},
-    dispatch: function (name, event) {
-        var callbacks = this.callbacks[name];
-        callbacks && callbacks.forEach(function (callback) {
-            callback(event);
-        });
-    },
-    listen: function (name, callback) {
-        this.callbacks[name] = this.callbacks[name] || [];
-        this.callbacks[name].push(callback);
-    }
-};
