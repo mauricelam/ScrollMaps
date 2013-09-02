@@ -14,8 +14,10 @@ var ScrollableMap = function (div, type, id) {
         return overflow !== 'hidden' && overflow !== 'visible';
     }
 
-    function hasScrollableParent (element) {
-        return scrollable(element) || (element.parentNode && hasScrollableParent(element.parentNode));
+    function hasScrollableParent (element, until) {
+        if (scrollable(element)) return true;
+        if (!element.parentNode || element.parentNode === until || element.isSameNode(until)) return false;
+        return hasScrollableParent(element.parentNode, until);
     }
 
     if (type === ScrollableMap.TYPE_IFRAME) {
@@ -241,14 +243,7 @@ var ScrollableMap = function (div, type, id) {
         var isAccelerating = (!pref('isolateZoomScroll') ||
             accelero.isAccelerating(e.wheelDeltaX, e.wheelDeltaY, e.timeStamp));
 
-        var scrollables = $(target).parentsUntil(div).filter(function () {
-            var isVisible = (this.offsetHeight && this.offsetWidth);
-            var xScroll = this.offsetWidth < this.scrollWidth;
-            var yScroll = this.offsetHeight < this.scrollHeight;
-            return isVisible && (xScroll || yScroll) && this.style.overflow !== 'hidden';
-        });
-
-        if (scrollables.length > 0) {
+        if (hasScrollableParent(target, div)) {
             // something is scrollable, let's allow it to scroll
             return;
         }
