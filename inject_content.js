@@ -1,4 +1,4 @@
-var ScrollMaps = new (function _ScrollMaps(){
+(function (){
     init();
 
     function init() {
