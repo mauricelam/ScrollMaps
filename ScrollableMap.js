@@ -6,17 +6,23 @@ var ScrollableMap = function (div, type, id) {
     var mapClicked; // whether the map has ever been clicked (to activate the map)
     var bodyScrolls = false;
 
+    var style = document.createElement('style');
+    style.innerHTML =   '.gmnoprint { -webkit-transition: opacity 0.3s !important; }' +
+                        '.scrollMapsHideControls .gmnoprint { opacity: 0 !important; }';
+    document.head.appendChild(style);
+
     // Whether an element is scrollable
     function scrollable (element) {
         if (!element || !element.ownerDocument) return false;
         if (element.scrollHeight <= element.clientHeight) return false;
-        var overflow = $(element).css('overflow');
+        if (element.clientHeight === 0 || element.clientWidth === 0) return false;
+        var overflow = $(element).css('overflow') || element.style.overflow;
         return overflow !== 'hidden' && overflow !== 'visible';
     }
 
     function hasScrollableParent (element, until) {
         if (scrollable(element)) return true;
-        if (!element.parentNode || element.parentNode === until || element.isSameNode(until)) return false;
+        if (!element.parentNode || element === until || element.isSameNode(until)) return false;
         return hasScrollableParent(element.parentNode, until);
     }
 
@@ -79,13 +85,13 @@ var ScrollableMap = function (div, type, id) {
         if (!mapClicked) {
             if (event) event.stopPropagation();
             mapClicked = true;
-            $(div).find('.gmnoprint').fadeIn(100);
+            $(div).removeClass('scrollMapsHideControls');
         }
     }
     function hideControls(){
         if (mapRequiresActivation() && pref('enabled') && pref('frameRequireFocus')) {
             mapClicked = false;
-            $(div).find('.gmnoprint').fadeOut(200);
+            $(div).addClass('scrollMapsHideControls');
         }
     }
 
