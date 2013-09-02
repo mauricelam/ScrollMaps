@@ -1,6 +1,6 @@
 {
   "name": "ScrollMaps",
-  "version": "1.5",
+  "version": "1.6",
   "manifest_version": 2,
   "description": "Allow you to use two finger scroll on your Mac trackpad in Google Maps. ",
   "content_scripts":[
