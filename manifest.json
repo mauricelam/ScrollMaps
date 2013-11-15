@@ -40,6 +40,7 @@
   "permissions": [
     "tabs",
     "*://maps.google.com/",
+    "*://www.google.com/maps/",
     "<all_urls>"
   ]
 }
