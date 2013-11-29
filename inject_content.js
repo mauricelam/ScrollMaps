@@ -5,7 +5,9 @@
         function newMapNotifier (Map) {
             var newMap = function (container, opts) {
                 if (opts) opts.scrollwheel = true; // force mousewheel
-                window.dispatchEvent(createEvent('mapsFound', container));
+                var uid = Math.floor(Math.random() * 100000);
+                container.dispatchEvent(createEvent('mapsFound', uid));
+                container.setAttribute('data-scrollmaps', uid);
                 var mapobj = new Map(container, opts);
 
                 if (typeof mapobj.enableScrollWheelZoom == 'function') {
