@@ -10,7 +10,8 @@ document.addEventListener('load', function (event) {
     document.head.insertBefore(SM.injectScript('inject_content.js'), document.head.firstChild);
 
     window.addEventListener('mapsFound', function (event) {
-        new ScrollableMap(event.detail, ScrollableMap.TYPE_API, SM.count++);
+        var map = event.target;
+        new ScrollableMap(map, ScrollableMap.TYPE_API, SM.count++);
     }, false);
 }, true);
 
