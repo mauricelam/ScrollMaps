@@ -59,6 +59,7 @@ var ScrollableMap = function (div, type, id) {
     self.init = function (div, type) {
         self.type = type;
         div.addEventListener('mousewheel', self.handleWheelEvent, true);
+        window.addEventListener('keydown', self.handleKeyEvent, true);
         initFrame(div);
         // Fix for webkit bug
         document.documentElement.style.overflow = 'scroll';
@@ -136,14 +137,18 @@ var ScrollableMap = function (div, type, id) {
         gpoint[1] += dy;
     };
 
-    self.mouseMoved = function () {
+    var mousePosition = {x: 0, y: 0};
+
+    self.realMouseMoved = function (e) {
+        mousePosition = e.detail;
+
         if (self.type !== ScrollableMap.TYPE_NEWWEB || !lastTarget) return;
         var upEvent = document.createEvent('MouseEvents');
         upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, gpoint[0], gpoint[1], false, false, false, false, 0, null);
         lastTarget.dispatchEvent(upEvent);
         pretendingMouseDown = false;
     };
-    window.addEventListener('realmousemove', self.mouseMoved, true);
+    window.addEventListener('realmousemove', self.realMouseMoved, true);
 
     self.moveLegacy = function (point, dx, dy, target) {
         var diffX = Math.abs(dx), diffY = Math.abs(dy);
@@ -235,8 +240,19 @@ var ScrollableMap = function (div, type, id) {
         target.dispatchEvent(secondRightClick);
     }
 
-    var lastTarget;
+    self.handleKeyEvent = function (e) {
+        if (e.ctrlKey && e.keyCode == 187) {
+            // +
+            // console.log('zoom in', mousePosition, mouseTarget);
+            self.zoomIn(mousePosition, div);
+        } else if (e.ctrlKey && e.keyCode == 189) {
+            // -
+            // console.log('zoom out');
+            self.zoomOut(mousePosition, div);
+        }
+    };
 
+    var lastTarget;
     self.handleWheelEvent = function (e) {
         if (!pref('enabled') && !window.safari) return;
         if ((self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API) && !pref('enableForFrames') ) return;

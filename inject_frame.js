@@ -7,8 +7,8 @@ var retries = 3;
 
 window.addEventListener('mousemove', function (e) {
     if (e.detail !== 88) {
-        var event = new Event('realmousemove');
-        window.dispatchEvent(event);
+        var event = new CustomEvent('realmousemove', {'detail': [e.pageX, e.pageY]});
+        e.target.dispatchEvent(event);
     }
 }, true);
 
