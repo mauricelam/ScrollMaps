@@ -5,14 +5,12 @@ var Options = {};
     Options.createOptions = function(){
         var box = $('#checkboxes');
 
-        if (window.safari) {
-            var enabledCheckbox = PrefMaker.makeBooleanCheckbox(
-                'enabled',
-                'Enable on this computer',
-                'Enable this extension individually on different machines'
-            );
-            box.append(enabledCheckbox);
-        }
+        var enabledCheckbox = PrefMaker.makeBooleanCheckbox(
+            'enabled',
+            'Enable on this computer',
+            'Enable this extension individually on different machines'
+        );
+        box.append(enabledCheckbox);
 
         var enableForFramesCheckbox = PrefMaker.makeBooleanCheckbox('enableForFrames',
             'Enable in embedded maps',
@@ -58,5 +56,9 @@ var Options = {};
 
     $(function(){
         Options.createOptions();
+
+        Pref.onPreferenceChanged(function(event, pair) {
+            console.log(event, pair);
+        });
     });
 })();

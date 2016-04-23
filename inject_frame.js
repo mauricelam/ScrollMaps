@@ -13,7 +13,7 @@ window.addEventListener('mousemove', function (e) {
 }, true);
 
 function injectNewMaps() {
-    var elem = document.querySelectorAll('.widget-scene')[0];
+    var elem = document.querySelectorAll('#content-container')[0];
     if (elem) {
         new ScrollableMap(elem, ScrollableMap.TYPE_NEWWEB, SM.count++);
     } else if (retries > 0) {

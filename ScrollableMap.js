@@ -46,7 +46,7 @@ var ScrollableMap = function (div, type, id) {
         bodyScrolls = scrolls;
         if (bodyScrolls) { hideControls(); } else { showControls(); }
     }
-    function mapRequiresActivation () { return bodyScrolls; }
+    function mapRequiresActivation () { return self.type != ScrollableMap.TYPE_NEWWEB && bodyScrolls; }
 
     var States = { idle: 0, scrolling: 1, zooming: 2 };
     var state = States.idle;
@@ -181,31 +181,69 @@ var ScrollableMap = function (div, type, id) {
         }
     };
 
-    self.zoomIn = function (mousePos, target) {
+    self.zoomIn = function (mousePos, target, originalEvent) {
         if (self.type == ScrollableMap.TYPE_IFRAME) {
-            zoomInFrame(mousePos, target);
+            zoomInFrame(mousePos, target, originalEvent);
         } else {
-            zoomInWeb(mousePos, target);
+            zoomInWeb(mousePos, target, originalEvent);
         }
     };
 
-    self.zoomOut = function (mousePos, target) {
+    self.zoomOut = function (mousePos, target, originalEvent) {
         if (self.type == ScrollableMap.TYPE_IFRAME) {
-            zoomOutFrame(mousePos, target);
+            zoomOutFrame(mousePos, target, originalEvent);
         } else {
-            zoomOutWeb(mousePos, target);
+            zoomOutWeb(mousePos, target, originalEvent);
         }
     };
 
     var lastZoomTime = 0;
     var MINZOOMINTERVAL = 200;
 
-    function zoomInWeb (mousePos, target) {
+    function createBackdoorWheelEvent(originalEvent) {
+        if (originalEvent instanceof WheelEvent) {
+            var init = {};
+            for (var i in originalEvent) {
+                init[i] = originalEvent[i];
+            }
+            init.screenX = -88;
+            init.screenY = -88;
+
+            if (pref('invertZoom')) {
+                init.deltaX *= -1;
+                init.deltaY *= -1;
+            }
+
+            return new WheelEvent('wheel', init);
+        }
+    }
+
+    function zoomInWeb (mousePos, target, originalEvent) {
+        var e;
+        // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
+        // keep that behavior for Cmd-scrolling.
+        if (originalEvent instanceof WheelEvent) {
+            e = createBackdoorWheelEvent(originalEvent);
+            target.dispatchEvent(e);
+            return;
+        }
+
+        // Fallback, just-in-case the original event is not a wheel event (e.g. programmatic call,
+        // or keyboard +/-)
         if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
         lastZoomTime = Date.now();
         // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
-        var e = document.createEvent('WheelEvent');
-        e.initWebKitWheelEvent(0, 1, window, -88, -88, mousePos[0], mousePos[1], false, false, false, false);
+        e = new WheelEvent('wheel', {
+            bubbles: true,
+            cancelable: true,
+            deltaX: 0,
+            deltaY: 120,
+            screenX: -88,
+            screenY: -88,
+            clientX: mousePos[0],
+            clientY: mousePos[1],
+            view: window
+        });
         target.dispatchEvent(e);
     }
 
@@ -218,12 +256,32 @@ var ScrollableMap = function (div, type, id) {
         target.dispatchEvent(event);
     }
 
-    function zoomOutWeb (mousePos, target) {
+    function zoomOutWeb (mousePos, target, originalEvent) {
+        var e;
+        // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
+        // keep that behavior for Cmd-scrolling.
+        if (originalEvent instanceof WheelEvent) {
+            e = createBackdoorWheelEvent(originalEvent);
+            target.dispatchEvent(e);
+            return;
+        }
+
+        // Fallback, just-in-case the original event is not a wheel event (e.g. programmatic call,
+        // or keyboard +/-)
         if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
         lastZoomTime = Date.now();
         // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
-        var e = document.createEvent('WheelEvent');
-        e.initWebKitWheelEvent(0, -1, window, -88, -88, mousePos[0], mousePos[1], false, false, false, false);
+        e = new WheelEvent('wheel', {
+            bubbles: true,
+            cancelable: true,
+            deltaX: 0,
+            deltaY: -120,
+            screenX: -88,
+            screenY: -88,
+            clientX: mousePos[0],
+            clientY: mousePos[1],
+            view: window
+        });
         target.dispatchEvent(e);
     }
 
@@ -244,11 +302,11 @@ var ScrollableMap = function (div, type, id) {
         if (e.ctrlKey && e.keyCode == 187) {
             // +
             // console.log('zoom in', mousePosition, mouseTarget);
-            self.zoomIn(mousePosition, div);
+            self.zoomIn(mousePosition, div, e);
         } else if (e.ctrlKey && e.keyCode == 189) {
             // -
             // console.log('zoom out');
-            self.zoomOut(mousePosition, div);
+            self.zoomOut(mousePosition, div, e);
         }
     };
 
@@ -259,7 +317,9 @@ var ScrollableMap = function (div, type, id) {
         if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
             e.stopPropagation(); return;
         }
-        if (e.screenX == -88 && e.screenY == -88) return; // backdoor for zooming
+        if (e.screenX == -88 && e.screenY == -88) {
+            return; // backdoor for zooming
+        }
 
         var target = e.target || e.srcElement;
         var isAccelerating = (!pref('isolateZoomScroll') ||
@@ -276,7 +336,7 @@ var ScrollableMap = function (div, type, id) {
             lastTarget = target;
 
 
-        var destinationState = (e.metaKey) ? States.zooming : States.scrolling;
+        var destinationState = (e.metaKey || e.ctrlKey) ? States.zooming : States.scrolling;
         if (isAccelerating || state == destinationState) {
             state = destinationState;
             var mousePos = [e.clientX, e.clientY];
@@ -288,9 +348,9 @@ var ScrollableMap = function (div, type, id) {
                         factor *= -1;
                     }
                     if (e.wheelDeltaY * factor > 3){
-                        self.zoomIn(mousePos, target);
+                        self.zoomIn(mousePos, target, e);
                     } else if (e.wheelDeltaY * factor < -3){
-                        self.zoomOut(mousePos, target);
+                        self.zoomOut(mousePos, target, e);
                     }
                     break;
                 case States.scrolling:
@@ -320,7 +380,11 @@ var ScrollableMap = function (div, type, id) {
 function arrayContainsElement (array, element) {
     if (!array) return false;
     for (var i in array) {
-        if (element.isSameNode(array[i])) return true;
+        try {
+            if (element.isSameNode(array[i])) return true;
+        } catch (e) {
+            console.warn(e, array, element);
+        }
     }
     return false;
 }

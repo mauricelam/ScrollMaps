@@ -39,7 +39,7 @@ var ScrollMapsOptionsPanel = new (function _ScrollMapsOptionsPanel(){
     };
 
     $(function(){
-        if($('#map').size() > 0 && window === window.top) // make sure it's on a real map page
-            self.createButton();
+        // if($('#map').size() > 0 && window === window.top) // make sure it's on a real map page
+            // self.createButton();
     });
 })();
