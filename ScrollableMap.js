@@ -26,6 +26,10 @@ var ScrollableMap = function (div, type, id) {
         return hasScrollableParent(element.parentNode, until);
     }
 
+    function getWheelEventTarget() {
+        return div.querySelector('.widget-scene-canvas') || div;
+    }
+
     if (type === ScrollableMap.TYPE_IFRAME) {
         setTimeout(function () {
             Message.extension.sendMessage('listenBodyScrolls', {});
@@ -237,7 +241,7 @@ var ScrollableMap = function (div, type, id) {
             bubbles: true,
             cancelable: true,
             deltaX: 0,
-            deltaY: 120,
+            deltaY: -1200,
             screenX: -88,
             screenY: -88,
             clientX: mousePos[0],
@@ -275,7 +279,7 @@ var ScrollableMap = function (div, type, id) {
             bubbles: true,
             cancelable: true,
             deltaX: 0,
-            deltaY: -120,
+            deltaY: 1200,
             screenX: -88,
             screenY: -88,
             clientX: mousePos[0],
@@ -299,14 +303,16 @@ var ScrollableMap = function (div, type, id) {
     }
 
     self.handleKeyEvent = function (e) {
+        console.log('key event', e);
+        // Chrome pinch gestures send these keyboard events (somehow)
         if (e.ctrlKey && e.keyCode == 187) {
             // +
             // console.log('zoom in', mousePosition, mouseTarget);
-            self.zoomIn(mousePosition, div, e);
+            self.zoomIn(mousePosition, getWheelEventTarget(), e);
         } else if (e.ctrlKey && e.keyCode == 189) {
             // -
             // console.log('zoom out');
-            self.zoomOut(mousePosition, div, e);
+            self.zoomOut(mousePosition, getWheelEventTarget(), e);
         }
     };
 

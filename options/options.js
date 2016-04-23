@@ -51,7 +51,11 @@ var Options = {};
         );
         box.append(isolateZoomScrollCheckbox);
 
-        box.append('<div id="zoomhint">Cmd-scroll to zoom</div>');
+        if (navigator.userAgent.indexOf('Macintosh')) {
+            box.append('<div id="zoomhint">Cmd-scroll to zoom</div>');
+        } else {
+            box.append('<div id="zoomhint">Ctrl-scroll to zoom</div>');
+        }
     };
 
     $(function(){
