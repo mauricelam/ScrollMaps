@@ -13,7 +13,7 @@ var Message = {};
     };
 
     Message.tab.sendMessage = function (target, action, data, responseCallback) {
-        var tabId = (typeof target === 'number') ? target : target.tab.id || target.id;
+        var tabId = (typeof target === 'number') ? target : (target.tab) ? target.tab.id : target.id;
         responseCallback = responseCallback || function () {};
         chrome.tabs.sendMessage(tabId, { 'action': action, 'data': data }, responseCallback);
     };
