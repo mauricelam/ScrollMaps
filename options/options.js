@@ -39,8 +39,8 @@ var Options = {};
 
         var frameRequireFocusCheckbox = PrefMaker.makeBooleanCheckbox(
             'frameRequireFocus',
-            'Embedded maps require activation',
-            'Disable maps scrolling until map is clicked'
+            'Require click to scroll embedded maps',
+            'Prioritize page scrolling until embedded map is clicked'
         );
         box.append(frameRequireFocusCheckbox);
 
@@ -60,9 +60,5 @@ var Options = {};
 
     $(function(){
         Options.createOptions();
-
-        Pref.onPreferenceChanged(function(event, pair) {
-            console.log(event, pair);
-        });
     });
 })();
