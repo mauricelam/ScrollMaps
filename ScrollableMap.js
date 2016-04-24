@@ -8,49 +8,22 @@ var ScrollableMap = function (div, type, id) {
 
     var style = document.createElement('style');
     style.innerHTML =   '.gmnoprint { -webkit-transition: opacity 0.3s !important; }' +
-                        '.scrollMapsHideControls .gmnoprint { opacity: 0 !important; }';
+                        '.scrollMapsHideControls .gmnoprint { opacity: 0.5 !important; }';
     document.head.appendChild(style);
 
-    // Whether an element is scrollable
-    function scrollable (element) {
-        if (!element || !element.ownerDocument) return false;
-        if (element.scrollHeight <= element.clientHeight) return false;
-        if (element.clientHeight === 0 || element.clientWidth === 0) return false;
-        var overflow = $(element).css('overflow') || element.style.overflow;
-        return overflow !== 'hidden' && overflow !== 'visible';
+    function getWheelEventTarget(mousePos) {
+        var hoverElement = document.elementFromPoint(mousePos[0], mousePos[1]);
+        return hoverElement && div.contains(hoverElement) ? hoverElement : div;
     }
 
-    function hasScrollableParent (element, until) {
-        if (scrollable(element)) return true;
-        if (!element.parentNode || element === until || element.isSameNode(until)) return false;
-        return hasScrollableParent(element.parentNode, until);
-    }
-
-    function getWheelEventTarget() {
-        return div.querySelector('.widget-scene-canvas') || div;
-    }
-
-    if (type === ScrollableMap.TYPE_IFRAME) {
-        setTimeout(function () {
-            Message.extension.sendMessage('listenBodyScrolls', {});
-        }, 500);
-        Message.extension.addListener(function(action, data, sender, sendResponse){
-            if (action === 'setBodyScrolls') setBodyScrolls(data.scrolls);
-        });
-    } else {
-        window.addEventListener('resize', function () {
-            setBodyScrolls(hasScrollableParent(div.parentNode));
-        });
-        window.setTimeout(function () {
-            setBodyScrolls(hasScrollableParent(div.parentNode));
-        }, 1000);
-    }
-
-    function setBodyScrolls (scrolls) {
+    Scrollability.monitorScrollabilitySuper(div, function (scrolls) {
         bodyScrolls = scrolls;
         if (bodyScrolls) { hideControls(); } else { showControls(); }
+    });
+
+    function mapRequiresActivation () {
+        return self.type != ScrollableMap.TYPE_NEWWEB && bodyScrolls;
     }
-    function mapRequiresActivation () { return self.type != ScrollableMap.TYPE_NEWWEB && bodyScrolls; }
 
     var States = { idle: 0, scrolling: 1, zooming: 2 };
     var state = States.idle;
@@ -64,9 +37,19 @@ var ScrollableMap = function (div, type, id) {
         self.type = type;
         div.addEventListener('mousewheel', self.handleWheelEvent, true);
         window.addEventListener('keydown', self.handleKeyEvent, true);
+
+        window.addEventListener('mousemove', function (e) {
+            if (e.detail !== 88) {
+                var event = new CustomEvent('realmousemove', {'detail': [e.pageX, e.pageY]});
+                e.target.dispatchEvent(event);
+            }
+        }, true);
+
         initFrame(div);
-        // Fix for webkit bug
-        document.documentElement.style.overflow = 'scroll';
+
+        // Workaround for webkit bug w.r.t. tying scroll gestures with page back
+        // https://bugs.chromium.org/p/chromium/issues/detail?id=239731
+        // document.documentElement.style.overflow = 'scroll';
     };
 
     function initFrame (div) {
@@ -251,7 +234,7 @@ var ScrollableMap = function (div, type, id) {
         target.dispatchEvent(e);
     }
 
-    function zoomInFrame(mousePos, target){
+    function zoomInFrame(mousePos, target) {
         if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
         lastZoomTime = Date.now();
 
@@ -303,23 +286,25 @@ var ScrollableMap = function (div, type, id) {
     }
 
     self.handleKeyEvent = function (e) {
-        console.log('key event', e);
         // Chrome pinch gestures send these keyboard events (somehow)
         if (e.ctrlKey && e.keyCode == 187) {
             // +
             // console.log('zoom in', mousePosition, mouseTarget);
-            self.zoomIn(mousePosition, getWheelEventTarget(), e);
+            self.zoomIn(mousePosition, getWheelEventTarget(mousePosition), e);
         } else if (e.ctrlKey && e.keyCode == 189) {
             // -
             // console.log('zoom out');
-            self.zoomOut(mousePosition, getWheelEventTarget(), e);
+            self.zoomOut(mousePosition, getWheelEventTarget(mousePosition), e);
         }
     };
 
     var lastTarget;
     self.handleWheelEvent = function (e) {
         if (!pref('enabled') && !window.safari) return;
-        if ((self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API) && !pref('enableForFrames') ) return;
+        var isFrameType = self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API;
+        if (isFrameType && !pref('enableForFrames')) {
+            return;
+        }
         if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
             e.stopPropagation(); return;
         }
@@ -331,7 +316,7 @@ var ScrollableMap = function (div, type, id) {
         var isAccelerating = (!pref('isolateZoomScroll') ||
             accelero.isAccelerating(e.wheelDeltaX, e.wheelDeltaY, e.timeStamp));
 
-        if (hasScrollableParent(target, div)) {
+        if (Scrollability.hasScrollableParent(target, div)) {
             // something is scrollable, let's allow it to scroll
             return;
         }
@@ -385,7 +370,7 @@ var ScrollableMap = function (div, type, id) {
 
 function arrayContainsElement (array, element) {
     if (!array) return false;
-    for (var i in array) {
+    for (var i = 0; i < array.length; i++) {
         try {
             if (element.isSameNode(array[i])) return true;
         } catch (e) {

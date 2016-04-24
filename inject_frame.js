@@ -5,13 +5,6 @@ SM.inframe = (window.top !== window);
 
 var retries = 3;
 
-window.addEventListener('mousemove', function (e) {
-    if (e.detail !== 88) {
-        var event = new CustomEvent('realmousemove', {'detail': [e.pageX, e.pageY]});
-        e.target.dispatchEvent(event);
-    }
-}, true);
-
 function injectNewMaps() {
     var elem = document.querySelectorAll('#content-container')[0];
     if (elem) {
