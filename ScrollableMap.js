@@ -36,7 +36,7 @@ var ScrollableMap = function (div, type, id) {
     self.init = function (div, type) {
         self.type = type;
         div.addEventListener('mousewheel', self.handleWheelEvent, true);
-        window.addEventListener('keydown', self.handleKeyEvent, true);
+        // window.addEventListener('keydown', self.handleKeyEvent, true);
 
         window.addEventListener('mousemove', function (e) {
             if (e.detail !== 88) {
@@ -187,7 +187,7 @@ var ScrollableMap = function (div, type, id) {
     var lastZoomTime = 0;
     var MINZOOMINTERVAL = 200;
 
-    function createBackdoorWheelEvent(originalEvent) {
+    function createBackdoorWheelEvent(originalEvent, zoomIn) {
         if (originalEvent instanceof WheelEvent) {
             var init = {};
             for (var i in originalEvent) {
@@ -196,8 +196,9 @@ var ScrollableMap = function (div, type, id) {
             init.screenX = -88;
             init.screenY = -88;
 
-            if (pref('invertZoom')) {
-                init.deltaX *= -1;
+            if (zoomIn && init.deltaY > 0) {
+                init.deltaY *= -1;
+            } else if (!zoomIn && init.deltaY < 0) {
                 init.deltaY *= -1;
             }
 
@@ -210,7 +211,7 @@ var ScrollableMap = function (div, type, id) {
         // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
         // keep that behavior for Cmd-scrolling.
         if (originalEvent instanceof WheelEvent) {
-            e = createBackdoorWheelEvent(originalEvent);
+            e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */);
             target.dispatchEvent(e);
             return;
         }
@@ -248,7 +249,7 @@ var ScrollableMap = function (div, type, id) {
         // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
         // keep that behavior for Cmd-scrolling.
         if (originalEvent instanceof WheelEvent) {
-            e = createBackdoorWheelEvent(originalEvent);
+            e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */);
             target.dispatchEvent(e);
             return;
         }
@@ -285,18 +286,21 @@ var ScrollableMap = function (div, type, id) {
         target.dispatchEvent(secondRightClick);
     }
 
-    self.handleKeyEvent = function (e) {
-        // Chrome pinch gestures send these keyboard events (somehow)
-        if (e.ctrlKey && e.keyCode == 187) {
-            // +
-            // console.log('zoom in', mousePosition, mouseTarget);
-            self.zoomIn(mousePosition, getWheelEventTarget(mousePosition), e);
-        } else if (e.ctrlKey && e.keyCode == 189) {
-            // -
-            // console.log('zoom out');
-            self.zoomOut(mousePosition, getWheelEventTarget(mousePosition), e);
-        }
-    };
+    // Not needed anymore because Chrome now sends ctrl+wheel event for pinch gestures
+    // TODO: check what happens for Safari
+    //
+    // self.handleKeyEvent = function (e) {
+    //     // Hook for BetterTouchTools to turn pinch gestures into key events
+    //     if (e.ctrlKey && e.keyCode == 187) {
+    //         // +
+    //         // console.log('zoom in', mousePosition, mouseTarget);
+    //         self.zoomIn(mousePosition, getWheelEventTarget(mousePosition), e);
+    //     } else if (e.ctrlKey && e.keyCode == 189) {
+    //         // -
+    //         // console.log('zoom out');
+    //         self.zoomOut(mousePosition, getWheelEventTarget(mousePosition), e);
+    //     }
+    // };
 
     var lastTarget;
     self.handleWheelEvent = function (e) {
@@ -327,14 +331,16 @@ var ScrollableMap = function (div, type, id) {
             lastTarget = target;
 
 
-        var destinationState = (e.metaKey || e.ctrlKey) ? States.zooming : States.scrolling;
+        var destinationState = (e.metaKey || e.ctrlKey || e.altKey) ? States.zooming : States.scrolling;
         if (isAccelerating || state == destinationState) {
             state = destinationState;
             var mousePos = [e.clientX, e.clientY];
 
             switch (state) {
                 case States.zooming:
-                    var factor = (pref('invertZoom')) ? -1 : 1;
+                    // In Chrome, ctrl + wheel => pinch gesture. Do not invert zoom for the pinch
+                    // gesture.
+                    var factor = (pref('invertZoom') && !(window.chrome && e.ctrlKey)) ? -1 : 1;
                     if (window.safari && e.webkitDirectionInvertedFromDevice) {
                         factor *= -1;
                     }

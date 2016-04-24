@@ -54,7 +54,7 @@ var Options = {};
         if (navigator.userAgent.indexOf('Macintosh')) {
             box.append('<div id="zoomhint">Cmd-scroll to zoom</div>');
         } else {
-            box.append('<div id="zoomhint">Ctrl-scroll to zoom</div>');
+            box.append('<div id="zoomhint">Alt-scroll to zoom</div>');
         }
     };
 
