@@ -1,71 +1,122 @@
 (function (){
-    init();
 
     function init() {
-        function newMapNotifier (Map) {
+        function newMapNotifier (parent, propname, Map) {
+            if (Map['..ScrollMaps']) return;
+
             var newMap = function (container, opts) {
                 if (opts) opts.scrollwheel = true; // force mousewheel
                 var uid = Math.floor(Math.random() * 100000);
                 container.dispatchEvent(createEvent('mapsFound', uid));
                 container.setAttribute('data-scrollmaps', uid);
-                var mapobj = new Map(container, opts);
+                Map.call(this, container, opts);
 
-                if (typeof mapobj.enableScrollWheelZoom == 'function') {
-                    mapobj.enableScrollWheelZoom();
-                    mapobj.disableScrollWheelZoom = function () { console.log('cannot disable scroll wheel'); };
+                if (typeof this.enableScrollWheelZoom === 'function') {
+                    this.enableScrollWheelZoom();
+                    this.disableScrollWheelZoom = function () { console.log('cannot disable scroll wheel'); };
                 }
-                return mapobj;
+                return this;
             };
+            newMap['..ScrollMaps'] = true;
             newMap.prototype = Map.prototype;
-            return newMap;
+            parent[propname] = newMap;
         }
-        swapFunctions ('GMap', newMapNotifier);
-        swapFunctions ('GMap2', newMapNotifier);
-        swapFunctions ('google.maps.Map2', newMapNotifier);
-        swapFunctions ('google.maps.Map', newMapNotifier);
+        onChainedPropertySet('GMap', newMapNotifier);
+        onChainedPropertySet('GMap2', newMapNotifier);
+        onChainedPropertySet('google.maps.Map2', newMapNotifier);
+        onChainedPropertySet('google.maps.Map', newMapNotifier);
     }
 
-    function swapFunctions (chain, fn) {
+    // Monitor a chain of properties (foo.bar.baz.quuz). The callback will be called immediately
+    // with the value if the entire chain is already set.
+    function onChainedPropertySet(chain, fn) {
         if (typeof chain === 'string') chain = chain.split('.');
         if (chain[0] === 'window') chain.shift();
-        swapFunctionsRecursive(window, chain, fn);
+        onChainedPropertySetRecursive(window, chain, fn);
     }
 
-    function swapFunctionsRecursive (object, chain, fn) {
+    function onChainedPropertySetRecursive (object, chain, fn) {
         if (typeof object[chain[0]] == 'undefined') {
-            onPropertySet (object, chain, fn);
+            // Add monitor for property set if not defined yet
+            onPropertySet(object, chain, fn);
         } else {
             if (chain.length > 1) {
-                swapFunctionsRecursive (object[chain.shift()], chain, fn);
+                // Expand the chain and listen for the next property down the chain
+                onChainedPropertySetRecursive(object[chain.shift()], chain, fn);
             } else {
-                object[chain[0]] = fn(object[chain[0]]);
+                // Last item in the chain is set, simply call the callback function
+                fn(object, chain[0], object[chain[0]]);
             }
         }
     }
 
+    // Registers a callback when the given chain of properties is set. This does not call the
+    // callback immediately if there is already a value.
     function onPropertySet (object, properties, fn) {
-        createFunction(0)(object);
+        createFunction(0)(undefined, undefined, object);
 
         function createFunction (i){
             if (i >= properties.length) return fn;
-            return function (obj) {
-                onImmediatePropertySet(obj, properties[i], createFunction(i+1));
-                return obj;
+            return function (parent, propname, value) {
+                onImmediatePropertySet(value, properties[i], createFunction(i+1));
             };
         }
     }
 
+    var ListeningPropertyDescriptor = function (parent, propertyName, realDescriptor) {
+        this.propertyName = name;
+        this.configurable = true;
+        // Should this be enumerable only when real value is set?
+        this.enumerable = true;
+        this.listeners = [];
+        this.realDescriptor = Object.getOwnPropertyDescriptor(parent, propertyName);
+        if (!this.realDescriptor) this.realValue = parent[propertyName];
+        this.parent = parent;
+    };
+
+    ListeningPropertyDescriptor.prototype.set = function(realValue) {
+        if (this.realDescriptor) {
+            this.realDescriptor.set(realValue);
+            return;
+        }
+        this.realValue = realValue;
+
+        for (var i = 0; i < this.listeners.length; i++) {
+            this.listeners[i](this.parent, this.propertyName, realValue);
+        }
+    };
+
+    ListeningPropertyDescriptor.prototype.get = function() {
+        if (this.realDescriptor) {
+            return this.realDescriptor.get();
+        }
+        return this.realValue;
+    };
+
+    ListeningPropertyDescriptor.prototype.addListener = function(listener) {
+        this.listeners.push(listener);
+    };
+
+    ListeningPropertyDescriptor.prototype.getDescriptor = function() {
+        return {
+            set: this.set.bind(this),
+            get: this.get.bind(this),
+            configurable: this.configurable,
+            enumerable: this.enumerable
+        };
+    };
+
+    // Listen to "property" in the given "object", calling "fn" when the property is set.
     function onImmediatePropertySet (object, property, fn) {
-        var descriptor = Object.getOwnPropertyDescriptor(object, property);
-        var setter = (descriptor) ? 
-              function (value) { descriptor.set(value); this['..' + property] = fn(value); }
-            : function (value) { this['..' + property] = fn(value); };
-        Object.defineProperty(object, property, {
-            get: function () { return this['..' + property]; },
-            set: setter,
-            configurable: true,
-            enumerable: true
-        });
+        var listeningDescriptor = object['..' + property];
+        if (!listeningDescriptor) {
+            listeningDescriptor = new ListeningPropertyDescriptor(object, property);
+            Object.defineProperty(object, property, listeningDescriptor.getDescriptor());
+            // Store the descriptor in the object, since native descriptors will remove its type
+            // and extra properties.
+            object['..' + property] = listeningDescriptor;
+        }
+        listeningDescriptor.addListener(fn);
     }
 
     function createEvent(type, detail) {
@@ -73,4 +124,7 @@
         event.initCustomEvent(type, true, false, detail);
         return event;
     }
+
+    init();
+
 })();
