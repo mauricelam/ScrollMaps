@@ -14,7 +14,7 @@ var PrefMaker = new (function _PrefMaker(){
         }
         var div = $('<div class="PMcheckbox"></div>');
         var box = $('<input id="PMcheckbox_' + key + '" type="checkbox" />');
-        var label = $('<label for="PMcheckbox_' + key + '">' + label + '</label>');
+        label = $('<label for="PMcheckbox_' + key + '">' + label + '</label>');
         div.append(box).append(label);
         box.click(updateOption);
         label.click(updateOption);

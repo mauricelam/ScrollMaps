@@ -5,14 +5,12 @@ var Options = {};
     Options.createOptions = function(){
         var box = $('#checkboxes');
 
-        if (window.safari) {
-            var enabledCheckbox = PrefMaker.makeBooleanCheckbox(
-                'enabled',
-                'Enable on this computer',
-                'Enable this extension individually on different machines'
-            );
-            box.append(enabledCheckbox);
-        }
+        var enabledCheckbox = PrefMaker.makeBooleanCheckbox(
+            'enabled',
+            'Enable on this computer',
+            'Enable this extension individually on different machines'
+        );
+        box.append(enabledCheckbox);
 
         var enableForFramesCheckbox = PrefMaker.makeBooleanCheckbox('enableForFrames',
             'Enable in embedded maps',
@@ -41,8 +39,8 @@ var Options = {};
 
         var frameRequireFocusCheckbox = PrefMaker.makeBooleanCheckbox(
             'frameRequireFocus',
-            'Embedded maps require activation',
-            'Disable maps scrolling until map is clicked'
+            'Require click to scroll embedded maps',
+            'Prioritize page scrolling until embedded map is clicked'
         );
         box.append(frameRequireFocusCheckbox);
 
@@ -53,7 +51,11 @@ var Options = {};
         );
         box.append(isolateZoomScrollCheckbox);
 
-        box.append('<div id="zoomhint">Cmd-scroll to zoom</div>');
+        if (navigator.userAgent.indexOf('Macintosh')) {
+            box.append('<div id="zoomhint">Cmd-scroll to zoom</div>');
+        } else {
+            box.append('<div id="zoomhint">Alt-scroll to zoom</div>');
+        }
     };
 
     $(function(){

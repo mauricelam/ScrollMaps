@@ -5,15 +5,8 @@ SM.inframe = (window.top !== window);
 
 var retries = 3;
 
-window.addEventListener('mousemove', function (e) {
-    if (e.detail !== 88) {
-        var event = new Event('realmousemove');
-        window.dispatchEvent(event);
-    }
-}, true);
-
 function injectNewMaps() {
-    var elem = document.querySelectorAll('.widget-scene')[0];
+    var elem = document.getElementById('content-container');
     if (elem) {
         new ScrollableMap(elem, ScrollableMap.TYPE_NEWWEB, SM.count++);
     } else if (retries > 0) {
@@ -24,7 +17,7 @@ function injectNewMaps() {
 }
 
 function injectFrame() {
-    // dont activate this thing at all if the frame has no map
+    // Don't activate this thing at all if the frame has no map
     var elem = document.getElementById('map');
     if (elem) {
         new ScrollableMap(elem, (SM.inframe) ? ScrollableMap.TYPE_IFRAME : ScrollableMap.TYPE_WEB, SM.count++);
