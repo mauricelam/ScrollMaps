@@ -210,6 +210,8 @@ var ScrollableMap = function (div, type, id) {
             }
 
             return new WheelEvent('wheel', init);
+        } else {
+            console.log('Trying to create backdoor event out of non-wheel event', originalEvent);
         }
     }
 
@@ -322,7 +324,7 @@ var ScrollableMap = function (div, type, id) {
         if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
             e.stopPropagation(); return;
         }
-        
+
         if (e.screenX == -88 && e.screenY == -88) {
             return; // backdoor for zooming
         }
@@ -355,14 +357,15 @@ var ScrollableMap = function (div, type, id) {
                     if (window.safari && e.webkitDirectionInvertedFromDevice) {
                         factor *= -1;
                     }
-                    if (e.wheelDeltaY * factor > 3){
+                    if (e.deltaY * factor < 0){
                         self.zoomIn(mousePos, target, e);
-                    } else if (e.wheelDeltaY * factor < -3){
+                    } else if (e.deltaY * factor > 0){
                         self.zoomOut(mousePos, target, e);
                     }
                     break;
                 case States.scrolling:
                     setTimer('flushAverage', function () { averageX.flush(); averageY.flush(); }, 200);
+                    // TODO: replace wheelDelta with delta for standards compliance
                     averageX.push(e.wheelDeltaX); averageY.push(e.wheelDeltaY);
 
                     var speedFactor = ( pref('scrollSpeed') / 100 ) * ( pref('invertScroll') ? -1 : 1 );
