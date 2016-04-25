@@ -35,7 +35,7 @@ var ScrollableMap = function (div, type, id) {
     
     self.init = function (div, type) {
         self.type = type;
-        div.addEventListener('mousewheel', self.handleWheelEvent, true);
+        div.addEventListener('wheel', self.handleWheelEvent, true);
         // window.addEventListener('keydown', self.handleKeyEvent, true);
 
         window.addEventListener('mousemove', function (e) {
@@ -103,19 +103,22 @@ var ScrollableMap = function (div, type, id) {
 
         if (!pretendingMouseDown) {
             var downEvent = document.createEvent('MouseEvents');
-            downEvent.initMouseEvent('mousedown', true, true, window, 1, 0, 0, point[0], point[1], false, false, false, false, 0, null);
+            downEvent.initMouseEvent('mousedown', true, true, window, 1, 0, 0, point[0], point[1],
+                false, false, false, false, 0, null);
             target.dispatchEvent(downEvent);
             pretendingMouseDown = true;
         }
 
         var moveEvent = document.createEvent('MouseEvents');
-        moveEvent.initMouseEvent('mousemove', true, false, window, 88, 0, 0, point[0]+dx, point[1]+dy, false, false, false, false, 0, null);
+        moveEvent.initMouseEvent('mousemove', true, false, window, 88, 0, 0,
+            point[0]+dx, point[1]+dy, false, false, false, false, 0, null);
         target.dispatchEvent(moveEvent);
 
         window.clearTimeout(timer);
         timer = window.setTimeout(function () {
             var upEvent = document.createEvent('MouseEvents');
-            upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, gpoint[0], gpoint[1], false, false, false, false, 0, null);
+            upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, gpoint[0], gpoint[1],
+                false, false, false, false, 0, null);
             target.dispatchEvent(upEvent);
             pretendingMouseDown = false;
         }, 100);
@@ -131,7 +134,8 @@ var ScrollableMap = function (div, type, id) {
 
         if (self.type !== ScrollableMap.TYPE_NEWWEB || !lastTarget) return;
         var upEvent = document.createEvent('MouseEvents');
-        upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, gpoint[0], gpoint[1], false, false, false, false, 0, null);
+        upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, gpoint[0], gpoint[1],
+            false, false, false, false, 0, null);
         lastTarget.dispatchEvent(upEvent);
         pretendingMouseDown = false;
     };
@@ -148,15 +152,18 @@ var ScrollableMap = function (div, type, id) {
         }
 
         var downEvent = document.createEvent('MouseEvents');
-        downEvent.initMouseEvent('mousedown', true, true, window, 1, 0, 0, point[0], point[1], false, false, false, false, 0, null);
+        downEvent.initMouseEvent('mousedown', true, true, window, 1, 0, 0, point[0], point[1],
+            false, false, false, false, 0, null);
         target.dispatchEvent(downEvent);
 
         var moveEvent = document.createEvent('MouseEvents');
-        moveEvent.initMouseEvent('mousemove', true, true, window, 1, 0, 0, point[0]+dx, point[1]+dy, false, false, false, false, 0, null);
+        moveEvent.initMouseEvent('mousemove', true, true, window, 1, 0, 0, point[0]+dx, point[1]+dy,
+            false, false, false, false, 0, null);
         target.dispatchEvent(moveEvent);
 
         var upEvent = document.createEvent('MouseEvents');
-        upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, point[0]+dx, point[1]+dy, false, false, false, false, 0, null);
+        upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, point[0]+dx, point[1]+dy,
+            false, false, false, false, 0, null);
         target.dispatchEvent(upEvent);
     };
 
@@ -240,7 +247,8 @@ var ScrollableMap = function (div, type, id) {
         lastZoomTime = Date.now();
 
         var event = document.createEvent('MouseEvents');
-        event.initMouseEvent('dblclick', true, true, window, 2, 0, 0, mousePos[0], mousePos[1], false, false, false, false, 0, null);
+        event.initMouseEvent('dblclick', true, true, window, 2, 0, 0, mousePos[0], mousePos[1],
+            false, false, false, false, 0, null);
         target.dispatchEvent(event);
     }
 
@@ -278,11 +286,13 @@ var ScrollableMap = function (div, type, id) {
         lastZoomTime = Date.now();
 
         var firstRightClick = document.createEvent('MouseEvents');
-        firstRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0, mousePos[0], mousePos[1], false, false, false, false, 2, null);
+        firstRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0,
+            mousePos[0], mousePos[1], false, false, false, false, 2, null);
         target.dispatchEvent(firstRightClick);
 
         var secondRightClick = document.createEvent('MouseEvents');
-        secondRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0, mousePos[0], mousePos[1], false, false, false, false, 2, null);
+        secondRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0,
+            mousePos[0], mousePos[1], false, false, false, false, 2, null);
         target.dispatchEvent(secondRightClick);
     }
 
@@ -312,6 +322,7 @@ var ScrollableMap = function (div, type, id) {
         if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
             e.stopPropagation(); return;
         }
+        
         if (e.screenX == -88 && e.screenY == -88) {
             return; // backdoor for zooming
         }
@@ -396,6 +407,7 @@ ScrollableMap.TYPE_WEB = 0;
 ScrollableMap.TYPE_IFRAME = 1;
 ScrollableMap.TYPE_API = 2;
 ScrollableMap.TYPE_NEWWEB = 3;
+ScrollableMap.TYPE_STREETVIEW_API = 4;
 
 var SMLowPassFilter = function SMLowPassFilter () { this.init.apply(this, arguments); };
 SMLowPassFilter.SMOOTHING = 0.5;

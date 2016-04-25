@@ -1,4 +1,10 @@
-(function (){
+(function () {
+
+    var TYPE_WEB = 0;
+    var TYPE_IFRAME = 1;
+    var TYPE_API = 2;
+    var TYPE_NEWWEB = 3;
+    var TYPE_STREETVIEW_API = 4;
 
     function init() {
         function newMapNotifier (parent, propname, Map) {
@@ -7,7 +13,7 @@
             var newMap = function (container, opts) {
                 if (opts) opts.scrollwheel = true; // force mousewheel
                 var uid = Math.floor(Math.random() * 100000);
-                container.dispatchEvent(createEvent('mapsFound', uid));
+                container.dispatchEvent(createEvent('mapsFound', {'id': uid, 'type': TYPE_API}));
                 container.setAttribute('data-scrollmaps', uid);
                 Map.call(this, container, opts);
 
@@ -15,6 +21,7 @@
                     this.enableScrollWheelZoom();
                     this.disableScrollWheelZoom = function () { console.log('cannot disable scroll wheel'); };
                 }
+
                 return this;
             };
             newMap['..ScrollMaps'] = true;
@@ -25,6 +32,31 @@
         onChainedPropertySet('GMap2', newMapNotifier);
         onChainedPropertySet('google.maps.Map2', newMapNotifier);
         onChainedPropertySet('google.maps.Map', newMapNotifier);
+
+        function newStreetViewNotifier(parent, propname, StreetView) {
+            if (StreetView['..ScrollMaps']) return;
+
+            var newStreetView = function (container, opts) {
+                if (opts) opts.scrollwheel = true; // force mousewheel
+                var uid = Math.floor(Math.random() * 100000);
+                container.dispatchEvent(createEvent('mapsFound',
+                        {'id': uid, 'type': TYPE_STREETVIEW_API}));
+                container.setAttribute('data-scrollmaps', uid);
+                StreetView.call(this, container, opts);
+
+                return this;
+            };
+            newStreetView['..ScrollMaps'] = true;
+            newStreetView.prototype = StreetView.prototype;
+            parent[propname] = newStreetView;
+        }
+        onChainedPropertySet('google.maps.StreetViewPanorama', newStreetViewNotifier);
+    }
+
+    function createEvent(type, detail) {
+        var event = document.createEvent('CustomEvent');
+        event.initCustomEvent(type, true, false, detail);
+        return event;
     }
 
     // Monitor a chain of properties (foo.bar.baz.quuz). The callback will be called immediately
@@ -32,20 +64,21 @@
     function onChainedPropertySet(chain, fn) {
         if (typeof chain === 'string') chain = chain.split('.');
         if (chain[0] === 'window') chain.shift();
-        onChainedPropertySetRecursive(window, chain, fn);
-    }
+        recursive(window);
 
-    function onChainedPropertySetRecursive (object, chain, fn) {
-        if (typeof object[chain[0]] == 'undefined') {
-            // Add monitor for property set if not defined yet
-            onPropertySet(object, chain, fn);
-        } else {
-            if (chain.length > 1) {
-                // Expand the chain and listen for the next property down the chain
-                onChainedPropertySetRecursive(object[chain.shift()], chain, fn);
+        function recursive(object) {
+            if (typeof object[chain[0]] == 'undefined') {
+                // Add monitor for property set if not defined yet
+                onPropertySet(object, chain, fn);
             } else {
-                // Last item in the chain is set, simply call the callback function
-                fn(object, chain[0], object[chain[0]]);
+                if (chain.length > 1) {
+                    // Expand the chain and listen for the next property down the chain
+                    recursive(object[chain.shift()]);
+                } else {
+                    // Last item in the chain is set, simply call the callback function
+                    fn(object, chain[0], object[chain[0]]);
+                    console.log('Failed to inject script before Google Maps JS is loaded');
+                }
             }
         }
     }
@@ -58,13 +91,13 @@
         function createFunction (i){
             if (i >= properties.length) return fn;
             return function (parent, propname, value) {
-                onImmediatePropertySet(value, properties[i], createFunction(i+1));
+                ListeningPropertyDescriptor.attach(value, properties[i], createFunction(i+1));
             };
         }
     }
 
     var ListeningPropertyDescriptor = function (parent, propertyName, realDescriptor) {
-        this.propertyName = name;
+        this.propertyName = propertyName;
         this.configurable = true;
         // Should this be enumerable only when real value is set?
         this.enumerable = true;
@@ -107,7 +140,7 @@
     };
 
     // Listen to "property" in the given "object", calling "fn" when the property is set.
-    function onImmediatePropertySet (object, property, fn) {
+    ListeningPropertyDescriptor.attach = function (object, property, fn) {
         var listeningDescriptor = object['..' + property];
         if (!listeningDescriptor) {
             listeningDescriptor = new ListeningPropertyDescriptor(object, property);
@@ -117,13 +150,8 @@
             object['..' + property] = listeningDescriptor;
         }
         listeningDescriptor.addListener(fn);
-    }
-
-    function createEvent(type, detail) {
-        var event = document.createEvent('CustomEvent');
-        event.initCustomEvent(type, true, false, detail);
-        return event;
-    }
+        return listeningDescriptor;
+    };
 
     init();
 
