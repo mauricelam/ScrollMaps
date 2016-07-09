@@ -1,0 +1,70 @@
+{
+  "name": "ScrollMaps",
+  "version": "2.1",
+  "manifest_version": 2,
+  "minimum_chrome_version": "35",
+  "description": "Allow you to use two finger scroll on your Mac trackpad in Google Maps. ",
+  "content_scripts": [
+    {
+      "matches": "<all_google_maps_urls>",
+      "js": [
+        "jquery.js",
+        "Shim.js",
+        "inject.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": "<all_google_maps_urls>",
+      "js": [
+        "jquery.js",
+        "Shim.js",
+        "prefreader.js",
+        "inject_frame.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "jquery.js",
+        "Shim.js",
+        "prefreader.js",
+        "ScrollableMap.js",
+        "global_inject.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "scripts": [
+      "jquery.js",
+      "Shim.js",
+      "pref.js",
+      "background.js"
+    ],
+    "persistent": false
+  },
+  "web_accessible_resources": [
+    "images/button_active.png",
+    "images/button_inactive.png",
+    "inject_content.js"
+  ],
+  "options_page": "options/options.html",
+  "icons": {
+    "16": "images/maps_16.png",
+    "48": "images/maps_48.png",
+    "128": "images/maps_128.png"
+  },
+  "permissions": [
+    "tabs",
+    "*://maps.google.com/",
+    "*://www.google.com/maps/",
+    "<all_urls>"
+  ]
+}
