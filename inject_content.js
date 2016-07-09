@@ -154,5 +154,7 @@
     };
 
     init();
+    // The script is loaded and listeners are registered. Clean up by removing this tag
+    document.documentElement.removeChild(document.getElementById('..scrollmaps_inject'));
 
 })();

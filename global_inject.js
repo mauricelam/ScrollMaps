@@ -10,10 +10,11 @@ SM.updateBodyScrolls = function () {
     }
 };
 
-SM.injectScript = function(src) {
+SM.injectScript = function(host, src) {
     var script = document.createElement('script');
+    script.setAttribute('id', '..scrollmap_inject');
     script.src = Extension.getURL(src);
-    return script;
+    host.insertBefore(script, host.firstChild);
 };
 
 
@@ -111,33 +112,36 @@ function getIframeForWindow(win) {
 
 // Init
 
-document.documentElement.insertBefore(SM.injectScript('inject_content.js'), document.documentElement.firstChild);
 
-window.addEventListener('mapsFound', function (event) {
-    var map = event.target;
-    new ScrollableMap(map, ScrollableMap.TYPE_API, SM.count++);
-}, false);
+if (document.URL.split('.').pop(0).toLowerCase() != 'pdf') {
+    SM.injectScript(document.documentElement, 'inject_content.js');
 
-// Message.extension.addListener(function (action, data, sender, sendResponse) {
-//     switch (action) {
-//     }
-// });
+    window.addEventListener('mapsFound', function (event) {
+        var map = event.target;
+        new ScrollableMap(map, ScrollableMap.TYPE_API, SM.count++);
+    }, false);
 
-window.addEventListener('message', function(message) {
-    if (message.data.action === 'monitorScroll') {
-        var iframe = getIframeForWindow(message.source);
+    window.addEventListener('message', function(message) {
+        if (message.data.action === 'monitorScroll') {
+            var iframe = getIframeForWindow(message.source);
 
-        if (!iframe) {
-            console.warn('No matching iframe for message', message);
-            return;
-        }
-
-        Scrollability.monitorScrollabilitySuper(iframe, function (scrollable) {
-            if (scrollable) {
-                message.source.postMessage({'action': 'pageNeedsScrolling', 'value': true}, '*');
-            } else {
-                message.source.postMessage({'action': 'pageNeedsScrolling', 'value': false}, '*');
+            if (!iframe) {
+                console.warn('No matching iframe for message', message);
+                return;
             }
-        });
-    }
-});
+
+            Scrollability.monitorScrollabilitySuper(iframe, function (scrollable) {
+                if (scrollable) {
+                    message.source.postMessage({'action': 'pageNeedsScrolling', 'value': true}, '*');
+                } else {
+                    message.source.postMessage({'action': 'pageNeedsScrolling', 'value': false}, '*');
+                }
+            });
+        }
+    });
+
+} else {
+    // Don't run on PDF files. There seems to be a conflict between the built-in Chrome PDF plugin
+    // and how the script tag is injected.
+    console.log('ScrollMaps: Skipping PDF file');
+}
