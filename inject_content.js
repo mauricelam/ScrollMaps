@@ -13,8 +13,8 @@
             var newMap = function (container, opts) {
                 if (opts) opts.scrollwheel = true; // force mousewheel
                 var uid = Math.floor(Math.random() * 100000);
-                container.dispatchEvent(createEvent('mapsFound', {'id': uid, 'type': TYPE_API}));
                 container.setAttribute('data-scrollmaps', uid);
+                dispatchEventWhenAttached(container, 'mapsFound', {'id': uid, 'type': TYPE_API});
                 Map.call(this, container, opts);
 
                 if (typeof this.enableScrollWheelZoom === 'function') {
@@ -39,8 +39,8 @@
             var newStreetView = function (container, opts) {
                 if (opts) opts.scrollwheel = true; // force mousewheel
                 var uid = Math.floor(Math.random() * 100000);
-                container.dispatchEvent(createEvent('mapsFound',
-                        {'id': uid, 'type': TYPE_STREETVIEW_API}));
+                dispatchEventWhenAttached(container, 'mapsFound',
+                    {'id': uid, 'type': TYPE_STREETVIEW_API});
                 container.setAttribute('data-scrollmaps', uid);
                 StreetView.call(this, container, opts);
 
@@ -53,10 +53,19 @@
         onChainedPropertySet('google.maps.StreetViewPanorama', newStreetViewNotifier);
     }
 
-    function createEvent(type, detail) {
-        var event = document.createEvent('CustomEvent');
-        event.initCustomEvent(type, true, false, detail);
-        return event;
+    function dispatchEventWhenAttached(elem, type, detail) {
+        var e = new CustomEvent(type, { 'detail': detail });
+        if (document.documentElement.contains(elem)) {
+            elem.dispatchEvent(e);
+        } else {
+            var mutationObserver = new MutationObserver(function (records, observer) {
+                if (document.documentElement.contains(elem)) {
+                    elem.dispatchEvent(e);
+                    mutationObserver.disconnect();
+                }
+            });
+            mutationObserver.observe(document, { childList: true, subtree: true });
+        }
     }
 
     // Monitor a chain of properties (foo.bar.baz.quuz). The callback will be called immediately
@@ -154,7 +163,11 @@
     };
 
     init();
+
     // The script is loaded and listeners are registered. Clean up by removing this tag
-    document.documentElement.removeChild(document.getElementById('..scrollmaps_inject'));
+    var scriptElem = document.getElementById('..scrollmaps_inject');
+    if (scriptElem) {
+        document.documentElement.removeChild(scriptElem);
+    }
 
 })();

@@ -12,7 +12,7 @@ SM.updateBodyScrolls = function () {
 
 SM.injectScript = function(host, src) {
     var script = document.createElement('script');
-    script.setAttribute('id', '..scrollmap_inject');
+    script.setAttribute('id', '..scrollmaps_inject');
     script.src = Extension.getURL(src);
     host.insertBefore(script, host.firstChild);
 };
