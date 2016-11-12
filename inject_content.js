@@ -150,6 +150,7 @@
 
     // Listen to "property" in the given "object", calling "fn" when the property is set.
     ListeningPropertyDescriptor.attach = function (object, property, fn) {
+        if (typeof object !== 'object') return;
         var listeningDescriptor = object['..' + property];
         if (!listeningDescriptor) {
             listeningDescriptor = new ListeningPropertyDescriptor(object, property);
