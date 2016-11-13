@@ -179,25 +179,25 @@ var ScrollableMap = function (div, type, id) {
     };
 
     self.zoomIn = function (mousePos, target, originalEvent) {
-        if (self.type == ScrollableMap.TYPE_IFRAME) {
-            zoomInFrame(mousePos, target, originalEvent);
-        } else {
+        // if (self.type === ScrollableMap.TYPE_IFRAME || self.type === ScrollableMap.TYPE_API) {
+            // zoomInFrame(mousePos, target, originalEvent);
+        // } else {
             zoomInWeb(mousePos, target, originalEvent);
-        }
+        // }
     };
 
     self.zoomOut = function (mousePos, target, originalEvent) {
-        if (self.type == ScrollableMap.TYPE_IFRAME) {
-            zoomOutFrame(mousePos, target, originalEvent);
-        } else {
+        // if (self.type === ScrollableMap.TYPE_IFRAME || self.type === ScrollableMap.TYPE_API) {
+            // zoomOutFrame(mousePos, target, originalEvent);
+        // } else {
             zoomOutWeb(mousePos, target, originalEvent);
-        }
+        // }
     };
 
     var lastZoomTime = 0;
     var MINZOOMINTERVAL = 200;
 
-    function createBackdoorWheelEvent(originalEvent, zoomIn) {
+    function createBackdoorWheelEvent(originalEvent, zoomIn, scale) {
         if (originalEvent instanceof WheelEvent) {
             var init = {};
             for (var i in originalEvent) {
@@ -211,6 +211,7 @@ var ScrollableMap = function (div, type, id) {
             } else if (!zoomIn && init.deltaY < 0) {
                 init.deltaY *= -1;
             }
+            init.deltaY *= scale || 1;
 
             return new WheelEvent('wheel', init);
         } else {
@@ -223,7 +224,10 @@ var ScrollableMap = function (div, type, id) {
         // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
         // keep that behavior for Cmd-scrolling.
         if (originalEvent instanceof WheelEvent) {
-            e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */);
+            // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
+            // have much less "delta" than scroll
+            var scale = type !== ScollableMap.TYPE_NEWWEB && originalEvent.ctrlKey ? 3 : 1;
+            e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
             target.dispatchEvent(e);
             return;
         }
@@ -247,22 +251,25 @@ var ScrollableMap = function (div, type, id) {
         target.dispatchEvent(e);
     }
 
-    function zoomInFrame(mousePos, target) {
-        if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
-        lastZoomTime = Date.now();
+    // function zoomInFrame(mousePos, target) {
+    //     if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
+    //     lastZoomTime = Date.now();
 
-        var event = document.createEvent('MouseEvents');
-        event.initMouseEvent('dblclick', true, true, window, 2, 0, 0, mousePos[0], mousePos[1],
-            false, false, false, false, 0, null);
-        target.dispatchEvent(event);
-    }
+    //     var event = document.createEvent('MouseEvents');
+    //     event.initMouseEvent('dblclick', true, true, window, 2, 0, 0, mousePos[0], mousePos[1],
+    //         false, false, false, false, 0, null);
+    //     target.dispatchEvent(event);
+    // }
 
     function zoomOutWeb (mousePos, target, originalEvent) {
         var e;
         // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
         // keep that behavior for Cmd-scrolling.
         if (originalEvent instanceof WheelEvent) {
-            e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */);
+            // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
+            // have much less "delta" than scroll
+            var scale = type !== ScollableMap.TYPE_NEWWEB && originalEvent.ctrlKey ? 3 : 1;
+            e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
             target.dispatchEvent(e);
             return;
         }
@@ -286,20 +293,20 @@ var ScrollableMap = function (div, type, id) {
         target.dispatchEvent(e);
     }
 
-    function zoomOutFrame(mousePos, target){
-        if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
-        lastZoomTime = Date.now();
+    // function zoomOutFrame(mousePos, target){
+    //     if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
+    //     lastZoomTime = Date.now();
 
-        var firstRightClick = document.createEvent('MouseEvents');
-        firstRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0,
-            mousePos[0], mousePos[1], false, false, false, false, 2, null);
-        target.dispatchEvent(firstRightClick);
+    //     var firstRightClick = document.createEvent('MouseEvents');
+    //     firstRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0,
+    //         mousePos[0], mousePos[1], false, false, false, false, 2, null);
+    //     target.dispatchEvent(firstRightClick);
 
-        var secondRightClick = document.createEvent('MouseEvents');
-        secondRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0,
-            mousePos[0], mousePos[1], false, false, false, false, 2, null);
-        target.dispatchEvent(secondRightClick);
-    }
+    //     var secondRightClick = document.createEvent('MouseEvents');
+    //     secondRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0,
+    //         mousePos[0], mousePos[1], false, false, false, false, 2, null);
+    //     target.dispatchEvent(secondRightClick);
+    // }
 
     var lastTarget;
     self.handleWheelEvent = function (e) {
