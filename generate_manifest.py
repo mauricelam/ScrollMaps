@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import json
+import sys
 
 GOOGLE_MAPS_CCTLDS = [
     "at", "au", "be", "br", "ca", "cf", "cg", "ch", "ci", "cl", "cn", "uk", "in", "jp", "th", "cz",
@@ -46,8 +47,13 @@ def replace_google_urls(obj):
     return obj
 
 if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print('Usage: generate_manifest.py <output> <version>')
+    output = sys.argv[1]
+    version = sys.argv[2]
     with open('manifest_template.json', 'r') as template:
-        with open('manifest.json', 'w') as manifest:
+        with open(output, 'w') as manifest:
             manif = json.load(template)
             replace_google_urls(manif)
+            manif['version'] = version
             json.dump(manif, manifest, indent=2)

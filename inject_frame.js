@@ -19,6 +19,7 @@ function injectNewMaps() {
 function injectFrame() {
     // Don't activate this thing at all if the frame has no map
     var elem = document.getElementById('map');
+    elem = elem || document.getElementById('mapDiv');
     if (elem) {
         new ScrollableMap(elem, (SM.inframe) ? ScrollableMap.TYPE_IFRAME : ScrollableMap.TYPE_WEB, SM.count++);
     } else if (!SM.inframe) {
