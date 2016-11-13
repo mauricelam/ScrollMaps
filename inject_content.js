@@ -6,21 +6,68 @@
     var TYPE_NEWWEB = 3;
     var TYPE_STREETVIEW_API = 4;
 
+    function DOMDictionary(element) {
+        // TODO: Move this to a shadow DOM to give better abstraction?
+        this.element = element;
+    }
+
+    DOMDictionary.prototype.get = function (key) {
+        return this.element.getAttribute('data-scrollmaps-' + key);
+    };
+
+    DOMDictionary.prototype.set = function (key, value) {
+        this.element.setAttribute('data-scrollmaps-' + key, value);
+    };
+
     function init() {
         function newMapNotifier (parent, propname, Map) {
             if (Map['..ScrollMaps']) return;
 
             var newMap = function (container, opts) {
-                if (opts) opts.scrollwheel = true; // force mousewheel
-                var uid = Math.floor(Math.random() * 100000);
-                container.setAttribute('data-scrollmaps', uid);
-                dispatchEventWhenAttached(container, 'mapsFound', {'id': uid, 'type': TYPE_API});
+                var mapOpts = new DOMDictionary(container);
+                if (opts) {
+                    mapOpts.set('declare-draggable', !('draggable' in opts) || opts.draggable);
+                    mapOpts.set('declare-scrollwheel', !('scrollwheel' in opts) || opts.scrollwheel);
+                }
+                dispatchEventWhenAttached(container,
+                    'scrollmaps.mapsFound', {'type': TYPE_API});
                 Map.call(this, container, opts);
 
                 if (typeof this.enableScrollWheelZoom === 'function') {
+                    // Needs to be removed or overridden to avoid conflict with 'scrollwheel' logic below?
                     this.enableScrollWheelZoom();
                     this.disableScrollWheelZoom = function () { console.log('cannot disable scroll wheel'); };
                 }
+
+                Object.defineProperty(this, 'draggable', {
+                    get: function () {
+                        if (mapOpts.get('require-focus') === 'false') {
+                            return mapOpts.get('declare-draggable') !== 'false';
+                        } else {
+                            return true;
+                        }
+                    },
+                    set: function (value) {
+                        mapOpts.set('declare-draggable', value);
+                    }
+                });
+                Object.defineProperty(this, 'scrollwheel', {
+                    get: function() {
+                        if (mapOpts.get('require-focus') === 'false' &&
+                            mapOpts.get('declare-draggable') === 'false') {
+                            // If both draggable and scrollwheel is false, the app probably doesn't
+                            // intend that map to be interactive. In that case if the user has
+                            // require-focus set to false, then turn off scroll wheel to avoid
+                            // interfering with page scroll.
+                            return mapOpts.get('declare-scrollwheel') !== 'false';
+                        } else {
+                            return true;
+                        }
+                    },
+                    set: function (value) {
+                        mapOpts.set('declare-scrollwheel', value);
+                    }
+                });
 
                 return this;
             };
@@ -37,11 +84,14 @@
             if (StreetView['..ScrollMaps']) return;
 
             var newStreetView = function (container, opts) {
-                if (opts) opts.scrollwheel = true; // force mousewheel
-                var uid = Math.floor(Math.random() * 100000);
+                if (opts) {
+                    console.log('opts', opts);
+                    opts.scrollwheel = true; // force mousewheel
+                    // TODO: Don't force draggable if activate embedded is not on
+                    opts.draggable = true;
+                }
                 dispatchEventWhenAttached(container, 'mapsFound',
-                    {'id': uid, 'type': TYPE_STREETVIEW_API});
-                container.setAttribute('data-scrollmaps', uid);
+                    {'type': TYPE_STREETVIEW_API});
                 StreetView.call(this, container, opts);
 
                 return this;
@@ -163,11 +213,5 @@
     };
 
     init();
-
-    // The script is loaded and listeners are registered. Clean up by removing this tag
-    var scriptElem = document.getElementById('..scrollmaps_inject');
-    if (scriptElem) {
-        document.documentElement.removeChild(scriptElem);
-    }
 
 })();

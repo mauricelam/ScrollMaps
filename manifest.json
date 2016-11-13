@@ -775,7 +775,7 @@
       "background.js"
     ]
   }, 
-  "version": "2.2", 
+  "version": "2.3", 
   "options_page": "options/options.html", 
   "manifest_version": 2, 
   "permissions": [

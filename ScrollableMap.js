@@ -1,9 +1,23 @@
 /*global $ Message pref */
 
-var ScrollableMap = function (div, type, id) {
+function DOMDictionary(element) {
+    // TODO: Move this to a shadow DOM? Will that give better abstraction?
+    this.element = element;
+}
+
+DOMDictionary.prototype.get = function (key) {
+    return this.element.getAttribute('data-scrollmaps-' + key);
+};
+
+DOMDictionary.prototype.set = function (key, value) {
+    this.element.setAttribute('data-scrollmaps-' + key, value);
+};
+
+var ScrollableMap = function (div, type, opts) {
     var self = this;
 
     var mapClicked; // whether the map has ever been clicked (to activate the map)
+    var mapOpts = new DOMDictionary(div);
     var bodyScrolls = false;
 
     var style = document.createElement('style');
@@ -35,8 +49,11 @@ var ScrollableMap = function (div, type, id) {
     
     self.init = function (div, type) {
         self.type = type;
+
         div.addEventListener('wheel', self.handleWheelEvent, true);
-        // window.addEventListener('keydown', self.handleKeyEvent, true);
+        if (!pref('frameRequireFocus')) {
+            mapOpts.set('require-focus', false);
+        }
 
         window.addEventListener('mousemove', function (e) {
             if (e.detail !== 88) {
@@ -56,6 +73,7 @@ var ScrollableMap = function (div, type, id) {
         mapClicked = false;
         Pref.onPreferenceChanged('frameRequireFocus', function(pair){
             (pair.value) ? hideControls() : showControls();
+            mapOpts.set('require-focus', pair.value);
         });
         div.addEventListener('click', didClickMap, true);
         $(div).mouseleave(hideControls);
@@ -298,27 +316,16 @@ var ScrollableMap = function (div, type, id) {
         target.dispatchEvent(secondRightClick);
     }
 
-    // Not needed anymore because Chrome now sends ctrl+wheel event for pinch gestures
-    // TODO: check what happens for Safari
-    //
-    // self.handleKeyEvent = function (e) {
-    //     // Hook for BetterTouchTools to turn pinch gestures into key events
-    //     if (e.ctrlKey && e.keyCode == 187) {
-    //         // +
-    //         // console.log('zoom in', mousePosition, mouseTarget);
-    //         self.zoomIn(mousePosition, getWheelEventTarget(mousePosition), e);
-    //     } else if (e.ctrlKey && e.keyCode == 189) {
-    //         // -
-    //         // console.log('zoom out');
-    //         self.zoomOut(mousePosition, getWheelEventTarget(mousePosition), e);
-    //     }
-    // };
-
     var lastTarget;
     self.handleWheelEvent = function (e) {
         if (!pref('enabled') && !window.safari) return;
         var isFrameType = self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API;
         if (isFrameType && !pref('enableForFrames')) {
+            return;
+        }
+        if (!pref('frameRequireFocus') && mapOpts.get('declare-draggable') === 'false') {
+            // Don't try to scroll if the app declares that the map is not draggable, and the frame
+            // doesn't require focus.
             return;
         }
         if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {

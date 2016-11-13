@@ -11,10 +11,16 @@ SM.updateBodyScrolls = function () {
 };
 
 SM.injectScript = function(host, src) {
-    var script = document.createElement('script');
-    script.setAttribute('id', '..scrollmaps_inject');
-    script.src = Extension.getURL(src);
-    host.insertBefore(script, host.firstChild);
+    // Use 'javascript:' URL with XHR and eval the loaded script for the most transparent way to
+    // load the script.
+    // (Previous way to adding a <script> tag makes Chrome's PDF reader unhappy)
+    var injectJs = [
+        'javascript:',
+        'var xhr = new XMLHttpRequest();',
+        'xhr.open("GET", "' + Extension.getURL(src) + '", false);',
+        'xhr.send();',
+        'if (xhr.response) eval(xhr.response);'].join('');
+    location.href = injectJs;
 };
 
 
@@ -28,7 +34,12 @@ Scrollability.isScrollable = function (element) {
     // if (element.clientHeight === 0 || element.clientWidth === 0) return false;
  
     var overflow = window.getComputedStyle(element).getPropertyValue('overflow');
-    return overflow !== 'hidden' && overflow !== 'visible';
+    if (overflow === 'hidden') return false;
+    if (overflow === 'visible') {
+        // If the element is body or document, overflow visible still causes the page to scroll
+        return !element.isSameNode(document.body) && !element.isSameNode(document.documentElement);
+    }
+    return true;
 };
 
 // hasScrollableParent(elem)  ==>  whether anything, including window scrolls
@@ -112,36 +123,28 @@ function getIframeForWindow(win) {
 
 // Init
 
+SM.injectScript(document.documentElement, 'inject_content.js');
 
-if (document.URL.split('.').pop(0).toLowerCase() != 'pdf') {
-    SM.injectScript(document.documentElement, 'inject_content.js');
+window.addEventListener('scrollmaps.mapsFound', function (event) {
+    var map = event.target;
+    new ScrollableMap(map, ScrollableMap.TYPE_API, SM.count++);
+}, true);
 
-    window.addEventListener('mapsFound', function (event) {
-        var map = event.target;
-        new ScrollableMap(map, ScrollableMap.TYPE_API, SM.count++);
-    }, false);
+window.addEventListener('message', function(message) {
+    if (message.data.action === 'monitorScroll') {
+        var iframe = getIframeForWindow(message.source);
 
-    window.addEventListener('message', function(message) {
-        if (message.data.action === 'monitorScroll') {
-            var iframe = getIframeForWindow(message.source);
-
-            if (!iframe) {
-                console.warn('No matching iframe for message', message);
-                return;
-            }
-
-            Scrollability.monitorScrollabilitySuper(iframe, function (scrollable) {
-                if (scrollable) {
-                    message.source.postMessage({'action': 'pageNeedsScrolling', 'value': true}, '*');
-                } else {
-                    message.source.postMessage({'action': 'pageNeedsScrolling', 'value': false}, '*');
-                }
-            });
+        if (!iframe) {
+            console.warn('No matching iframe for message', message);
+            return;
         }
-    });
 
-} else {
-    // Don't run on PDF files. There seems to be a conflict between the built-in Chrome PDF plugin
-    // and how the script tag is injected.
-    console.log('ScrollMaps: Skipping PDF file');
-}
+        Scrollability.monitorScrollabilitySuper(iframe, function (scrollable) {
+            if (scrollable) {
+                message.source.postMessage({'action': 'pageNeedsScrolling', 'value': true}, '*');
+            } else {
+                message.source.postMessage({'action': 'pageNeedsScrolling', 'value': false}, '*');
+            }
+        });
+    }
+});

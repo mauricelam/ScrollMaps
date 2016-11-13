@@ -69,6 +69,7 @@ function pref(label){
         });
     });
 
+
     Message.extension.addListener(function(action, data, sender, sendResponse) {
         switch(action) {
             case 'setPreference':
