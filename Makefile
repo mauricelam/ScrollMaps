@@ -76,7 +76,7 @@ TEST_URLS := \
     http://www.google.com/mapmaker \
     https://www.google.com/flights/ \
     https://developers.google.com/maps/documentation/embed/guide \
-    http://maps.google.com/ \
+    http://maps.google.com/?force=tt \
     http://maps.google.be/ \
     http://en.parkopedia.com/parking/san_francisco_ca_united_states/?ac=1&country=US&lat=37.7749295&lng=-122.41941550000001 \
     https://developers.google.com/maps/documentation/javascript/signedin \
@@ -93,4 +93,4 @@ TEST_URLS := \
 
 .PHONY: test
 test:
-	$(foreach url,$(TEST_URLS),open '$(url)'${\n}$(CONTINUE)${\n})
+	$(foreach url,$(TEST_URLS),@read -p "Open $(url)? [Y/n] " -n1 input; echo "\n";if [[ "$$input" != 'n' ]]; then open "$(url)"; fi ${\n})
