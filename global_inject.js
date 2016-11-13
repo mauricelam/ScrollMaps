@@ -83,18 +83,15 @@ Scrollability._monitorPotentialScrollabilityChange = function (element, callback
 // Monitor parent scrollability for given element across iframes
 Scrollability.monitorScrollabilitySuper = function (element, callback) {
     var overallScrollable = null;
-    var ancestorScrollable = false;
+    var ancestorScrollable = false;  // Scrollability of parent documents of this frame
 
-    var updateScrollability = function (_ancestor) {
+    var updateScrollability = function () {
         // Maybe not all cases need to calculate hasScrollableParent?
-        var newOverallScrollable = _ancestor || Scrollability.hasScrollableParent(element);
+        var newOverallScrollable = ancestorScrollable || Scrollability.hasScrollableParent(element);
         if (overallScrollable !== newOverallScrollable) {
             overallScrollable = newOverallScrollable;
             callback(newOverallScrollable);
         }
-    };
-    var updateScrollabilityOnAncestorChange = function () {
-        updateScrollability(ancestorScrollable);
     };
 
     if (window !== window.parent) {
@@ -104,14 +101,15 @@ Scrollability.monitorScrollabilitySuper = function (element, callback) {
         window.addEventListener('message', function (message) {
             if (message.data.action === 'pageNeedsScrolling') {
                 ancestorScrollable = Boolean(message.data.value);
-                updateScrollability(ancestorScrollable);
+                updateScrollability();
             }
         });
     } else {
-        updateScrollability(false);
+        ancestorScrollable = false;
+        updateScrollability();
     }
 
-    Scrollability._monitorPotentialScrollabilityChange(element, updateScrollabilityOnAncestorChange);
+    Scrollability._monitorPotentialScrollabilityChange(element, updateScrollability);
 };
 
 function getIframeForWindow(win) {
