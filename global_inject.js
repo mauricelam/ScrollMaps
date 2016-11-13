@@ -39,7 +39,10 @@ Scrollability.isScrollable = function (element) {
     // if (element.clientHeight === 0 || element.clientWidth === 0) return false;
  
     var overflow = window.getComputedStyle(element).getPropertyValue('overflow');
-    return overflow !== 'hidden' && overflow !== 'visible';
+    if (overflow === 'hidden') return false;
+    // Body and document element will scroll even if overflow is visible
+    if (element === document.body || element === document.documentElement) return true;
+    return overflow !== 'visible';
 };
 
 // hasScrollableParent(elem)  ==>  whether anything, including window scrolls
