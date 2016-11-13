@@ -53,7 +53,7 @@
   "web_accessible_resources": [
     "images/button_active.png",
     "images/button_inactive.png",
-    "inject_content.js"
+    "inject_content.min.js"
   ],
   "options_page": "options/options.html",
   "icons": {

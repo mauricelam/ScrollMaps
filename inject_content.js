@@ -165,10 +165,4 @@
 
     init();
 
-    // The script is loaded and listeners are registered. Clean up by removing this tag
-    var scriptElem = document.getElementById('..scrollmaps_inject');
-    if (scriptElem) {
-        document.documentElement.removeChild(scriptElem);
-    }
-
 })();
