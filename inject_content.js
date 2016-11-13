@@ -8,6 +8,7 @@
 
     function init() {
         function newMapNotifier (parent, propname, Map) {
+            if (typeof Map !== 'function') return;
             if (Map['..ScrollMaps']) return;
 
             var newMap = function (container, opts) {
@@ -19,7 +20,9 @@
 
                 if (typeof this.enableScrollWheelZoom === 'function') {
                     this.enableScrollWheelZoom();
-                    this.disableScrollWheelZoom = function () { console.log('cannot disable scroll wheel'); };
+                    this.disableScrollWheelZoom = function () {
+                        console.log('ScrollMaps locked scroll wheel to enabled');
+                    };
                 }
 
                 return this;
