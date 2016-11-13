@@ -1,6 +1,10 @@
 /*global $ Message pref */
 
 var ScrollableMap = function (div, type, id) {
+    // Avoid adding multiple event listeners to the same map
+    if (div.__scrollMapEnabled) return;
+    div.__scrollMapEnabled = true;
+
     var self = this;
 
     var mapClicked; // whether the map has ever been clicked (to activate the map)
@@ -36,7 +40,6 @@ var ScrollableMap = function (div, type, id) {
     self.init = function (div, type) {
         self.type = type;
         div.addEventListener('wheel', self.handleWheelEvent, true);
-        // window.addEventListener('keydown', self.handleKeyEvent, true);
 
         window.addEventListener('mousemove', function (e) {
             if (e.detail !== 88) {
@@ -297,22 +300,6 @@ var ScrollableMap = function (div, type, id) {
             mousePos[0], mousePos[1], false, false, false, false, 2, null);
         target.dispatchEvent(secondRightClick);
     }
-
-    // Not needed anymore because Chrome now sends ctrl+wheel event for pinch gestures
-    // TODO: check what happens for Safari
-    //
-    // self.handleKeyEvent = function (e) {
-    //     // Hook for BetterTouchTools to turn pinch gestures into key events
-    //     if (e.ctrlKey && e.keyCode == 187) {
-    //         // +
-    //         // console.log('zoom in', mousePosition, mouseTarget);
-    //         self.zoomIn(mousePosition, getWheelEventTarget(mousePosition), e);
-    //     } else if (e.ctrlKey && e.keyCode == 189) {
-    //         // -
-    //         // console.log('zoom out');
-    //         self.zoomOut(mousePosition, getWheelEventTarget(mousePosition), e);
-    //     }
-    // };
 
     var lastTarget;
     self.handleWheelEvent = function (e) {

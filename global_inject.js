@@ -93,7 +93,7 @@ Scrollability.monitorScrollabilitySuper = function (element, callback) {
             callback(newOverallScrollable);
         }
     };
-    var updateScrollabilityNoAncestorChange = function () {
+    var updateScrollabilityOnAncestorChange = function () {
         updateScrollability(ancestorScrollable);
     };
 
@@ -103,14 +103,15 @@ Scrollability.monitorScrollabilitySuper = function (element, callback) {
 
         window.addEventListener('message', function (message) {
             if (message.data.action === 'pageNeedsScrolling') {
-                updateScrollability(Boolean(message.data.value));
+                ancestorScrollable = Boolean(message.data.value);
+                updateScrollability(ancestorScrollable);
             }
         });
     } else {
         updateScrollability(false);
     }
 
-    Scrollability._monitorPotentialScrollabilityChange(element, updateScrollabilityNoAncestorChange);
+    Scrollability._monitorPotentialScrollabilityChange(element, updateScrollabilityOnAncestorChange);
 };
 
 function getIframeForWindow(win) {

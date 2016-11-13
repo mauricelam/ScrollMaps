@@ -75,7 +75,6 @@ TEST_URLS := \
     https://developers.google.com/maps/documentation/javascript/styling \
     http://www.google.com/mapmaker \
     https://www.google.com/flights/ \
-    https://www.google.com/flights/\#search;f=SJC;d=2016-11-28;r=2016-12-02;mc=m \
     https://developers.google.com/maps/documentation/embed/guide \
     http://maps.google.com/ \
     http://maps.google.be/ \
@@ -89,7 +88,8 @@ TEST_URLS := \
     https://www.google.com/maps/@?force=lite&dg=opt&newdg=1 \
     https://www.google.com/fusiontables/DataSource?docid=1jtmdb0D2ykY3_OmNhqiyBoiiv9B3jLNZBIffVMKR\#map:id=4 \
     https://www.wunderground.com/ \
-    https://www.google.com/maps/d/viewer?mid=1ZpcZ8OMZh1G1XwRmt9GaCwH6f-g&amp%3Bhl=en
+    https://www.google.com/maps/d/viewer?mid=1ZpcZ8OMZh1G1XwRmt9GaCwH6f-g&amp%3Bhl=en \
+    https://www.geckoboard.com/tech-acquisitions/
 
 .PHONY: test
 test:
