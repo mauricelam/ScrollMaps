@@ -226,7 +226,7 @@ var ScrollableMap = function (div, type, id) {
         if (originalEvent instanceof WheelEvent) {
             // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
             // have much less "delta" than scroll
-            var scale = type !== ScollableMap.TYPE_NEWWEB && originalEvent.ctrlKey ? 3 : 1;
+            var scale = type !== ScrollableMap.TYPE_NEWWEB && originalEvent.ctrlKey ? 3 : 1;
             e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
             target.dispatchEvent(e);
             return;
@@ -268,7 +268,7 @@ var ScrollableMap = function (div, type, id) {
         if (originalEvent instanceof WheelEvent) {
             // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
             // have much less "delta" than scroll
-            var scale = type !== ScollableMap.TYPE_NEWWEB && originalEvent.ctrlKey ? 3 : 1;
+            var scale = type !== ScrollableMap.TYPE_NEWWEB && originalEvent.ctrlKey ? 3 : 1;
             e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
             target.dispatchEvent(e);
             return;
