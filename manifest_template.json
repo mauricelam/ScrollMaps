@@ -10,15 +10,6 @@
       "js": [
         "jquery.js",
         "Shim.js",
-        "inject.js"
-      ],
-      "run_at": "document_start"
-    },
-    {
-      "matches": "<all_google_maps_urls>",
-      "js": [
-        "jquery.js",
-        "Shim.js",
         "prefreader.js",
         "inject_frame.js"
       ],
