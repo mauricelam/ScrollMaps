@@ -131,7 +131,7 @@ if (document.URL.split('.').pop(0).toLowerCase() !== 'pdf') {
 
     window.addEventListener('mapsFound', function (event) {
         var map = event.target;
-        new ScrollableMap(map, ScrollableMap.TYPE_API, SM.count++);
+        new ScrollableMap(map, event.detail.type, SM.count++);
     }, true);
 
     window.addEventListener('message', function(message) {
