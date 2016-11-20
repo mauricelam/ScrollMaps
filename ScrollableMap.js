@@ -52,26 +52,35 @@ var ScrollableMap = function (div, type, id) {
         Pref.onPreferenceChanged('frameRequireFocus', function(pair){
             (pair.value) ? hideControls() : showControls();
         });
-        div.addEventListener('click', didClickMap, true);
+        div.addEventListener('click', handleClick, true);
+        div.addEventListener('mousedown', blockEventIfNotActivated, true);
+        div.addEventListener('mouseup', blockEventIfNotActivated, true)
         $(div).mouseleave(hideControls);
         if (mapRequiresActivation()){
             setTimeout(hideControls, 500);
         }
     }
 
-    function didClickMap (event) {
+    function blockEventIfNotActivated(event) {
+        if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+    }
+
+    function handleClick(event) {
         showControls(event);
         lastTarget = null;
     }
 
-    function showControls(event){
-        if (!mapClicked) {
+    function showControls(event) {
+        if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
             if (event) event.stopPropagation();
             mapClicked = true;
             $(div).removeClass('scrollMapsHideControls');
         }
     }
-    function hideControls(){
+    function hideControls() {
         if (mapRequiresActivation() && pref('enabled') && pref('frameRequireFocus')) {
             mapClicked = false;
             $(div).addClass('scrollMapsHideControls');
