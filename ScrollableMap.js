@@ -48,14 +48,6 @@ var ScrollableMap = function (div, type, id) {
             }
         }, true);
 
-        initFrame(div);
-
-        // Workaround for webkit bug w.r.t. tying scroll gestures with page back
-        // https://bugs.chromium.org/p/chromium/issues/detail?id=239731
-        // document.documentElement.style.overflow = 'scroll';
-    };
-
-    function initFrame (div) {
         mapClicked = false;
         Pref.onPreferenceChanged('frameRequireFocus', function(pair){
             (pair.value) ? hideControls() : showControls();
@@ -86,127 +78,25 @@ var ScrollableMap = function (div, type, id) {
         }
     }
 
-    var gpoint = [0, 0];
-    var timer;
-    var pretendingMouseDown = false;
-    var startpoint = [0, 0];
-
-    self.moveNewMaps = function (point, dx, dy, target) {
-        if (!pretendingMouseDown) {
-            gpoint = point;
-        } else {
-            startpoint = point;
-        }
-        point = gpoint;
-        var diffX = Math.abs(dx), diffY = Math.abs(dy);
-        if (diffX < 3 && diffY < 3) {
-            // scale to make sure at least one of them is > 3
-            // this ensures it's treated as a drag, not a click
-            var scale = 3.2 / Math.max(diffX, diffY);
-            dx *= scale;
-            dy *= scale;
-        }
-
-        if (!pretendingMouseDown) {
-            var downEvent = document.createEvent('MouseEvents');
-            downEvent.initMouseEvent('mousedown', true, true, window, 1, 0, 0, point[0], point[1],
-                false, false, false, false, 0, null);
-            target.dispatchEvent(downEvent);
-            pretendingMouseDown = true;
-        }
-
-        var moveEvent = document.createEvent('MouseEvents');
-        moveEvent.initMouseEvent('mousemove', true, false, window, 88, 0, 0,
-            point[0]+dx, point[1]+dy, false, false, false, false, 0, null);
-        target.dispatchEvent(moveEvent);
-
-        function pretendMouseUp() {
-            if (!pretendingMouseDown) return;
-            var upEvent = document.createEvent('MouseEvents');
-            upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, gpoint[0], gpoint[1],
-                false, false, false, false, 0, null);
-            target.dispatchEvent(upEvent);
-            pretendingMouseDown = false;
-        }
-
-        gpoint[0] += dx;
-        gpoint[1] += dy;
-
-        // Street view panning has set an exponential decaying curve, in order for the scroll
-        // to continue, pretend a mouse up every so often.
-        // There is a visible jump when this happens if you observe carefully, but the results
-        // are good enough for general use.
-        if (Math.abs(gpoint[0] - startpoint[0]) > 600 || Math.abs(gpoint[1] - startpoint[1]) > 600) {
-            pretendMouseUp();
-        }
-
-        window.clearTimeout(timer);
-        timer = window.setTimeout(pretendMouseUp, 100);
-    };
-
-    var mousePosition = {x: 0, y: 0};
+    var dragger = new DragSimulator({});
 
     self.realMouseMoved = function (e) {
-        mousePosition = e.detail;
-
-        if (!pretendingMouseDown || !lastTarget) return;
-        var upEvent = document.createEvent('MouseEvents');
-        upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, gpoint[0], gpoint[1],
-            false, false, false, false, 0, null);
-        lastTarget.dispatchEvent(upEvent);
-        pretendingMouseDown = false;
+        if (lastTarget) {
+            dragger.simulateMouseUp(lastTarget);
+        }
     };
     window.addEventListener('realmousemove', self.realMouseMoved, true);
 
-    self.moveLegacy = function (point, dx, dy, target) {
-        var diffX = Math.abs(dx), diffY = Math.abs(dy);
-        if (diffX < 3 && diffY < 3) {
-            // scale to make sure at least one of them is > 3
-            // this ensures it's treated as a drag, not a click
-            var scale = 3.2 / Math.max(diffX, diffY);
-            dx *= scale;
-            dy *= scale;
-        }
-
-        var downEvent = document.createEvent('MouseEvents');
-        downEvent.initMouseEvent('mousedown', true, true, window, 1, 0, 0, point[0], point[1],
-            false, false, false, false, 0, null);
-        target.dispatchEvent(downEvent);
-
-        var moveEvent = document.createEvent('MouseEvents');
-        moveEvent.initMouseEvent('mousemove', true, true, window, 1, 0, 0, point[0]+dx, point[1]+dy,
-            false, false, false, false, 0, null);
-        target.dispatchEvent(moveEvent);
-
-        var upEvent = document.createEvent('MouseEvents');
-        upEvent.initMouseEvent('mouseup', true, true, window, 1, 0, 0, point[0]+dx, point[1]+dy,
-            false, false, false, false, 0, null);
-        target.dispatchEvent(upEvent);
-    };
-
     self.move = function (point, dx, dy, target) {
-        // if (self.type === ScrollableMap.TYPE_NEWWEB || self.type === ScrollableMap.TYPE_STREETVIEW_API) {
-            self.moveNewMaps(point, dx, dy, target);
-        // } else {
-            // console.log('Move legacy', target);
-            // self.moveLegacy(point, dx, dy, target);
-        // }
+        dragger.simulateDrag(target, point, dx, dy);
     };
 
     self.zoomIn = function (mousePos, target, originalEvent) {
-        // if (self.type === ScrollableMap.TYPE_IFRAME || self.type === ScrollableMap.TYPE_API) {
-            // zoomInFrame(mousePos, target, originalEvent);
-        // } else {
-            zoomInWeb(mousePos, target, originalEvent);
-        // }
+        zoomInWeb(mousePos, target, originalEvent);
     };
 
     self.zoomOut = function (mousePos, target, originalEvent) {
-        // if (self.type === ScrollableMap.TYPE_IFRAME || self.type === ScrollableMap.TYPE_API) {
-            // zoomOutFrame(mousePos, target, originalEvent);
-        // } else {
-            zoomOutWeb(mousePos, target, originalEvent);
-        // }
+        zoomOutWeb(mousePos, target, originalEvent);
     };
 
     var lastZoomTime = 0;
@@ -266,16 +156,6 @@ var ScrollableMap = function (div, type, id) {
         target.dispatchEvent(e);
     }
 
-    // function zoomInFrame(mousePos, target) {
-    //     if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
-    //     lastZoomTime = Date.now();
-
-    //     var event = document.createEvent('MouseEvents');
-    //     event.initMouseEvent('dblclick', true, true, window, 2, 0, 0, mousePos[0], mousePos[1],
-    //         false, false, false, false, 0, null);
-    //     target.dispatchEvent(event);
-    // }
-
     function zoomOutWeb (mousePos, target, originalEvent) {
         var e;
         // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
@@ -307,21 +187,6 @@ var ScrollableMap = function (div, type, id) {
         });
         target.dispatchEvent(e);
     }
-
-    // function zoomOutFrame(mousePos, target){
-    //     if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
-    //     lastZoomTime = Date.now();
-
-    //     var firstRightClick = document.createEvent('MouseEvents');
-    //     firstRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0,
-    //         mousePos[0], mousePos[1], false, false, false, false, 2, null);
-    //     target.dispatchEvent(firstRightClick);
-
-    //     var secondRightClick = document.createEvent('MouseEvents');
-    //     secondRightClick.initMouseEvent('contextmenu', true, true, window, 2, 0, 0,
-    //         mousePos[0], mousePos[1], false, false, false, false, 2, null);
-    //     target.dispatchEvent(secondRightClick);
-    // }
 
     var lastTarget;
     self.handleWheelEvent = function (e) {
@@ -494,5 +359,115 @@ SM2DAccelerationDetector.prototype = {
         var x = this.xAccelerationDetector.isAccelerating(deltaX, time);
         var y = this.yAccelerationDetector.isAccelerating(deltaY, time);
         return x || y;
+    }
+};
+
+var DragSimulator = function DragSimulator() { this.init.apply(this, arguments); };
+
+DragSimulator.defaultOpts = {
+    // The minimum distance to simulate a drag, to avoid the event being interpreted as
+    // a click. If the scroll gesture's distance is smaller than this, it will be scaled
+    // up to reach this distance.
+    'minDragDistance': 3,
+    // The maximum distance that can be scrolled (along either X or Y axis) before a
+    // mouse up is force triggered. This is useful for street view where the panning
+    // is non-linear, so that the panning response will reset one in a while.
+    // If this value is too large, the stree view will stop panning until you want for
+    // the mouse-up timeout. If this value is too small, the event may be treated as a
+    // mouse move rather than a drag.
+    'maxDistanceUntilUp': 600,
+    // The delay in milliseconds before a mouse up is simulated, after the last call to
+    // simulateDrag. This is non-zero for newer implementations tend to have inertial-drag
+    // which tracks the mouse events over time, and therefore firing mousedown + mousemove
+    // + mouseup events in the same loop synchronously will not work.
+    'mouseUpDelay': 100,
+};
+
+DragSimulator.prototype = {
+    init: function (opts) {
+        this.opts = {};
+        for (var i in DragSimulator.defaultOpts) {
+            if (i in opts) {
+                this.opts[i] = opts[i];
+            } else {
+                this.opts[i] = DragSimulator.defaultOpts[i];
+            }
+        }
+    },
+    simulateMouseDown: function (target, point) {
+        this.mouseDownPoint = [point[0], point[1]];  // Deep copy
+        this.simulatedMousePoint = point;
+        var downEvent = new MouseEvent('mousedown', {
+            'bubbles': true,
+            'cancelable': true,
+            'detail': 1,
+            'clientX': point[0],
+            'clientY': point[1],
+            'button': 0,
+            'buttons': 1
+        });
+        target.dispatchEvent(downEvent);
+    },
+    simulateMouseUp: function (target) {
+        if (!this.mouseDownPoint) return;
+        var upEvent = new MouseEvent('mouseup', {
+            'bubbles': true,
+            'cancelable': true,
+            'detail': 1,
+            'clientX': this.simulatedMousePoint[0],
+            'clientY': this.simulatedMousePoint[1],
+            'button': 0,
+            'buttons': 0
+        });
+        target.dispatchEvent(upEvent);
+        this.mouseDownPoint = null;
+    },
+    simulateMouseMove: function (target, dx, dy) {
+        this.simulatedMousePoint[0] += dx;
+        this.simulatedMousePoint[1] += dy;
+        var moveEvent = new MouseEvent('mousemove', {
+            'bubbles': true,
+            'cancelable': false,
+            'detail': 88,
+            'clientX': this.simulatedMousePoint[0],
+            'clientY': this.simulatedMousePoint[1],
+            'button': 0,
+            'buttons': 1  // Left mouse button should be down when simulating drag-move
+        })
+        target.dispatchEvent(moveEvent);
+    },
+    simulateDrag: function (target, point, dx, dy) {
+        var minDragDistance = this.opts.minDragDistance;
+        var diffX = Math.abs(dx), diffY = Math.abs(dy);
+        if (diffX < minDragDistance && diffY < minDragDistance) {
+            // scale to make sure at least one of them is > minDragDistance
+            // this ensures it's treated as a drag, not a click
+            var scale = (minDragDistance * 1.05) / Math.max(diffX, diffY);
+            dx *= scale;
+            dy *= scale;
+        }
+
+        if (!this.mouseDownPoint) {
+            this.simulateMouseDown(target, point);
+        }
+
+        this.simulateMouseMove(target, dx, dy);
+
+        // Street view panning has set an exponential decaying curve, in order for the scroll
+        // to continue, pretend a mouse up every so often.
+        // There is a visible jump when this happens if you observe carefully, but the results
+        // are good enough for general use.
+        var maxDistanceUntilUp = this.opts.maxDistanceUntilUp;
+        if (Math.abs(this.simulatedMousePoint[0] - this.mouseDownPoint[0]) > maxDistanceUntilUp ||
+            Math.abs(this.simulatedMousePoint[1] - this.mouseDownPoint[1]) > maxDistanceUntilUp) {
+            this.simulateMouseUp(target);
+        }
+
+        if (this.opts.mouseUpDelay > 0) {
+            window.clearTimeout(this.timer);
+            this.timer = window.setTimeout(
+                this.simulateMouseUp.bind(this, target),
+                this.opts.mouseUpDelay);
+        }
     }
 };
