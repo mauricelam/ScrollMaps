@@ -73,8 +73,6 @@ endif
 
 TEST_URLS := \
     https://developers.google.com/maps/documentation/javascript/styling \
-    http://www.google.com/mapmaker \
-    https://www.google.com/flights/ \
     https://developers.google.com/maps/documentation/embed/guide \
     http://maps.google.com/?force=tt \
     http://maps.google.be/ \
@@ -87,9 +85,11 @@ TEST_URLS := \
     https://developers.google.com/maps/documentation/javascript/examples/drawing-tools \
     https://www.google.com/maps/@?force=lite&dg=opt&newdg=1 \
     https://www.google.com/fusiontables/DataSource?docid=1jtmdb0D2ykY3_OmNhqiyBoiiv9B3jLNZBIffVMKR\#map:id=4 \
-    https://www.wunderground.com/ \
     https://www.google.com/maps/d/viewer?mid=1ZpcZ8OMZh1G1XwRmt9GaCwH6f-g&amp%3Bhl=en \
     https://www.geckoboard.com/tech-acquisitions/
+
+MAPBOX_TEST_URLS := \
+    https://www.wunderground.com/
 
 .PHONY: test
 test:
