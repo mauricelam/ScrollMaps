@@ -18,8 +18,11 @@ var Options = {};
         );
         box.append(enableForFramesCheckbox);
 
-        var slider = PrefMaker.makeSlider('scrollSpeed', 'Scrolling speed', 100, 1);
-        box.append(slider);
+        var scrollSpeedSlider = PrefMaker.makeSlider('scrollSpeed', 'Scrolling speed', 100, 5, 5);
+        box.append(scrollSpeedSlider);
+
+        var zoomSpeedSlider = PrefMaker.makeSlider('zoomSpeed', 'Zoom speed', 500, 10, 10);
+        box.append(zoomSpeedSlider);
 
         var invertScrollCheckbox = PrefMaker.makeBooleanCheckbox('invertScroll',
             'Invert Scroll',
@@ -51,11 +54,7 @@ var Options = {};
         );
         box.append(isolateZoomScrollCheckbox);
 
-        if (navigator.userAgent.indexOf('Macintosh')) {
-            box.append('<div id="zoomhint">Cmd-scroll to zoom</div>');
-        } else {
-            box.append('<div id="zoomhint">Alt-scroll to zoom</div>');
-        }
+        box.append('<div id="zoomhint">Pinch to zoom in or out</div>');
     };
 
     $(function(){

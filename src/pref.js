@@ -16,7 +16,8 @@ function pref(label){
         'enableForFrames': true,
         'isolateZoomScroll': true,
         'frameRequireFocus': true,
-        'scrollSpeed': 50
+        'scrollSpeed': 50,
+        'zoomSpeed': 250
 	};
 
 	function getDefault(label) {
