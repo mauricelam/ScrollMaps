@@ -1,6 +1,16 @@
 body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial, sans-serif; font-size: 14px; }
 
-#box { background: -webkit-linear-gradient(top, #DDD 0%, #EAEAEA 1% ); border: 1px solid #BBB; margin: auto; margin-top: 50px; position: relative; width: 750px; min-height: 460px; -webkit-border-radius: 5px; box-sizing: border-box; }
+#box {
+    background: -webkit-linear-gradient(top, #DDD 0%, #EAEAEA 1% );
+    border: 1px solid #BBB;
+    margin: auto;
+    margin-top: 50px;
+    position: relative;
+    width: 750px;
+    min-height: 450px;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
 #box-content { padding: 15px; }
 #header {   font-family: Century Gothic, Arial, sans-serif; -webkit-user-select: none; cursor: default;
             font-size: 30px; margin: auto; color: #333; text-shadow: 0 1px 1px white; 
@@ -9,8 +19,9 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
         }
 
 .horizontalLine { border-top: 1px solid #CCC; border-bottom: 1px solid #FFF; margin: 5px 0px; }
+.clear { clear: both; }
 
-#checkboxes { display: inline-block; width: 350px; height: 430px; float: left; position: relative; }
+#checkboxes { display: inline-block; width: 350px; height: 480px; float: left; position: relative; }
 #mapsdemo { border: 1px solid #BBB; float: right; }
 
 #zoomhint { position: absolute; bottom: 3px; right: 5px; font-size: 12px; text-shadow: 0 1px 1px white; color: #888; -webkit-user-select: none; cursor: default; }
