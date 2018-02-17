@@ -23,9 +23,9 @@ grunt.initConfig({
             files: [{
                 expand: true,
                 src: [
-                    'src/*.js',
-                    'options/*.js',
-                    'options/*.html'
+                    'src/**/*.js',
+                    'src/**/*.css',
+                    'src/**/*.html',
                 ],
                 dest: '<%= pluginDir %>'
             }]
