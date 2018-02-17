@@ -1,0 +1,31 @@
+{
+  "name": "scrollmaps",
+  "version": "2.5.0",
+  "description": "Allow you to use two finger scroll on your Mac trackpad in Google Maps",
+  "main": "ScrollableMap.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "version": "grunt release",
+    "postversion": "grunt postversion"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mauricelam/ScrollMaps.git"
+  },
+  "author": "Maurice Lam",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mauricelam/ScrollMaps/issues"
+  },
+  "homepage": "https://github.com/mauricelam/ScrollMaps",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "^1.0.2",
+    "grunt-contrib-compress": "^1.4.3",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-uglify": "^3.3.0",
+    "grunt-exec": "^3.0.0",
+    "grunt-newer": "^1.3.0",
+    "open": "0.0.5"
+  }
+}
