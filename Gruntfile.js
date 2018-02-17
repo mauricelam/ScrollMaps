@@ -5,6 +5,7 @@ module.exports = function(grunt) {
 grunt.loadNpmTasks('grunt-contrib-compress');
 grunt.loadNpmTasks('grunt-contrib-copy');
 grunt.loadNpmTasks('grunt-contrib-uglify');
+grunt.loadNpmTasks('grunt-contrib-imagemin');
 grunt.loadNpmTasks('grunt-newer');
 grunt.loadNpmTasks('grunt-exec');
 
@@ -24,8 +25,7 @@ grunt.initConfig({
                 src: [
                     'src/*.js',
                     'options/*.js',
-                    'options/*.html',
-                    'images/*.png'
+                    'options/*.html'
                 ],
                 dest: '<%= pluginDir %>'
             }]
@@ -64,6 +64,15 @@ grunt.initConfig({
     open: {
         github_release: 'https://github.com/mauricelam/ScrollMaps/releases/new?tag=<%= version %>',
         webstore: 'https://chrome.google.com/webstore/developer/edit/jifommjndpnefcfplgnbhabocomgdjjg'
+    },
+    imagemin: {
+        dynamic: {
+            files: [{
+                expand: true,
+                src: ['images/**/*.png'],
+                dest: '<%= pluginDir %>'
+            }]
+        }
     }
 });
 
@@ -74,7 +83,8 @@ grunt.registerMultiTask('open', function() {
 grunt.registerTask('build', [
     'uglify:all',
     'copy:all',
-    'copy:manifest']);
+    'copy:manifest',
+    'newer:imagemin']);
 
 grunt.registerTask('dev', [
     'set_version:10000',
