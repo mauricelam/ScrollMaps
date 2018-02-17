@@ -46,7 +46,7 @@
     "images/button_inactive.png",
     "inject_content.min.js"
   ],
-  "options_page": "options/options.html",
+  "options_page": "src/options/options.html",
   "icons": {
     "16": "images/maps_16.png",
     "48": "images/maps_48.png",
