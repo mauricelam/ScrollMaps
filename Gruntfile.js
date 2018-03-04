@@ -1,4 +1,5 @@
-var open = require('open');
+const open = require('open');
+const { exec } = require('child_process')
 
 module.exports = function(grunt) {
 
@@ -190,5 +191,11 @@ const TEST_SITES = [
 
 const MAPBOX_TEST_SITES = [
     'https://www.wunderground.com/'];
+
+grunt.registerTask('manualtest', function () {
+    for (test of TEST_SITES) {
+        exec(`./chrome-cli open ${test}`)
+    }
+});
 
 };
