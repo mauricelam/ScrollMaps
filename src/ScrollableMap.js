@@ -145,7 +145,6 @@ var ScrollableMap = function (div, type, id) {
                 scale = pref('zoomSpeed') / 100;
                 if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
             }
-            console.log('scale', scale);
             e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
             target.dispatchEvent(e);
             return;
@@ -182,7 +181,6 @@ var ScrollableMap = function (div, type, id) {
                 scale = pref('zoomSpeed') / 100;
                 if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
             }
-            console.log('scale', scale);
             e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
             target.dispatchEvent(e);
             return;
