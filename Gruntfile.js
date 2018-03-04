@@ -193,6 +193,7 @@ const MAPBOX_TEST_SITES = [
     'https://www.wunderground.com/'];
 
 grunt.registerTask('manualtest', function () {
+    exec(`./chrome-cli open http://www.google.com/maps -n`)
     for (test of TEST_SITES) {
         exec(`./chrome-cli open ${test}`)
     }
