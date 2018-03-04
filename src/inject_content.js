@@ -12,7 +12,20 @@
             if (Map['..ScrollMaps']) return;
 
             var newMap = function (container, opts) {
-                if (opts) opts.scrollwheel = true; // force mousewheel
+                if (opts) {
+                    opts.scrollwheel = true; // force mousewheel
+                    if (opts.gestureHandling != 'none') {
+                        // Force greedy gesture handling to allow us to pan the map. The "require
+                        // click to scroll embedded maps" options handles the "cooperative" gesture
+                        // handling mode in Maps API.
+                        // The behavior of the API values are described here:
+                        // https://developers.google.com/maps/documentation/javascript/interaction
+                        //
+                        // If the gesture handling is 'none', maybe the developer has a good reason
+                        // to not allow pannign
+                        opts.gestureHandling = 'greedy';
+                    }
+                }
                 var uid = Math.floor(Math.random() * 100000);
                 container.setAttribute('data-scrollmaps', uid);
                 dispatchEventWhenAttached(container, 'mapsFound', {'id': uid, 'type': TYPE_API});
@@ -40,7 +53,9 @@
             if (StreetView['..ScrollMaps']) return;
 
             var newStreetView = function (container, opts) {
-                if (opts) opts.scrollwheel = true; // force mousewheel
+                if (opts) {
+                    opts.scrollwheel = true; // force mousewheel
+                }
                 var uid = Math.floor(Math.random() * 100000);
                 dispatchEventWhenAttached(container, 'mapsFound',
                     {'id': uid, 'type': TYPE_STREETVIEW_API});
