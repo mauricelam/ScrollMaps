@@ -56,14 +56,12 @@ grunt.initConfig({
     },
     exec: {
         chrome_extension_reload: '(./chrome-cli open chrome://extensions && ./chrome-cli reload && ./chrome-cli close) || echo "Skipping chrome reload"',
-        // commit: 'git commit -a -m "Release version <%= version %>"',
-        // Make sure git doesn't have uncommitted changes
-        git_clean: 'git diff-index --quiet HEAD -- && git ls-files --exclude-standard --others || echo "Git status is dirty. Please commit your changes before releasing"; exit 105',
-        npm_version: 'npm --no-git-tag-version version <%= version %>"',
-        npm_get_version: 'npm --no-git-tag-version version <%= version %>"'
+        git_push: 'git push',
+        npm_version: 'npm version <%= version %>"'
     },
     open: {
-        github_release: 'https://github.com/mauricelam/ScrollMaps/releases/new?tag=<%= version %>',
+        gen_dir: 'gen',
+        github_release: 'https://github.com/mauricelam/ScrollMaps/releases/new?tag=v<%= version %>',
         webstore: 'https://chrome.google.com/webstore/developer/edit/jifommjndpnefcfplgnbhabocomgdjjg'
     },
     imagemin: {
@@ -104,6 +102,8 @@ grunt.registerTask('release', function () {
 // TODO: move to npm directly?
 grunt.registerTask('postversion', [
     'release',
+    'open:gen_dir',
+    'exec:git_push',
     'open:github_release',
     'open:webstore']);
 
