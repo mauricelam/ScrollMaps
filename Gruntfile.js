@@ -1,5 +1,5 @@
 const open = require('open');
-const { exec } = require('child_process')
+const { execSync } = require('child_process')
 
 module.exports = function(grunt) {
 
@@ -193,9 +193,9 @@ const MAPBOX_TEST_SITES = [
     'https://www.wunderground.com/'];
 
 grunt.registerTask('manualtest', function () {
-    exec(`./chrome-cli open http://www.google.com/maps -n`)
+    execSync(`./chrome-cli open "http://www.google.com/maps" -n`, { encoding: 'utf-8' });
     for (test of TEST_SITES) {
-        exec(`./chrome-cli open ${test}`)
+        execSync(`./chrome-cli open "${test}"`, { encoding: 'utf-8' })
     }
 });
 
