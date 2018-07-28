@@ -11,8 +11,8 @@ var ScrollableMap = function (div, type, id) {
     var bodyScrolls = false;
 
     var style = document.createElement('style');
-    style.innerHTML =   '.gmnoprint { -webkit-transition: opacity 0.3s !important; }' +
-                        '.scrollMapsHideControls .gmnoprint { opacity: 0.5 !important; }';
+    style.innerHTML =   '.gmnoprint, .gm-style .place-card, .gm-style .login-control { -webkit-transition: opacity 0.3s !important; }' +
+                        '.scrollMapsHideControls .gmnoprint, .scrollMapsHideControls .gm-style .place-card, .scrollMapsHideControls .gm-style .login-control { opacity: 0.5 !important; }';
     document.head.appendChild(style);
 
     function getWheelEventTarget(mousePos) {
