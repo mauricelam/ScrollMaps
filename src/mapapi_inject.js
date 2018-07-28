@@ -1,7 +1,5 @@
 /*global $ Message ScrollableMap */
 
-console.log('Map API injected');
-
 var SM = SM || { count: 0 };
 
 SM.injectScript = function(host, src) {

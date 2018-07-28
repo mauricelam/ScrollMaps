@@ -25,7 +25,7 @@ grunt.initConfig({
                         "src/jquery.js",
                         "src/Shim.js",
                         "src/prefreader.js",
-                        "src/scrollability_inject.js",
+                        "src/Scrollability.js",
                         "src/ScrollableMap.js",
                         "src/mapapi_inject.js"
                     ]
@@ -34,7 +34,7 @@ grunt.initConfig({
                     dest: '<%= pluginDir %>/scrollability_inject.min.js',
                     src: [
                         "src/jquery.js",
-                        "src/scrollability_inject.js"
+                        "src/Scrollability.js"
                     ]
                 },
                 {
@@ -43,7 +43,7 @@ grunt.initConfig({
                         "src/jquery.js",
                         "src/Shim.js",
                         "src/prefreader.js",
-                        "src/scrollability_inject.js",
+                        "src/Scrollability.js",
                         "src/ScrollableMap.js",
                         "src/inject_frame.js"
                     ]
@@ -131,7 +131,7 @@ grunt.registerTask('dev', [
     'set_version:10000',
     'build',
     'exec:chrome_extension_reload'
-    ]);
+]);
 
 grunt.registerTask('release', function () {
     let pkg = grunt.file.readJSON('package.json')
