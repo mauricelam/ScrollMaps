@@ -44,6 +44,12 @@
             newMap.prototype = Map.prototype;
             parent[propname] = newMap;
         }
+
+        // Some scripts (YouTube) uses `'google' in window` to check for existence of 'google'
+        // object rather than window.google directly. Since Google has multiple APIs all under
+        // the 'google' namespace, we will take our chances and predefine it, hoping that they all
+        // correctly deal with a google object that's already present.
+        // window.google = {};
         onChainedPropertySet('GMap', newMapNotifier);
         onChainedPropertySet('GMap2', newMapNotifier);
         onChainedPropertySet('google.maps.Map2', newMapNotifier);
@@ -181,6 +187,9 @@
         return listeningDescriptor;
     };
 
-    init();
+    if (document.documentElement.innerHTML.indexOf('maps.googleapis.com') !== -1) {
+        // Avoid injecting into pages not using maps
+        init();
+    }
 
 })();

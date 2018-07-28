@@ -7,12 +7,7 @@
   "content_scripts": [
     {
       "matches": "<%= all_google_maps_urls %>",
-      "js": [
-        "src/jquery.js",
-        "src/Shim.js",
-        "src/prefreader.js",
-        "src/inject_frame.js"
-      ],
+      "js": ["inject_frame.min.js"],
       "all_frames": true,
       "run_at": "document_start"
     },
@@ -21,13 +16,7 @@
         "http://*/*",
         "https://*/*"
       ],
-      "js": [
-        "src/jquery.js",
-        "src/Shim.js",
-        "src/prefreader.js",
-        "src/ScrollableMap.js",
-        "src/global_inject.js"
-      ],
+      "js": ["mapapi_inject.min.js"],
       "all_frames": true,
       "run_at": "document_start"
     }

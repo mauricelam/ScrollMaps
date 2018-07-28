@@ -5,18 +5,50 @@ module.exports = function(grunt) {
 
 grunt.loadNpmTasks('grunt-contrib-compress');
 grunt.loadNpmTasks('grunt-contrib-copy');
-grunt.loadNpmTasks('grunt-contrib-uglify');
+grunt.loadNpmTasks('grunt-contrib-uglify-es');
 grunt.loadNpmTasks('grunt-contrib-imagemin');
+grunt.loadNpmTasks('grunt-mocha-test');
 grunt.loadNpmTasks('grunt-newer');
 grunt.loadNpmTasks('grunt-exec');
 
 grunt.initConfig({
     uglify: {
         all: {
-            files: [{
-                dest: '<%= pluginDir %>/inject_content.min.js',
-                src: ['src/inject_content.js']
-            }]
+            files: [
+                {
+                    dest: '<%= pluginDir %>/inject_content.min.js',
+                    src: ['src/inject_content.js']
+                },
+                {
+                    dest: '<%= pluginDir %>/mapapi_inject.min.js',
+                    src: [
+                        "src/jquery.js",
+                        "src/Shim.js",
+                        "src/prefreader.js",
+                        "src/scrollability_inject.js",
+                        "src/ScrollableMap.js",
+                        "src/mapapi_inject.js"
+                    ]
+                },
+                {
+                    dest: '<%= pluginDir %>/scrollability_inject.min.js',
+                    src: [
+                        "src/jquery.js",
+                        "src/scrollability_inject.js"
+                    ]
+                },
+                {
+                    dest: '<%= pluginDir %>/inject_frame.min.js',
+                    src: [
+                        "src/jquery.js",
+                        "src/Shim.js",
+                        "src/prefreader.js",
+                        "src/scrollability_inject.js",
+                        "src/ScrollableMap.js",
+                        "src/inject_frame.js"
+                    ]
+                }
+            ]
         }
     },
     copy: {
@@ -55,7 +87,8 @@ grunt.initConfig({
         }
     },
     exec: {
-        chrome_extension_reload: '(./chrome-cli open chrome://extensions && ./chrome-cli reload && ./chrome-cli close) || echo "Skipping chrome reload"',
+        // chrome_extension_reload: '(./chrome-cli open chrome://extensions && ./chrome-cli reload && ./chrome-cli close) || echo "Skipping chrome reload"',
+        chrome_extension_reload: ':',
         git_push: 'git push',
         npm_version: 'npm version <%= version %>"'
     },
@@ -72,6 +105,15 @@ grunt.initConfig({
                 dest: '<%= pluginDir %>'
             }]
         }
+    },
+    mochaTest: {
+      test: {
+        options: {
+          reporter: 'spec',
+          noFail: false // Optionally set to not fail on failed tests (will still fail on other errors)
+        },
+        src: ['test/**/*.js']
+      }
     }
 });
 
@@ -88,7 +130,8 @@ grunt.registerTask('build', [
 grunt.registerTask('dev', [
     'set_version:10000',
     'build',
-    'exec:chrome_extension_reload']);
+    'exec:chrome_extension_reload'
+    ]);
 
 grunt.registerTask('release', function () {
     let pkg = grunt.file.readJSON('package.json')
@@ -165,8 +208,8 @@ function getGoogleMapUrls() {
         for (format of GOOGLE_MAPS_URL_FORMATS) {
             output.push(format.replace('{tld}', tld))
         }
-        output = output.concat(GOOGLE_MAPS_SPECIAL_URLS)
     }
+    output = output.concat(GOOGLE_MAPS_SPECIAL_URLS)
     return output
 }
 
@@ -177,7 +220,6 @@ const TEST_SITES = [
     'https://developers.google.com/maps/documentation/embed/guide',
     'http://maps.google.com/?force=tt',
     'http://maps.google.be/',
-    'http://en.parkopedia.com/parking/san_francisco_ca_united_states/?ac=1&country=US&lat=37.7749295&lng=-122.41941550000001',
     'https://developers.google.com/maps/documentation/javascript/signedin',
     'https://developers.google.com/maps/documentation/javascript/examples/polygon-draggable',
     'https://developers.google.com/maps/documentation/javascript/examples/layer-data-quakes',
@@ -187,10 +229,13 @@ const TEST_SITES = [
     'https://www.google.com/maps/@?force=lite&dg=opt&newdg=1',
     'https://www.google.com/fusiontables/DataSource?docid=1jtmdb0D2ykY3_OmNhqiyBoiiv9B3jLNZBIffVMKR\#map:id=4',
     'https://www.google.com/maps/d/viewer?mid=1ZpcZ8OMZh1G1XwRmt9GaCwH6f-g&amp%3Bhl=en',
-    'https://www.geckoboard.com/tech-acquisitions/'];
+    'https://www.geckoboard.com/tech-acquisitions/'
+];
 
 const MAPBOX_TEST_SITES = [
-    'https://www.wunderground.com/'];
+    'http://en.parkopedia.com/parking/san_francisco_ca_united_states/?ac=1&country=US&lat=37.7749295&lng=-122.41941550000001',
+    'https://www.wunderground.com/'
+];
 
 grunt.registerTask('manualtest', function () {
     execSync(`./chrome-cli open "http://www.google.com/maps" -n`, { encoding: 'utf-8' });
@@ -198,5 +243,9 @@ grunt.registerTask('manualtest', function () {
         execSync(`./chrome-cli open "${test}"`, { encoding: 'utf-8' })
     }
 });
+
+// ========== Unit tests ========== //
+
+grunt.registerTask('test', 'mochaTest');
 
 };
