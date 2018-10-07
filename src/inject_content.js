@@ -182,7 +182,8 @@
         return listeningDescriptor;
     };
 
-    if (document.documentElement.innerHTML.indexOf('maps.googleapis.com') !== -1) {
+    if (document.documentElement.innerHTML.indexOf('maps.googleapis.com') !== -1 ||
+        /.*:\/\/www\.google\.com\/maps\/(.+\/)?viewer[^a-zA-Z]/.test(document.URL)) {
         // Avoid injecting into pages not using maps
         init();
     }
