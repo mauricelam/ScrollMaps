@@ -27,15 +27,9 @@ SM.injectScript = function(host, src) {
 
 // Init
 
-if (document.URL.split('.').pop(0).toLowerCase() !== 'pdf') {
-    SM.injectScript(document.documentElement, 'inject_content.min.js');
+SM.injectScript(document.documentElement, 'inject_content.min.js');
 
-    window.addEventListener('mapsFound', function (event) {
-        var map = event.target;
-        new ScrollableMap(map, event.detail.type, SM.count++);
-    }, true);
-} else {
-    // Don't run on PDF files. There seems to be a conflict between the built-in Chrome PDF plugin
-    // and how the script tag is injected.
-    console.log('ScrollMaps: Skipping PDF file');
-}
+window.addEventListener('mapsFound', function (event) {
+    var map = event.target;
+    new ScrollableMap(map, event.detail.type, SM.count++);
+}, true);

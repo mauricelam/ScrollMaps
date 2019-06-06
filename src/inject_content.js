@@ -7,6 +7,7 @@
     var TYPE_STREETVIEW_API = 4;
 
     function init() {
+        console.log('hihi');
         function newMapNotifier (parent, propname, Map) {
             if (typeof Map !== 'function') return;
             if (Map['..ScrollMaps']) return;
@@ -22,7 +23,7 @@
                         // https://developers.google.com/maps/documentation/javascript/interaction
                         //
                         // If the gesture handling is 'none', maybe the developer has a good reason
-                        // to not allow pannign
+                        // to not allow panning
                         opts.gestureHandling = 'greedy';
                     }
                 }
@@ -182,10 +183,6 @@
         return listeningDescriptor;
     };
 
-    if (document.documentElement.innerHTML.indexOf('maps.googleapis.com') !== -1 ||
-        /.*:\/\/www\.google\.com\/maps\/(.+\/)?viewer[^a-zA-Z]/.test(document.URL)) {
-        // Avoid injecting into pages not using maps
-        init();
-    }
+    init();
 
 })();
