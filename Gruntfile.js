@@ -218,9 +218,6 @@ function getGoogleMapUrls() {
 const TEST_SITES = [
     'https://developers.google.com/maps/documentation/javascript/styling',
     'https://developers.google.com/maps/documentation/embed/guide',
-    'http://maps.google.com/?force=tt',
-    // 'http://maps.google.be/',
-    'https://developers.google.com/maps/documentation/javascript/signedin',
     'https://developers.google.com/maps/documentation/javascript/examples/polygon-draggable',
     'https://developers.google.com/maps/documentation/javascript/examples/layer-data-quakes',
     'https://developers.google.com/maps/documentation/javascript/examples/layer-georss',
