@@ -7,7 +7,6 @@
     var TYPE_STREETVIEW_API = 4;
 
     function init() {
-        console.log('hihi');
         function newMapNotifier (parent, propname, Map) {
             if (typeof Map !== 'function') return;
             if (Map['..ScrollMaps']) return;
