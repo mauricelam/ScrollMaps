@@ -4,6 +4,7 @@ const { execSync } = require('child_process')
 module.exports = function(grunt) {
 
 grunt.loadNpmTasks('grunt-contrib-compress');
+grunt.loadNpmTasks('grunt-contrib-concat');
 grunt.loadNpmTasks('grunt-contrib-copy');
 grunt.loadNpmTasks('grunt-contrib-uglify-es');
 grunt.loadNpmTasks('grunt-contrib-imagemin');
@@ -13,12 +14,6 @@ grunt.loadNpmTasks('grunt-exec');
 
 grunt.initConfig({
     uglify: {
-        options: {
-            // Double inclusion guard, since webrequest can inject the script
-            // many times
-            banner: 'if (!window["..SMLoaded"]) {',
-            footer: 'window["..SMLoaded"] = true; }'
-        },
         all: {
             files: [
                 {
@@ -53,6 +48,38 @@ grunt.initConfig({
                         "src/ScrollableMap.js",
                         "src/inject_frame.js"
                     ]
+                }
+            ]
+        }
+    },
+    concat: {
+        options: {
+            process: function(src, filepath) {
+                // Double inclusion guard, since webrequest can inject the script
+                // many times
+                let name = filepath.split('/')
+                name = name[name.length - 1]
+                return `if (!window["..SMLoaded:${name}"]) {` + src +
+                    `window["..SMLoaded:${name}"]=true;}`;
+            }
+        },
+        all: {
+            files: [
+                {
+                    dest: '<%= pluginDir %>/inject_content.min.js',
+                    src: ['<%= pluginDir %>/inject_content.min.js']
+                },
+                {
+                    dest: '<%= pluginDir %>/mapapi_inject.min.js',
+                    src: ['<%= pluginDir %>/mapapi_inject.min.js']
+                },
+                {
+                    dest: '<%= pluginDir %>/scrollability_inject.min.js',
+                    src: ['<%= pluginDir %>/scrollability_inject.min.js']
+                },
+                {
+                    dest: '<%= pluginDir %>/inject_frame.min.js',
+                    src: ['<%= pluginDir %>/inject_frame.min.js']
                 }
             ]
         }
@@ -129,6 +156,7 @@ grunt.registerMultiTask('open', function() {
 
 grunt.registerTask('build', [
     'uglify:all',
+    'concat:all',
     'copy:all',
     'copy:manifest',
     'newer:imagemin']);
