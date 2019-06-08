@@ -1,6 +1,13 @@
 /*global $ Message pref */
 
+const DEBUG = false;
+
 var ScrollableMap = function (div, type, id) {
+
+    if (DEBUG) {
+        console.log('Creating scrollable map', div, id);
+    }
+
     // Avoid adding multiple event listeners to the same map
     if (div.__scrollMapEnabled) return;
     div.__scrollMapEnabled = true;
