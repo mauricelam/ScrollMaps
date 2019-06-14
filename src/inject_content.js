@@ -22,7 +22,7 @@
                         // https://developers.google.com/maps/documentation/javascript/interaction
                         //
                         // If the gesture handling is 'none', maybe the developer has a good reason
-                        // to not allow pannign
+                        // to not allow panning
                         opts.gestureHandling = 'greedy';
                     }
                 }
@@ -182,10 +182,6 @@
         return listeningDescriptor;
     };
 
-    if (document.documentElement.innerHTML.indexOf('maps.googleapis.com') !== -1 ||
-        /.*:\/\/www\.google\.com\/maps\/(.+\/)?viewer[^a-zA-Z]/.test(document.URL)) {
-        // Avoid injecting into pages not using maps
-        init();
-    }
+    init();
 
 })();
