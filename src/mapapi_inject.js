@@ -33,7 +33,7 @@ function _matchAncestor(node, predicate) {
         return _matchAncestor(node.parentNode, predicate);
     }
     return null;
-};
+}
 
 let GoogleMapFinder = {};
 
@@ -42,7 +42,7 @@ GoogleMapFinder._findGmStyleMap = function() {
         .filter(container =>
             container.querySelector('img[src*="//maps.googleapis.com/maps/"]')
                 || container.querySelector('canvas'))
-        .map(container => container.parentNode.parentNode);
+        .map(container => container.parentNode);
 };
 
 GoogleMapFinder._findFallbackMap = function() {
