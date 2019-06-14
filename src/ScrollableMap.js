@@ -1,6 +1,40 @@
 /*global $ Message pref */
 
+const DEBUG = false;
+
 var ScrollableMap = function (div, type, id) {
+
+    function _findAncestorScrollMap(node) {
+        if (!(node instanceof Element)) {
+            return null;
+        }
+        if (node.hasAttribute('data-scrollmaps')) {
+            return node;
+        }
+        return _findAncestorScrollMap(node.parentNode);
+    }
+
+    function _findDescendantScrollMap(node) {
+        return node.querySelector('[data-scrollmaps]');
+    }
+
+    function _findLineageScrollMap(node) {
+        return _findDescendantScrollMap(node)
+            || _findAncestorScrollMap(node.parentNode);
+    }
+
+    let lineage = _findLineageScrollMap(div);
+    if (lineage != null) {
+        if (DEBUG) {
+            console.log('Scrollmap already added', lineage, div);
+        }
+        return;
+    }
+
+    if (DEBUG) {
+        console.log('Creating scrollable map', div, id);
+    }
+
     // Avoid adding multiple event listeners to the same map
     if (div.__scrollMapEnabled) return;
     div.__scrollMapEnabled = true;

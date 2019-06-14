@@ -4,6 +4,7 @@ const { execSync } = require('child_process')
 module.exports = function(grunt) {
 
 grunt.loadNpmTasks('grunt-contrib-compress');
+grunt.loadNpmTasks('grunt-contrib-concat');
 grunt.loadNpmTasks('grunt-contrib-copy');
 grunt.loadNpmTasks('grunt-contrib-uglify-es');
 grunt.loadNpmTasks('grunt-contrib-imagemin');
@@ -47,6 +48,38 @@ grunt.initConfig({
                         "src/ScrollableMap.js",
                         "src/inject_frame.js"
                     ]
+                }
+            ]
+        }
+    },
+    concat: {
+        options: {
+            process: function(src, filepath) {
+                // Double inclusion guard, since webrequest can inject the script
+                // many times
+                let name = filepath.split('/')
+                name = name[name.length - 1]
+                return `if (!window["..SMLoaded:${name}"]) {` + src +
+                    `window["..SMLoaded:${name}"]=true;}`;
+            }
+        },
+        all: {
+            files: [
+                {
+                    dest: '<%= pluginDir %>/inject_content.min.js',
+                    src: ['<%= pluginDir %>/inject_content.min.js']
+                },
+                {
+                    dest: '<%= pluginDir %>/mapapi_inject.min.js',
+                    src: ['<%= pluginDir %>/mapapi_inject.min.js']
+                },
+                {
+                    dest: '<%= pluginDir %>/scrollability_inject.min.js',
+                    src: ['<%= pluginDir %>/scrollability_inject.min.js']
+                },
+                {
+                    dest: '<%= pluginDir %>/inject_frame.min.js',
+                    src: ['<%= pluginDir %>/inject_frame.min.js']
                 }
             ]
         }
@@ -123,6 +156,7 @@ grunt.registerMultiTask('open', function() {
 
 grunt.registerTask('build', [
     'uglify:all',
+    'concat:all',
     'copy:all',
     'copy:manifest',
     'newer:imagemin']);
@@ -226,7 +260,9 @@ const TEST_SITES = [
     'https://www.google.com/maps/@?force=lite&dg=opt&newdg=1',
     'https://www.google.com/fusiontables/DataSource?docid=1jtmdb0D2ykY3_OmNhqiyBoiiv9B3jLNZBIffVMKR\#map:id=4',
     'https://www.google.com/maps/d/viewer?mid=1ZpcZ8OMZh1G1XwRmt9GaCwH6f-g&amp%3Bhl=en',
-    'https://www.geckoboard.com/tech-acquisitions/'
+    'https://www.geckoboard.com/tech-acquisitions/',
+    'http://thecopperonion.com/location',
+    'http://la.smorgasburg.com/info/'
 ];
 
 const MAPBOX_TEST_SITES = [
