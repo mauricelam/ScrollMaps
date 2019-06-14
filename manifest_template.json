@@ -10,15 +10,6 @@
       "js": ["inject_frame.min.js"],
       "all_frames": true,
       "run_at": "document_start"
-    },
-    {
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ],
-      "js": ["mapapi_inject.min.js"],
-      "all_frames": true,
-      "run_at": "document_start"
     }
   ],
   "background": {
@@ -28,7 +19,7 @@
       "src/pref.js",
       "src/background.js"
     ],
-    "persistent": false
+    "persistent": true
   },
   "web_accessible_resources": [
     "images/button_active.png",
@@ -42,6 +33,7 @@
     "128": "images/maps_128.png"
   },
   "permissions": [
+    "webRequest",
     "tabs",
     "*://maps.google.com/",
     "*://www.google.com/maps/",
