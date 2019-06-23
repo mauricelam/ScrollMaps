@@ -31,6 +31,8 @@ chrome.webRequest.onBeforeRequest.addListener(
     },
     {urls: ["*://maps.googleapis.com/*"]});
 
+// TODO: Indicator of whether the extension is active
+
 chrome.browserAction.onClicked.addListener((tab) => {
     chrome.tabs.executeScript(tab.id, {
         'file': 'mapapi_inject.min.js',
@@ -41,5 +43,10 @@ chrome.browserAction.onClicked.addListener((tab) => {
         'file': 'scrollability_inject.min.js',
         'runAt': 'document_idle',
         'allFrames': true
+    });
+
+    chrome.browserAction.setPopup({
+        'tabId': tab.id,
+        'popup': chrome.runtime.getURL('src/popup/popup.html'),
     });
 });
