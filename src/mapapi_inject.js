@@ -79,6 +79,9 @@ GoogleMapFinder.findMaps = function() {
 
 function scrollifyExistingMaps() {
     maps = GoogleMapFinder.findMaps();
+    if (DEBUG) {
+        console.log('existing maps', maps);
+    }
     if (maps.length <= 0) {
         return false;
     }
