@@ -30,3 +30,16 @@ chrome.webRequest.onBeforeRequest.addListener(
         return {};
     },
     {urls: ["*://maps.googleapis.com/*"]});
+
+chrome.browserAction.onClicked.addListener((tab) => {
+    chrome.tabs.executeScript(tab.id, {
+        'file': 'mapapi_inject.min.js',
+        'runAt': 'document_start',
+        'allFrames': true
+    });
+    chrome.tabs.executeScript(tab.id, {
+        'file': 'scrollability_inject.min.js',
+        'runAt': 'document_idle',
+        'allFrames': true
+    });
+});
