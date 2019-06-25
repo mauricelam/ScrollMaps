@@ -197,11 +197,15 @@ grunt.registerTask('set_version', (version) => {
 function processManifestTemplate(content) {
     let manifest = JSON.parse(content);
     function processObj(obj) {
+        if (Array.isArray(obj)) {
+            let index = obj.indexOf('<%= all_google_maps_urls %>');
+            if (index !== -1) {
+                obj.splice(index, 1, ...getGoogleMapUrls());
+            }
+        }
         if (typeof obj === 'object') {
-            for (o in obj) {
-                if (obj[o] === '<%= all_google_maps_urls %>') {
-                    obj[o] = getGoogleMapUrls();
-                } else if (typeof obj[o] === 'object') {
+            for (let o in obj) {
+                if (typeof obj[o] === 'object') {
                     processObj(obj[o]);
                 }
             }

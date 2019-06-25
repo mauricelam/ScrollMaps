@@ -31,7 +31,48 @@ chrome.webRequest.onBeforeRequest.addListener(
     },
     {urls: ["*://maps.googleapis.com/*"]});
 
-// TODO: Indicator of whether the extension is active
+async function initializeTab(tab) {
+    if (tab.url.indexOf('chrome://') === 0) {
+        // This extension can't inject into chrome:// pages. Just show the popup
+        // directly
+        updateBrowserAction(tab, {active: false})
+        return;
+    }
+    if (Permission.isMapsSite(tab.url)) {
+        updateBrowserAction(tab);
+        return;
+    }
+    let siteStatus = await Permission.loadSiteStatus(tab.url);
+    if (siteStatus.isSiteGranted || siteStatus.isAllGranted) {
+        updateBrowserAction(tab);
+    }
+}
+
+chrome.tabs.query({}, (tabs) => {
+    for (let tab of tabs) {
+        initializeTab(tab);
+    }
+});
+
+chrome.tabs.onUpdated.addListener(
+    (tabId, changeInfo, tab) => initializeTab(tab));
+
+function updateBrowserAction(tab, {active = true, popup = true} = {}) {
+    if (active) {
+        chrome.browserAction.setBadgeText({
+            'text': '\u2713',
+            'tabId': tab.id
+        });
+    }
+    if (popup) {
+        chrome.browserAction.setPopup({
+            'tabId': tab.id,
+            'popup': chrome.runtime.getURL('src/popup/popup.html'),
+        });
+    }
+}
+
+chrome.browserAction.setBadgeBackgroundColor({'color': '#4caf50'});
 
 chrome.browserAction.onClicked.addListener((tab) => {
     chrome.tabs.executeScript(tab.id, {
@@ -45,8 +86,5 @@ chrome.browserAction.onClicked.addListener((tab) => {
         'allFrames': true
     });
 
-    chrome.browserAction.setPopup({
-        'tabId': tab.id,
-        'popup': chrome.runtime.getURL('src/popup/popup.html'),
-    });
+    updateBrowserAction(tab);
 });
