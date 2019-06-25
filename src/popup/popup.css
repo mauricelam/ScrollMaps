@@ -9,22 +9,14 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
     border-radius: 5px;
     box-sizing: border-box;
 }
-#box-content { padding: 15px; }
-#header {   font-family: Century Gothic, Arial, sans-serif; -webkit-user-select: none; cursor: default;
-            font-size: 30px; margin: auto; color: #333; text-shadow: 0 1px 1px white; 
-            /*background: -webkit-linear-gradient(top, white 0%, #EEE 60%, #F5F5F5 90%); border: 1px solid #BBB;
-            -webkit-border-radius: 5px; padding: 2px 5px; -webkit-box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.50); */
-        }
+.box-content { padding: 15px; }
 
-.horizontalLine { border-top: 1px solid #CCC; border-bottom: 1px solid #FFF; margin: 5px 0px; }
-.clear { clear: both; }
+.disable-options .PMcheckbox { display: none; }
 
-#checkboxes { display: inline-block; width: 350px; height: 480px; float: left; position: relative; }
+.PMcheckbox { margin: 7px 0px; display: flex; vertical-align: middle; }
+.PMcheckbox input { margin-right: 10px; }
+.PMcheckbox label { vertical-align: middle; display: inline-block; }
 
-.PMradio { margin: 7px 0px; display: flex; vertical-align: middle; }
-.PMradio input { margin-right: 10px; }
-.PMradio label { vertical-align: middle; display: inline-block; }
-
-.PMradio_labelwrap { display: inline-block; -webkit-user-select: none; margin: 5px 0px; }
-.PMradio_labeltext { margin: 2px 0px; }
-.PMradio_smalltext { color: #666; font-size: 12px; }
+label.disabled { opacity: 0.3; }
+.PMcheckbox_labeltext { margin: 2px 0px; }
+.PMcheckbox_smalltext { color: #666; font-size: 12px; }
