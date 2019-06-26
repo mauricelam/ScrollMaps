@@ -70,7 +70,7 @@
                 return;
             }
 
-            $('label[for=site_granted] .PMradio_smalltext')
+            $('label[for=site_granted] .PMcheckbox_smalltext')
                 .text(`Enable ScrollMaps on ${host} without having to click on the extension icon`);
 
             $('#all_granted').prop('checked', status.isAllGranted);
