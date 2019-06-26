@@ -55,10 +55,11 @@
                     'ScrollMaps is enabled on this Google Maps page.');
                 return;
             }
-            if (status.tabUrl.indexOf('chrome://') === 0) {
+            let protocol = new URL(status.tabUrl).protocol;
+            if (protocol === 'chrome:' || protocol === 'chrome-extension:') {
                 $(document.body).addClass('disable-options');
                 $('#permissionExplanation').text(
-                    'ScrollMaps cannot be enabled on chrome:// pages');
+                    `ScrollMaps cannot be enabled on ${protocol}// pages`);
                 return;
             }
             let host = new URL(status.tabUrl).host;
