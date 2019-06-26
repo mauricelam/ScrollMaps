@@ -88,3 +88,5 @@ chrome.browserAction.onClicked.addListener((tab) => {
 
     updateBrowserAction(tab);
 });
+
+// TODO: Fix cross site active badge
