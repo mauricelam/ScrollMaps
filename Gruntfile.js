@@ -157,6 +157,7 @@ grunt.registerMultiTask('open', function() {
 grunt.registerTask('build', [
     'uglify:all',
     'concat:all',
+    'generate_domains',
     'copy:all',
     'copy:manifest',
     'newer:imagemin']);
@@ -190,6 +191,14 @@ grunt.registerTask('set_version', (version) => {
     if (!version) grunt.fatal(`Invalid version "${version}"`);
     grunt.config.set('pluginDir', `gen/plugin-${version}`);
     grunt.config.set('version', version);
+});
+
+grunt.registerTask('generate_domains', () => {
+    let urls = getGoogleMapUrls();
+    let pluginDir = grunt.config.get('pluginDir');
+    grunt.file.write(
+        `${pluginDir}/src/domains.js`,
+        'const SCROLLMAPS_DOMAINS = ' + JSON.stringify(urls));
 });
 
 // ========== Generate manifest ========== //

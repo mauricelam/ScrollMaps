@@ -1,10 +1,6 @@
 (function(){
 
     let siteStatus = loadSiteStatus();
-    const REQUIRED_PERMISSION_ORIGINS = [
-        'www.google.com',
-        'maps.google.com'
-    ];
 
     function getTabUrl() {
         return new Promise((resolve, reject) => {
@@ -25,8 +21,7 @@
 
     $('#site_granted').change(function() {
         siteStatus.then((status) => {
-            if (REQUIRED_PERMISSION_ORIGINS.includes(
-                    new URL(status.tabUrl).host)) {
+            if (Permission.isRequiredPermission(status.tabUrl)) {
                 return;
             }
             if ($(this).prop('checked')) {
@@ -38,6 +33,7 @@
     });
     $('#all_granted').change(function() {
         let allGranted = $(this).prop('checked');
+        $('#site_granted').prop('checked', allGranted);
         if (allGranted) {
             chrome.permissions.request({origins: ['<all_urls>']});
         } else {
@@ -66,7 +62,7 @@
                 return;
             }
             let host = new URL(status.tabUrl).host;
-            if (REQUIRED_PERMISSION_ORIGINS.includes(host)) {
+            if (Permission.isRequiredPermission(status.tabUrl)) {
                 $(document.body).addClass('disable-options');
                 $('#permissionExplanation').text(
                     `ScrollMaps is enabled on ${host}`);
