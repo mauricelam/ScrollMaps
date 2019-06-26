@@ -32,13 +32,13 @@ chrome.webRequest.onBeforeRequest.addListener(
     {urls: ["*://maps.googleapis.com/*"]});
 
 async function initializeTab(tab) {
-    if (tab.url.indexOf('chrome://') === 0) {
+    if (tab.url.indexOf('chrome://') === 0 || tab.url.indexOf('chrome-extension://') === 0) {
         // This extension can't inject into chrome:// pages. Just show the popup
         // directly
         updateBrowserAction(tab, {active: false})
         return;
     }
-    if (Permission.isMapsSite(tab.url)) {
+    if (Permission.isMapsSite(tab.url) || Permission.isRequiredPermission(tab.url)) {
         updateBrowserAction(tab);
         return;
     }
