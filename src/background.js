@@ -45,31 +45,33 @@ async function initializeTab(tab) {
     let siteStatus = await Permission.loadSiteStatus(tab.url);
     if (siteStatus.isSiteGranted || siteStatus.isAllGranted) {
         updateBrowserAction(tab);
+        return;
     }
+    updateBrowserAction(tab, {active: false, popup: false});
 }
 
-chrome.tabs.query({}, (tabs) => {
-    for (let tab of tabs) {
-        initializeTab(tab);
-    }
-});
+function updateAllTabs() {
+    chrome.tabs.query({}, (tabs) => {
+        for (let tab of tabs) {
+            initializeTab(tab);
+        }
+    });
+}
+
+updateAllTabs();
 
 chrome.tabs.onUpdated.addListener(
     (tabId, changeInfo, tab) => initializeTab(tab));
 
 function updateBrowserAction(tab, {active = true, popup = true} = {}) {
-    if (active) {
-        chrome.browserAction.setBadgeText({
-            'text': '\u2713',
-            'tabId': tab.id
-        });
-    }
-    if (popup) {
-        chrome.browserAction.setPopup({
-            'tabId': tab.id,
-            'popup': chrome.runtime.getURL('src/popup/popup.html'),
-        });
-    }
+    chrome.browserAction.setBadgeText({
+        'text': active ? '\u2713' : '',
+        'tabId': tab.id
+    });
+    chrome.browserAction.setPopup({
+        'tabId': tab.id,
+        'popup': popup ? chrome.runtime.getURL('src/popup/popup.html') : '',
+    });
 }
 
 chrome.browserAction.setBadgeBackgroundColor({'color': '#4caf50'});
@@ -89,4 +91,5 @@ chrome.browserAction.onClicked.addListener((tab) => {
     updateBrowserAction(tab);
 });
 
-// TODO: Fix cross site active badge
+chrome.permissions.onAdded.addListener((permissions) => updateAllTabs());
+chrome.permissions.onRemoved.addListener((permissions) => updateAllTabs());
