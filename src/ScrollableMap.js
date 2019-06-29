@@ -4,6 +4,8 @@ const DEBUG = false;
 
 var ScrollableMap = function (div, type, id) {
 
+    chrome.runtime.sendMessage({'action': 'mapLoaded'});
+
     function _findAncestorScrollMap(node) {
         if (!(node instanceof Element)) {
             return null;
@@ -43,6 +45,8 @@ var ScrollableMap = function (div, type, id) {
 
     var mapClicked; // whether the map has ever been clicked (to activate the map)
     var bodyScrolls = false;
+
+    div.setAttribute('data-scrollmaps', id);
 
     var style = document.createElement('style');
     style.innerHTML =   '.gmnoprint, .gm-style .place-card, .gm-style .login-control { -webkit-transition: opacity 0.3s !important; }' +

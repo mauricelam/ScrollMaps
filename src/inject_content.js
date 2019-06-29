@@ -27,7 +27,6 @@
                     }
                 }
                 var uid = Math.floor(Math.random() * 100000);
-                container.setAttribute('data-scrollmaps', uid);
                 dispatchEventWhenAttached(container, 'mapsFound', {'id': uid, 'type': TYPE_API});
                 Map.call(this, container, opts);
 
@@ -60,7 +59,6 @@
                 var uid = Math.floor(Math.random() * 100000);
                 dispatchEventWhenAttached(container, 'mapsFound',
                     {'id': uid, 'type': TYPE_STREETVIEW_API});
-                container.setAttribute('data-scrollmaps', uid);
                 StreetView.call(this, container, opts);
 
                 return this;
