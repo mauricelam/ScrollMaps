@@ -18,13 +18,11 @@ Permission.loadSiteStatus = async function (url) {
     };
 }
 
-Permission.isMapsSite = function (urlString) {
-    let url = new URL(urlString);
-    if (url.host === 'maps.google.com') {
-        return true;
-    }
-    if (url.host === 'google.com' || url.host === 'www.google.com') {
-        return url.pathname.indexOf('/maps/') === 0;
+Permission.isMapsSite = function (url) {
+    for (let domain of SCROLLMAPS_DOMAINS) {
+        if (_matchPattern(domain, url)) {
+            return true;
+        }
     }
     return false;
 }
