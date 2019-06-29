@@ -16,6 +16,14 @@ function injectScript(tabId, frameId) {
         'file': 'scrollability_inject.min.js',
         'runAt': 'document_idle',
         'allFrames': true
+    }, (result) => {
+        let lastError = chrome.runtime.lastError;
+        let errorMessage = lastError ? lastError.message : undefined;
+        if (DEBUG) {
+            console.log(tabId, errorMessage);
+        } else if (errorMessage && errorMessage.indexOf('Cannot access') === -1) {
+            console.warn(tabId, errorMessage);
+        }
     });
 }
 
@@ -27,7 +35,7 @@ chrome.webRequest.onBeforeRequest.addListener(
             }
             if (details.tabId < 0) {
                 console.warn('Tab ID is less than 0', details);
-                return {};
+                return;
             }
             injectScript(details.tabId, details.frameId);
         } else {
@@ -35,7 +43,7 @@ chrome.webRequest.onBeforeRequest.addListener(
                 console.log('Non matching request', details);
             }
         }
-        return {};
+        return;
     },
     {urls: ["*://maps.googleapis.com/*"]});
 
