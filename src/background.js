@@ -50,6 +50,14 @@ chrome.webRequest.onBeforeRequest.addListener(
 chrome.browserAction.onClicked.addListener((tab) => {
     injectScript(tab.id, 'all');
     setBrowserActionBadge(tab.id, BADGE_LOADING);
+    setTimeout(() => {
+        // Remove the loading badge if no maps responded in 10s
+        chrome.browserAction.getBadgeText({'tabId': tab.id}, (text) => {
+            if (text === BADGE_LOADING) {
+                setBrowserActionBadge(tab.id, '');
+            }
+        });
+    }, 10000);
 });
 
 function refreshBrowserAction(tab) {
