@@ -1,7 +1,5 @@
 var Options = {};
 
-chrome.runtime.sendMessage({'action': 'optionsPageLoaded'});
-
 (function(){
 
     Options.createOptions = function(){
