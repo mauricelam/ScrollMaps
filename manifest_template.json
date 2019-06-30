@@ -28,6 +28,7 @@
     "images/button_inactive.png",
     "inject_content.min.js"
   ],
+  "content_security_policy": "script-src 'self' https://maps.googleapis.com https://maps.gstatic.com; object-src 'self'",
   "options_page": "src/options/options.html",
   "icons": {
     "16": "images/maps_16.png",

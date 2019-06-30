@@ -259,8 +259,8 @@ var ScrollableMap = function (div, type, id) {
         }
 
         var target = e.target || e.srcElement;
-        var isAccelerating = (!pref('isolateZoomScroll') ||
-            accelero.isAccelerating(e.wheelDeltaX, e.wheelDeltaY, e.timeStamp));
+        var isAccelerating =
+            accelero.isAccelerating(e.wheelDeltaX, e.wheelDeltaY, e.timeStamp);
 
         if (Scrollability.hasScrollableParent(target, div)) {
             // something is scrollable, let's allow it to scroll
