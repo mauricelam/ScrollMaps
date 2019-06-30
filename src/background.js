@@ -21,7 +21,9 @@ function injectScript(tabId, frameId) {
         let errorMessage = lastError ? lastError.message : undefined;
         if (DEBUG) {
             console.log(tabId, errorMessage);
-        } else if (errorMessage && errorMessage.indexOf('Cannot access') === -1) {
+        } else if (errorMessage
+            && errorMessage.indexOf('Cannot access') === -1
+            && errorMessage.indexOf('The extensions gallery cannot be scripted') === -1) {
             console.warn(tabId, errorMessage);
         }
     });
@@ -140,12 +142,6 @@ chrome.browserAction.setBadgeBackgroundColor({'color': '#4caf50'});
 
 chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
-        if (request.action === 'optionsPageLoaded') {
-            // Workaround for https://bugs.chromium.org/p/chromium/issues/detail?id=30756 where
-            // content scripts defined in the manifest doesn't work for pages hosted by the
-            // extension itself.
-            injectScript(sender.tab.id, undefined);
-        }
         if (request.action === 'mapLoaded') {
             if (DEBUG) {
                 console.log('mapLoaded', sender.tab);
