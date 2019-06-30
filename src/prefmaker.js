@@ -1,12 +1,38 @@
 /*global $ Pref pref */
 
-/**
-
-  Create views or widgets to toggle certain preference values.
-
-**/
+/** Create views or widgets to toggle certain preference values. */
 
 var PrefMaker = new (function _PrefMaker(){
+
+    this.makePermissionCheckbox = function(key, origin, label, secondLine) {
+        if(typeof secondLine == 'string'){
+            label = createTwoLineBox(label, secondLine);
+        }
+        var div = $('<div class="PMcheckbox"></div>');
+        var box = $('<input id="PMcheckbox_' + key + '" type="checkbox" />');
+        label = $('<label for="PMcheckbox_' + key + '">' + label + '</label>');
+        div.append(box).append(label);
+        box.click(updateOption);
+        label.click(updateOption);
+        updateView();
+
+        var prefChange = false;
+        function updateOption(){
+            if (box.prop('checked')) {
+                chrome.permissions.request({origins: [origin]});
+            } else {
+                chrome.permissions.remove({origins: [origin]});
+            }
+        }
+        async function updateView(){
+            let permission = await Permission.getPermissions([origin]);
+            box.attr('checked', permission);
+        }
+        chrome.permissions.onAdded.addListener(updateView);
+        chrome.permissions.onRemoved.addListener(updateView);
+
+        return div;
+    };
 
     this.makeBooleanCheckbox = function(key, label, secondLine) {
         if(typeof secondLine == 'string'){

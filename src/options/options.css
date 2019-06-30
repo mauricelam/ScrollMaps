@@ -14,15 +14,13 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
 #box-content { padding: 15px; }
 #header {   font-family: Century Gothic, Arial, sans-serif; -webkit-user-select: none; cursor: default;
             font-size: 30px; margin: auto; color: #333; text-shadow: 0 1px 1px white; 
-            /*background: -webkit-linear-gradient(top, white 0%, #EEE 60%, #F5F5F5 90%); border: 1px solid #BBB;
-            -webkit-border-radius: 5px; padding: 2px 5px; -webkit-box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.50); */
         }
 
 .horizontalLine { border-top: 1px solid #CCC; border-bottom: 1px solid #FFF; margin: 5px 0px; }
 .clear { clear: both; }
 
 #checkboxes { display: inline-block; width: 350px; height: 480px; float: left; position: relative; }
-#mapsdemo { border: 1px solid #BBB; float: right; }
+#mapsdemo { width: 300px; height: 470px; border: 1px solid #BBB; float: right; }
 
 #zoomhint { position: absolute; bottom: 3px; right: 5px; font-size: 12px; text-shadow: 0 1px 1px white; color: #888; -webkit-user-select: none; cursor: default; }
 
