@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>ScrollMaps options</title>
+        <link rel="stylesheet" href="popup.css" type="text/css" />
+    </head>
+    <body>
+        <div id="box">
+            <div id="permissionOptions" class="box-content">
+                <div id="permissionExplanation">Activate ScrollMaps by clicking the extension icon</div>
+                <div class="PMcheckbox">
+                    <input type="checkbox" id="site_granted" name="permission" />
+                    <label for="site_granted">
+                        <div class="PMcheckbox_labeltext">Auto-activate on this site</div>
+                        <div class="PMcheckbox_smalltext">Enable ScrollMaps on this site without having to click on the extension icon</div>
+                    </label>
+                </div>
+                <div class="PMcheckbox">
+                    <input type="checkbox" id="all_granted" name="permission" />
+                    <label for="all_granted">
+                        <div class="PMcheckbox_labeltext">Auto-activate on all sites</div>
+                        <div class="PMcheckbox_smalltext">Enable ScrollMaps on all sites without having to click on the extension icon</div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script src="../jquery.js" type="text/javascript"></script>
+    <script src="../domains.js" type="text/javascript"></script>
+    <script src="../permission.js" type="text/javascript"></script>
+    <script src="popup.js" type="text/javascript"></script>
+</html>

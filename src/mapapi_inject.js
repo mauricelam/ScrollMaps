@@ -40,10 +40,26 @@ let GoogleMapFinder = {};
 GoogleMapFinder._findGmStyleMap = function() {
     return Array.from(document.querySelectorAll('.gm-style'))
         .filter(container =>
-            container.querySelector('img[src*="//maps.googleapis.com/maps/"]')
+            _querySrc(container, 'img',
+                [
+                    '//maps.googleapis.com/maps/',
+                    '//www.google.com/maps/',
+                    '//maps.google.com/maps/'
+                ])
                 || container.querySelector('canvas'))
         .map(container => container.parentNode);
 };
+
+function _querySrc(container, tag, possible_substrings) {
+    for (let elem of container.querySelectorAll(tag)) {
+        for (let substring of possible_substrings) {
+            if (elem.src.indexOf(substring) !== -1) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 GoogleMapFinder._findFallbackMap = function() {
     let foundImages = Array.from(
@@ -79,6 +95,9 @@ GoogleMapFinder.findMaps = function() {
 
 function scrollifyExistingMaps() {
     maps = GoogleMapFinder.findMaps();
+    if (DEBUG) {
+        console.log('existing maps', maps);
+    }
     if (maps.length <= 0) {
         return false;
     }

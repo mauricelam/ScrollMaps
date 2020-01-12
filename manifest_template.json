@@ -6,7 +6,7 @@
   "description": "Allow you to use two finger scroll on your Mac trackpad in Google Maps.",
   "content_scripts": [
     {
-      "matches": "<%= all_google_maps_urls %>",
+      "matches": ["<%= all_google_maps_urls %>"],
       "js": ["inject_frame.min.js"],
       "all_frames": true,
       "run_at": "document_start"
@@ -17,6 +17,8 @@
       "src/jquery.js",
       "src/Shim.js",
       "src/pref.js",
+      "src/domains.js",
+      "src/permission.js",
       "src/background.js"
     ],
     "persistent": true
@@ -26,6 +28,7 @@
     "images/button_inactive.png",
     "inject_content.min.js"
   ],
+  "content_security_policy": "script-src 'self' https://maps.googleapis.com https://maps.gstatic.com; object-src 'self'",
   "options_page": "src/options/options.html",
   "icons": {
     "16": "images/maps_16.png",
@@ -33,11 +36,17 @@
     "128": "images/maps_128.png"
   },
   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3XeoaqQRtfyt5UOKmdyeGm6ynNFixgxA6+L49HQCm9SffiesKkWh14JrhDpydJco8rN8Eaa/mVhYctZzjQK8LlUjceUrPY3pWAIooQFC94ELrTh5JfwaUd5g/2LOSpH22nUdpEEQ/ffiQOhGSwPaAwavXjNpK3QYRDEz8+RG7EQIDAQAB",
+  "browser_action": {},
   "permissions": [
+    "activeTab",
     "webRequest",
     "tabs",
+    "*://maps.googleapis.com/*",
     "*://maps.google.com/",
     "*://www.google.com/maps/",
+    "<%= all_google_maps_urls %>"
+  ],
+  "optional_permissions": [
     "<all_urls>"
   ]
 }

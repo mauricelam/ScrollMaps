@@ -157,6 +157,7 @@ grunt.registerMultiTask('open', function() {
 grunt.registerTask('build', [
     'uglify:all',
     'concat:all',
+    'generate_domains',
     'copy:all',
     'copy:manifest',
     'newer:imagemin']);
@@ -192,16 +193,28 @@ grunt.registerTask('set_version', (version) => {
     grunt.config.set('version', version);
 });
 
+grunt.registerTask('generate_domains', () => {
+    let urls = getGoogleMapUrls();
+    let pluginDir = grunt.config.get('pluginDir');
+    grunt.file.write(
+        `${pluginDir}/src/domains.js`,
+        'const SCROLLMAPS_DOMAINS = ' + JSON.stringify(urls));
+});
+
 // ========== Generate manifest ========== //
 
 function processManifestTemplate(content) {
     let manifest = JSON.parse(content);
     function processObj(obj) {
+        if (Array.isArray(obj)) {
+            let index = obj.indexOf('<%= all_google_maps_urls %>');
+            if (index !== -1) {
+                obj.splice(index, 1, ...getGoogleMapUrls());
+            }
+        }
         if (typeof obj === 'object') {
-            for (o in obj) {
-                if (obj[o] === '<%= all_google_maps_urls %>') {
-                    obj[o] = getGoogleMapUrls();
-                } else if (typeof obj[o] === 'object') {
+            for (let o in obj) {
+                if (typeof obj[o] === 'object') {
                     processObj(obj[o]);
                 }
             }
@@ -262,7 +275,8 @@ const TEST_SITES = [
     'https://www.google.com/maps/d/viewer?mid=1ZpcZ8OMZh1G1XwRmt9GaCwH6f-g&amp%3Bhl=en',
     'https://www.geckoboard.com/tech-acquisitions/',
     'http://thecopperonion.com/location',
-    'http://la.smorgasburg.com/info/'
+    'http://la.smorgasburg.com/info/',
+    'https://www.heywhatsthat.com/?view=P5XIGCII'
 ];
 
 const MAPBOX_TEST_SITES = [

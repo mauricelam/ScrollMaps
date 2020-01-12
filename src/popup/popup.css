@@ -1,0 +1,22 @@
+body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial, sans-serif; font-size: 14px; }
+
+#box {
+    background: -webkit-linear-gradient(top, #DDD 0%, #EAEAEA 1% );
+    border: 1px solid #BBB;
+    margin: auto;
+    position: relative;
+    width: 300px;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+.box-content { padding: 15px; }
+
+.disable-options .PMcheckbox { display: none; }
+
+.PMcheckbox { margin: 7px 0px; display: flex; vertical-align: middle; }
+.PMcheckbox input { margin-right: 10px; }
+.PMcheckbox label { vertical-align: middle; display: inline-block; }
+
+label.disabled { opacity: 0.3; }
+.PMcheckbox_labeltext { margin: 2px 0px; }
+.PMcheckbox_smalltext { color: #666; font-size: 12px; }
