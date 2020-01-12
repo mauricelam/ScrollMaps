@@ -66,7 +66,13 @@ function pref(label){
 
     $(window).bind('preferenceChanged', function(event, pair) {
         Extension.forAllTabs(function (tab) {
-            Message.tab.sendMessage(tab, 'preferenceChanged', pair);
+            Message.tab.sendMessage(tab, 'preferenceChanged', pair, (result) => {
+                let error = chrome.runtime.lastError;
+                let errorMessage = error ? error.message : undefined;
+                if (errorMessage && errorMessage.indexOf('Receiving end does not exist') === -1) {
+                    console.warn(error);
+                }
+            });
         });
     });
 

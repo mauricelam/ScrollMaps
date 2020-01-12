@@ -17,15 +17,13 @@ function injectMaps() {
 }
 
 function injectFrame() {
-    // Don't activate this thing at all if the frame has no map
-    if (SM.inframe) {
-        console.log('ignoring frame');
-        return;
-    }
-    var elem = document.getElementById('map');
+    let elem = document.getElementById('map');
     elem = elem || document.getElementById('mapDiv');
     if (elem) {
-        new ScrollableMap(elem, (SM.inframe) ? ScrollableMap.TYPE_IFRAME : ScrollableMap.TYPE_WEB, SM.count++);
+        new ScrollableMap(
+            elem,
+            (SM.inframe) ? ScrollableMap.TYPE_IFRAME : ScrollableMap.TYPE_WEB,
+            SM.count++);
     } else if (!SM.inframe) {
         injectMaps();
     }

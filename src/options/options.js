@@ -47,12 +47,13 @@ var Options = {};
         );
         box.append(frameRequireFocusCheckbox);
 
-        var isolateZoomScrollCheckbox = PrefMaker.makeBooleanCheckbox(
-            'isolateZoomScroll',
-            'Detect Finger Lift',
-            'To isolate scrolling gestures from zooming'
+        var allowAccessToAllSites = PrefMaker.makePermissionCheckbox(
+            'allowAccessToAllSites',
+            '<all_urls>',
+            'Allow ScrollMaps on all sites',
+            'Any sites that embed Google Maps will enable scrolling automatically'
         );
-        box.append(isolateZoomScrollCheckbox);
+        box.append(allowAccessToAllSites);
 
         box.append('<div id="zoomhint">Pinch to zoom in or out</div>');
     };

@@ -1,10 +1,10 @@
 (function () {
 
-    var TYPE_WEB = 0;
-    var TYPE_IFRAME = 1;
-    var TYPE_API = 2;
-    var TYPE_NEWWEB = 3;
-    var TYPE_STREETVIEW_API = 4;
+    const TYPE_WEB = 0;
+    const TYPE_IFRAME = 1;
+    const TYPE_API = 2;
+    const TYPE_NEWWEB = 3;
+    const TYPE_STREETVIEW_API = 4;
 
     function init() {
         function newMapNotifier (parent, propname, Map) {
@@ -27,7 +27,6 @@
                     }
                 }
                 var uid = Math.floor(Math.random() * 100000);
-                container.setAttribute('data-scrollmaps', uid);
                 dispatchEventWhenAttached(container, 'mapsFound', {'id': uid, 'type': TYPE_API});
                 Map.call(this, container, opts);
 
@@ -60,7 +59,6 @@
                 var uid = Math.floor(Math.random() * 100000);
                 dispatchEventWhenAttached(container, 'mapsFound',
                     {'id': uid, 'type': TYPE_STREETVIEW_API});
-                container.setAttribute('data-scrollmaps', uid);
                 StreetView.call(this, container, opts);
 
                 return this;
