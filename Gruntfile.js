@@ -275,7 +275,8 @@ const TEST_SITES = [
     'https://www.google.com/maps/d/viewer?mid=1ZpcZ8OMZh1G1XwRmt9GaCwH6f-g&amp%3Bhl=en',
     'https://www.geckoboard.com/tech-acquisitions/',
     'http://thecopperonion.com/location',
-    'http://la.smorgasburg.com/info/'
+    'http://la.smorgasburg.com/info/',
+    'https://www.heywhatsthat.com/?view=P5XIGCII'
 ];
 
 const MAPBOX_TEST_SITES = [
