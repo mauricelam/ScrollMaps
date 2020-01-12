@@ -24,8 +24,6 @@
     "persistent": true
   },
   "web_accessible_resources": [
-    "images/button_active.png",
-    "images/button_inactive.png",
     "inject_content.min.js"
   ],
   "content_security_policy": "script-src 'self' https://maps.googleapis.com https://maps.gstatic.com; object-src 'self'",
