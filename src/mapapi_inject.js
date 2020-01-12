@@ -40,16 +40,22 @@ let GoogleMapFinder = {};
 GoogleMapFinder._findGmStyleMap = function() {
     return Array.from(document.querySelectorAll('.gm-style'))
         .filter(container =>
-            _querySrc(container, 'img', '//maps.googleapis.com/maps/')
-                || _querySrc(container, 'img', '//www.google.com/maps/')
+            _querySrc(container, 'img',
+                [
+                    '//maps.googleapis.com/maps/',
+                    '//www.google.com/maps/',
+                    '//maps.google.com/maps/'
+                ])
                 || container.querySelector('canvas'))
         .map(container => container.parentNode);
 };
 
-function _querySrc(container, tag, substring) {
+function _querySrc(container, tag, possible_substrings) {
     for (let elem of container.querySelectorAll(tag)) {
-        if (elem.src.indexOf(substring) !== -1) {
-            return true;
+        for (let substring of possible_substrings) {
+            if (elem.src.indexOf(substring) !== -1) {
+                return true;
+            }
         }
     }
     return false;
