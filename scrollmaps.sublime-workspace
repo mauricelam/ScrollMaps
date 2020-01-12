@@ -4,6 +4,50 @@
 		"selected_items":
 		[
 			[
+				"refre",
+				"refreshScrollMapsStatus"
+			],
+			[
+				"BAD",
+				"BADGE_ACTIVE"
+			],
+			[
+				"bad",
+				"badgeText"
+			],
+			[
+				"ba",
+				"badge2"
+			],
+			[
+				"get",
+				"getBadgeText"
+			],
+			[
+				"up",
+				"updateBrowserAction"
+			],
+			[
+				"prot",
+				"protocol"
+			],
+			[
+				"box",
+				"box-content"
+			],
+			[
+				"remove",
+				"removeOrigins"
+			],
+			[
+				"site",
+				"isSiteGranted"
+			],
+			[
+				"is",
+				"isSiteGranted"
+			],
+			[
 				"al",
 				"alreadySet"
 			],
@@ -431,10 +475,81 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "src/background.js",
+			"settings":
+			{
+				"buffer_size": 4807,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/options/options.html",
+			"settings":
+			{
+				"buffer_size": 1222,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/options/options.js",
+			"settings":
+			{
+				"buffer_size": 2235,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/inject_content.js",
+			"settings":
+			{
+				"buffer_size": 7469,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/mapapi_inject.js",
+			"settings":
+			{
+				"buffer_size": 3866,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/inject_frame.js",
+			"settings":
+			{
+				"buffer_size": 884,
+				"line_ending": "Unix"
+			}
+		}
 	],
-	"build_system": "",
+	"build_system": "Packages/User/grunt.sublime-build",
 	"build_system_choices":
 	[
+		[
+			[
+				[
+					"Packages/Makefile/Make.sublime-build",
+					""
+				],
+				[
+					"Packages/Makefile/Make.sublime-build",
+					"Clean"
+				],
+				[
+					"Packages/User/grunt.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/User/grunt.sublime-build",
+				""
+			]
+		]
 	],
 	"build_varint": "",
 	"command_palette":
@@ -581,20 +696,41 @@
 	},
 	"expanded_folders":
 	[
-		"/Users/mauricelam/Desktop/Maurice/code/maps"
+		"/Users/mauricelam/Desktop/Maurice/code/maps",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/options",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/popup",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/test"
 	],
 	"file_history":
 	[
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/inject_content.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/ScrollableMap.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/manifest_template.json",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/inject_frame.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/background.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/options/options.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/options/options.html",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/gen/plugin-10000/inject_frame.min.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/options/options.css",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/Shim.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/pref.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/popup/popup.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/prefmaker.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/prefreader.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/permission.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/popup/popup.html",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/package.json",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/Gruntfile.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/gen/plugin-10000/src/domains.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/gen/plugin-10000/manifest.json",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/popup/popup.css",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/popup/permission.js",
+		"/Users/mauricelam/Desktop/Maurice/code/maps/src/mapapi_inject.js",
+		"/Users/mauricelam/Desktop/Maurice/code/hashbang/TODO",
 		"/Users/mauricelam/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
 		"/Users/mauricelam/Library/Application Support/Sublime Text 3/Packages/Default/Preferences.sublime-settings",
-		"/Users/mauricelam/Desktop/Maurice/code/maps/Gruntfile.js",
 		"/Users/mauricelam/Desktop/Maurice/code/maps/gen/plugin-10000/mapapi_inject.min.js",
-		"/Users/mauricelam/Desktop/Maurice/code/maps/src/inject_content.js",
-		"/Users/mauricelam/Desktop/Maurice/code/maps/manifest_template.json",
-		"/Users/mauricelam/Desktop/Maurice/code/maps/src/background.js",
-		"/Users/mauricelam/Desktop/Maurice/code/maps/src/ScrollableMap.js",
-		"/Users/mauricelam/Desktop/Maurice/code/maps/src/mapapi_inject.js",
-		"/Users/mauricelam/Desktop/Maurice/code/maps/package.json",
 		"/Users/mauricelam/Desktop/Maurice/code/maps/src/api_inject.js",
 		"/Users/mauricelam/Desktop/Maurice/code/maps/src/empty.js",
 		"/Users/mauricelam/.gitconfig",
@@ -602,7 +738,6 @@
 		"/Users/mauricelam/Desktop/Maurice/code/hashbang/setup.py",
 		"/Users/mauricelam/Desktop/Maurice/code/hashbang/pypi.py",
 		"/Users/mauricelam/Desktop/Maurice/code/hashbang/hashbang/hashbang.py",
-		"/Users/mauricelam/Desktop/Maurice/code/hashbang/TODO",
 		"/Users/mauricelam/Desktop/Maurice/code/hashbang/tests/extension/remainder.py",
 		"/Users/mauricelam/Desktop/Maurice/code/hashbang/tests/basic/trailing_underscore.py",
 		"/Users/mauricelam/Desktop/Maurice/code/hashbang/tests/extension/version.py",
@@ -696,33 +831,18 @@
 		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/multipletypes/interface_int_simplemap.go",
 		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/typesets_test.go",
 		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/buildtags/buildtags_expected_multiple.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/main.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/buildtags/buildtags_expected_nostrip.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/buildtags/buildtags_expected.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/buildtags/buildtags.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/string_array_set.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/bugreports/negation_string.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/bugreports/negation_generic.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/.travis.yml",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/interface-template/generic_expected.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/bugreports/int_digraph.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/interfaces/join_expected.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/bugreports/generic_digraph.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/interfaces/join.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/examples/interfaces/join.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/bugreports/int_new_and_make_slice.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/parse/test/bugreports/interface_uint8.go",
-		"/Users/mauricelam/go/src/github.com/mauricelam/genny/g.go"
+		"/Users/mauricelam/go/src/github.com/mauricelam/genny/main.go"
 	],
 	"find":
 	{
-		"height": 24.0
+		"height": 39.0
 	},
 	"find_in_files":
 	{
 		"height": 101.0,
 		"where_history":
 		[
+			""
 		]
 	},
 	"find_state":
@@ -730,6 +850,100 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"finder",
+			"container.querySelector",
+			"injectScript",
+			"tabId",
+			"INJECT FRAME",
+			"console.log",
+			"iframe",
+			"sendMessage",
+			"key",
+			"request",
+			"isolateZoomScroll",
+			"setBrowserActionBadge",
+			"onclick",
+			" return {}",
+			"injectScript",
+			"updateAllTabs",
+			"refreshScrollMapsStatus",
+			"injectscript",
+			"inject",
+			"refresh",
+			"injectscr",
+			"execu",
+			"BADGE_LOADING",
+			"BADGE_ORDER",
+			"BADGE_NONE",
+			"onclick",
+			"BADGE_LOADING",
+			"data-scrollmaps",
+			"setBrowserActionBadge",
+			"BADGE_NONE",
+			"setbad",
+			"refreshScrollMapsStatus",
+			"updateBrowserAction",
+			"initializeTab",
+			"details.tabId",
+			"state",
+			"chrome.runtime.onMessage.addListener",
+			"message",
+			"'active",
+			"isMapsSite",
+			"tabId",
+			"tab",
+			"updateBrowserAction",
+			"initialize",
+			"updateBrowserAction",
+			"initializeTab",
+			"radio",
+			"isRequiredPermission",
+			"isrequiredper",
+			"google.com",
+			"chrome://",
+			"permission.js",
+			"copy",
+			"REQUIRED_PERMISSION_ORIGINS",
+			"REQUIRED",
+			"TODO",
+			"status.isAllGranted",
+			"*://www.google.com/maps/",
+			"getGoogleMapUrls",
+			"all_google_maps_urls",
+			"in",
+			"PMradio",
+			"this.value",
+			"site_granted",
+			"not_granted",
+			"radio",
+			"d",
+			"PMradio",
+			"fullmaps",
+			"URL",
+			"url",
+			"loadsite",
+			"ismaps",
+			"getPermissions",
+			"markTabAsActive",
+			"tabUrl",
+			"<div>",
+			"div",
+			"PMcheckbox",
+			"site_granted",
+			"result",
+			"tabUrl",
+			"site_granted",
+			"getTabUrl",
+			"checked",
+			"options",
+			"DEBUG",
+			"details.tabId",
+			"maps",
+			"data-scrollmaps",
+			"self.type",
+			"data-scrollmap",
+			"hasattribu",
+			".parentnode"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -747,14 +961,210 @@
 	"groups":
 	[
 		{
+			"selected": 5,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "src/background.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4807,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1324,
+								1324
+							]
+						],
+						"settings":
+						{
+							"SL.283.region_keys":
+							[
+							],
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 132.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "src/options/options.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1222,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								655,
+								655
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/options/options.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2235,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								19,
+								19
+							]
+						],
+						"settings":
+						{
+							"SL.301.region_keys":
+							[
+							],
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/inject_content.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7469,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"SL.295.region_keys":
+							[
+							],
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "src/mapapi_inject.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3866,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3148,
+								3148
+							]
+						],
+						"settings":
+						{
+							"SL.293.region_keys":
+							[
+							],
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 908.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "src/inject_frame.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 884,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								491,
+								491
+							]
+						],
+						"settings":
+						{
+							"SL.306.region_keys":
+							[
+							],
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
 			]
 		}
 	],
 	"incremental_find":
 	{
-		"height": 24.0
+		"height": 38.0
 	},
 	"input":
 	{
@@ -787,6 +1197,10 @@
 	{
 		"height": 0.0
 	},
+	"output.exec":
+	{
+		"height": 108.0
+	},
 	"output.find_results":
 	{
 		"height": 0.0
@@ -805,12 +1219,140 @@
 		"selected_items":
 		[
 			[
+				"infra",
+				"src/inject_frame.js"
+			],
+			[
+				"ophtml",
+				"src/options/options.html"
+			],
+			[
+				"options",
+				"src/options/options.js"
+			],
+			[
+				"injcon",
+				"src/inject_content.js"
+			],
+			[
 				"map",
+				"src/mapapi_inject.js"
+			],
+			[
+				"scrollmap",
+				"src/ScrollableMap.js"
+			],
+			[
+				"injecon",
+				"src/inject_content.js"
+			],
+			[
+				"back",
+				"src/background.js"
+			],
+			[
+				"manif",
+				"manifest_template.json"
+			],
+			[
+				"inf",
+				"src/inject_frame.js"
+			],
+			[
+				"incon",
+				"src/inject_content.js"
+			],
+			[
+				"backg",
+				"src/background.js"
+			],
+			[
+				"opjs",
+				"src/options/options.js"
+			],
+			[
+				"opt",
+				"src/options/options.css"
+			],
+			[
+				"manife",
+				"manifest_template.json"
+			],
+			[
+				"in",
+				"src/inject_frame.js"
+			],
+			[
+				"options.html",
+				"src/options/options.html"
+			],
+			[
+				"popup",
+				"src/popup/popup.js"
+			],
+			[
+				"backgr",
+				"src/background.js"
+			],
+			[
+				"permiss",
+				"src/permission.js"
+			],
+			[
+				"prefmak",
+				"src/prefmaker.js"
+			],
+			[
+				"option",
+				"src/options/options.js"
+			],
+			[
+				"manifest",
+				"manifest_template.json"
+			],
+			[
+				"mani",
+				"manifest_template.json"
+			],
+			[
+				"infr",
+				"src/inject_frame.js"
+			],
+			[
+				"scrollable",
+				"src/ScrollableMap.js"
+			],
+			[
+				"grun",
+				"Gruntfile.js"
+			],
+			[
+				"gruntfil",
+				"Gruntfile.js"
+			],
+			[
+				"html",
+				"src/popup/popup.html"
+			],
+			[
+				"perm",
+				"src/permission.js"
+			],
+			[
+				"mapa",
 				"src/mapapi_inject.js"
 			],
 			[
 				"grunt",
 				"Gruntfile.js"
+			],
+			[
+				"scro",
+				"src/ScrollableMap.js"
+			],
+			[
+				"main",
+				"src/mapapi_inject.js"
 			],
 			[
 				"scroll",
@@ -821,20 +1363,8 @@
 				"gen/plugin-10000/mapapi_inject.min.js"
 			],
 			[
-				"grun",
-				"Gruntfile.js"
-			],
-			[
 				"scrollm",
 				"src/ScrollableMap.js"
-			],
-			[
-				"back",
-				"src/background.js"
-			],
-			[
-				"manifest",
-				"manifest_template.json"
 			],
 			[
 				"inject",
@@ -1069,10 +1599,6 @@
 				"parse/test/buildtags/buildtags_expected.go"
 			],
 			[
-				"main",
-				"main.go"
-			],
-			[
 				"parse",
 				"parse/parse.go"
 			],
@@ -1153,10 +1679,6 @@
 				"g.go"
 			],
 			[
-				"scrollmap",
-				"ScrollableMap.js"
-			],
-			[
 				"injec",
 				"src/inject_content.js"
 			],
@@ -1171,10 +1693,6 @@
 			[
 				"mapin",
 				"src/mapapi_inject.js"
-			],
-			[
-				"backgr",
-				"src/background.js"
 			],
 			[
 				"scin",
@@ -1193,10 +1711,6 @@
 				"src/inject_content.js"
 			],
 			[
-				"gruntfil",
-				"Gruntfile.js"
-			],
-			[
 				"maintest",
 				"main_test.go"
 			],
@@ -1209,112 +1723,12 @@
 				"src/options/options.css"
 			],
 			[
-				"ophtml",
-				"src/options/options.html"
-			],
-			[
 				"prefmake",
 				"src/prefmaker.js"
 			],
 			[
-				"option",
-				"src/options/options.js"
-			],
-			[
 				"pref",
 				"src/pref.js"
-			],
-			[
-				"options",
-				"src/options/options.html"
-			],
-			[
-				"option.html",
-				"options/options.html"
-			],
-			[
-				"npmrc",
-				".npmrc"
-			],
-			[
-				"pack",
-				"package.json"
-			],
-			[
-				"packa",
-				"package.json"
-			],
-			[
-				"package",
-				"package.json"
-			],
-			[
-				".py",
-				"generate_manifest.py"
-			],
-			[
-				"p",
-				"package.json"
-			],
-			[
-				"subj",
-				"subject.go"
-			],
-			[
-				"interfa",
-				"interface.go"
-			],
-			[
-				"string",
-				"string_test.go"
-			],
-			[
-				"confi",
-				"config.go"
-			],
-			[
-				"ass",
-				"assert.go"
-			],
-			[
-				"as",
-				"assert_test.go"
-			],
-			[
-				"asstet",
-				"assert_test.go"
-			],
-			[
-				"intetest",
-				"interface_test.go"
-			],
-			[
-				"",
-				"interface.go"
-			],
-			[
-				"field",
-				"field_tag.go"
-			],
-			[
-				"co",
-				"cobragen.go"
-			],
-			[
-				"usage",
-				"usage_test.go"
-			],
-			[
-				"pre",
-				"ex3/predict.m"
-			],
-			[
-				"nn",
-				"ex3/ex3_nn.m"
-			],
-			[
-				"cost",
-				"ex3/lrCostFunction.m"
 			]
 		],
 		"width": 0.0
