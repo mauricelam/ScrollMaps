@@ -29,17 +29,44 @@ function injectScript(tabId, frameId) {
     });
 }
 
+function isMapsJsRequest(request) {
+    if (request.type === 'script') {
+        return true;
+    } else if (request.type === 'xmlhttprequest') {
+        if (request.url.search(/\bjs\b/) !== -1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function findOriginatingTabIds(request) {
+    // For some reason <script> that are async defer is reported as
+    // xmlhttprequest and the tabId is set to -1. This attempts to reverse that.
+    return new Promise((resolve, reject) => {
+        if (request.tabId >= 0) {
+            resolve([{tabId: request.tabId, frameId: request.frameId}]);
+            return
+        }
+        chrome.tabs.query({}, (tabs) => {
+            resolve(tabs
+                .filter((tab) => tab.url && tab.url.indexOf(request.initiator) === 0)
+                .map((tab) => { return {tabId: tab.id, frameId: undefined}; }));
+        });
+    });
+}
+
 chrome.webRequest.onBeforeRequest.addListener(
     function(details) {
-        if (details.type === 'script') {
+        if (isMapsJsRequest(details)) {
             if (DEBUG) {
                 console.log('Map API script requested', details);
             }
-            if (details.tabId < 0) {
-                console.warn('Tab ID is less than 0', details);
-                return;
-            }
-            injectScript(details.tabId, details.frameId);
+            findOriginatingTabIds(details).then((tabs) => {
+                for (tab of tabs) {
+                    injectScript(tab.tabId, tab.frameId);
+                }
+            });
         } else {
             if (DEBUG) {
                 console.log('Non matching request', details);
