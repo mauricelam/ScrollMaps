@@ -263,6 +263,7 @@ function getGoogleMapUrls() {
 // ========== Manual Test Sites ========== //
 
 const TEST_SITES = [
+    'https://developers-dot-devsite-v2-prod.appspot.com/maps/documentation/javascript/examples/full/style-array',
     'https://developers.google.com/maps/documentation/javascript/styling',
     'https://developers.google.com/maps/documentation/embed/guide',
     'https://developers.google.com/maps/documentation/javascript/examples/polygon-draggable',
@@ -271,7 +272,6 @@ const TEST_SITES = [
     'https://developers.google.com/maps/documentation/javascript/examples/streetview-embed',
     'https://developers.google.com/maps/documentation/javascript/examples/drawing-tools',
     'https://www.google.com/maps/@?force=lite&dg=opt&newdg=1',
-    'https://www.google.com/fusiontables/DataSource?docid=1jtmdb0D2ykY3_OmNhqiyBoiiv9B3jLNZBIffVMKR\#map:id=4',
     'https://www.google.com/maps/d/viewer?mid=1ZpcZ8OMZh1G1XwRmt9GaCwH6f-g&amp%3Bhl=en',
     'https://www.geckoboard.com/tech-acquisitions/',
     'http://thecopperonion.com/location',
