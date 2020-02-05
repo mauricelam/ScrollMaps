@@ -56,7 +56,7 @@ chrome.browserAction.onClicked.addListener((tab) => {
     if (Permission.isRequiredPermission(tab.url)) {
         // If the permission is required (e.g. if it is on the domain
         // google.com), we cannot allow users to toggle the permission.
-        setBrowserActionBadge(tab.id, BADGE_DISABLED)
+        setBrowserActionBadge(tab.id, '')
         return;
     }
 

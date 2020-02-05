@@ -1,9 +1,9 @@
 /*global $ Message ScrollableMap */
 
-if (window.SM === undefined) {
-    window.SM = { count: 0 };
+if (window.SM_INJECT === undefined) {
+    window.SM_INJECT = { count: 0 };
 
-    SM.injectScript = function(host, src) {
+    SM_INJECT.injectScript = function(host, src) {
         var script = document.createElement('script');
         script.setAttribute('id', '..scrollmaps_inject');
         script.src = Extension.getURL(src);
@@ -92,29 +92,25 @@ if (window.SM === undefined) {
             return false;
         }
         for (map of maps) {
-            new ScrollableMap(map, ScrollableMap.TYPE_API, SM.count++);
+            new ScrollableMap(map, ScrollableMap.TYPE_API, SM_INJECT.count++);
         }
         return true;
     }
 
-    function poll(func, timeout, count) {
-        if (count <= 0) {
-            return;
-        }
-        window.setTimeout(() => {
-            if (!func()) {
-                poll(func, timeout, count - 1);
-            }
-        }, timeout);
-    }
-
     // Init
-    SM.injectScript(document.documentElement, 'inject_content.min.js');
-    poll(scrollifyExistingMaps, 1000, 5);
+    let lastEventTime = 0;
+    const THORTTLE_TIME_MS = 2000;
+    scrollifyExistingMaps();
+    window.addEventListener('mousewheel', (e) => {
+        if (e.timeStamp - lastEventTime > THORTTLE_TIME_MS) {
+            scrollifyExistingMaps();
+            lastEventTime = e.timeStamp;
+        }
+    }, true);
+    SM_INJECT.injectScript(document.documentElement, 'inject_content.min.js');
 
     window.addEventListener('mapsFound', function (event) {
         var map = event.target;
-        new ScrollableMap(map, event.detail.type, SM.count++);
+        new ScrollableMap(map, event.detail.type, SM_INJECT.count++);
     }, true);
-
 }
