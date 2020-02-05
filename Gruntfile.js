@@ -273,9 +273,10 @@ const TEST_SITES = [
     'https://developers.google.com/maps/documentation/javascript/examples/drawing-tools',
     'https://www.google.com/maps/@?force=lite&dg=opt&newdg=1',
     'https://www.google.com/maps/d/viewer?mid=1ZpcZ8OMZh1G1XwRmt9GaCwH6f-g&amp%3Bhl=en',
-    'https://www.geckoboard.com/tech-acquisitions/',
     'http://thecopperonion.com/location',
     'http://la.smorgasburg.com/info/',
+    'https://www.yelp.com/search?find_desc=Restaurants&find_loc=Chicago%2C%20IL',
+    'https://www.google.com/travel/explore',
     'https://www.heywhatsthat.com/?view=P5XIGCII'
 ];
 
