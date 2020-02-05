@@ -78,6 +78,7 @@ var ScrollableMap = function (div, type, id) {
     self.init = function (div, type) {
         self.type = type;
         div.addEventListener('wheel', self.handleWheelEvent, true);
+        div.addEventListener('wheel', self.onUnhandledWheelEvent, false);
 
         window.addEventListener('mousemove', function (e) {
             if (e.detail !== 88) {
@@ -172,7 +173,6 @@ var ScrollableMap = function (div, type, id) {
     }
 
     function zoomInWeb (mousePos, target, originalEvent) {
-        var e;
         // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
         // keep that behavior for Cmd-scrolling.
         if (originalEvent instanceof WheelEvent) {
@@ -183,7 +183,7 @@ var ScrollableMap = function (div, type, id) {
                 scale = pref('zoomSpeed') / 100;
                 if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
             }
-            e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
+            let e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
             target.dispatchEvent(e);
             return;
         }
@@ -193,23 +193,31 @@ var ScrollableMap = function (div, type, id) {
         if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
         lastZoomTime = Date.now();
         // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
-        e = new WheelEvent('wheel', {
-            bubbles: true,
-            cancelable: true,
-            deltaX: 0,
-            deltaY: -1200,
-            screenX: -88,
-            screenY: -88,
-            clientX: mousePos[0],
-            clientY: mousePos[1],
-            view: window
-        });
-        target.dispatchEvent(e);
+        let dispatchClick = (event) => {
+            let e = new MouseEvent(event, {
+                bubbles: true,
+                cancelable: true,
+                screenX: -88,
+                screenY: -88,
+                button: 1,
+                buttons: 1,
+                clientX: mousePos[0],
+                clientY: mousePos[1],
+                view: window
+            });
+            target.dispatchEvent(e);
+        };
+        dispatchClick('mousedown');
+        dispatchClick('mouseup');
+        dispatchClick('click');
+        dispatchClick('mousedown');
+        dispatchClick('mouseup');
+        dispatchClick('click');
+        dispatchClick('dblclick');
     }
 
     function zoomOutWeb (mousePos, target, originalEvent) {
-        var e;
-        // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
+        // New Google Maps zooms much better using unmodified mouse wheel events. Let's
         // keep that behavior for Cmd-scrolling.
         if (originalEvent instanceof WheelEvent) {
             // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
@@ -219,7 +227,7 @@ var ScrollableMap = function (div, type, id) {
                 scale = pref('zoomSpeed') / 100;
                 if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
             }
-            e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
+            let e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
             target.dispatchEvent(e);
             return;
         }
@@ -229,24 +237,30 @@ var ScrollableMap = function (div, type, id) {
         if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
         lastZoomTime = Date.now();
         // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
-        e = new WheelEvent('wheel', {
-            bubbles: true,
-            cancelable: true,
-            deltaX: 0,
-            deltaY: 1200,
-            screenX: -88,
-            screenY: -88,
-            clientX: mousePos[0],
-            clientY: mousePos[1],
-            view: window
-        });
-        target.dispatchEvent(e);
+        let dispatchRightClick = (event) => {
+            let e = new MouseEvent(event, {
+                bubbles: true,
+                cancelable: true,
+                screenX: -88,
+                screenY: -88,
+                button: 2,
+                buttons: 2,
+                clientX: mousePos[0],
+                clientY: mousePos[1],
+                view: window
+            });
+            target.dispatchEvent(e);
+        };
+        dispatchRightClick('mousedown');
+        dispatchRightClick('mouseup');
+        dispatchRightClick('mousedown');
+        dispatchRightClick('mouseup');
     }
 
     var lastTarget;
     self.handleWheelEvent = function (e) {
         if (!pref('enabled') && !window.safari) return;
-        var isFrameType = self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API;
+        let isFrameType = self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API;
         if (isFrameType && !pref('enableForFrames')) {
             return;
         }
@@ -311,6 +325,19 @@ var ScrollableMap = function (div, type, id) {
         }
         e.stopPropagation();
         e.preventDefault();
+    };
+
+    self.onUnhandledWheelEvent = function(e) {
+        // console.log('unhandled wheel event', e);
+        // let mousePos = [e.clientX, e.clientY];
+        // if (e.screenX == -88 && e.screenY == -88) {
+        //     // backdoor for zooming unhandled. Map to keyboard shortcuts
+        //     if (e.deltaY < 0) {
+        //         self.zoomIn(mousePos, e.target, null);
+        //     } else if (e.deltaY > 0) {
+        //         self.zoomOut(mousePos, e.target, null);
+        //     }
+        // }
     };
 
     self.init(div, type);
