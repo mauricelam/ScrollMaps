@@ -277,7 +277,8 @@ const TEST_SITES = [
     'http://la.smorgasburg.com/info/',
     'https://www.yelp.com/search?find_desc=Restaurants&find_loc=Chicago%2C%20IL',
     'https://www.google.com/travel/explore',
-    'https://www.heywhatsthat.com/?view=P5XIGCII'
+    'https://www.heywhatsthat.com/?view=P5XIGCII',
+    'https://www.youtube.com/'
 ];
 
 const MAPBOX_TEST_SITES = [
