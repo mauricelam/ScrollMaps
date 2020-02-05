@@ -37,6 +37,17 @@
                     };
                 }
 
+                if (typeof this.setOptions === 'function') {
+                    let originalSetOpt = this.setOptions;
+                    this.setOptions = function(opts) {
+                        if ('scrollwheel' in opts) {
+                            opts['scrollwheel'] = true;
+                            console.log('ScrollMaps locked scroll wheel to enabled');
+                        }
+                        originalSetOpt.call(this, arguments);
+                    };
+                }
+
                 return this;
             };
             newMap['..ScrollMaps'] = true;

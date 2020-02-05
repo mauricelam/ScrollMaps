@@ -37,9 +37,6 @@
   "browser_action": {},
   "permissions": [
     "activeTab",
-    "webRequest",
-    "tabs",
-    "*://maps.googleapis.com/*",
     "*://maps.google.com/",
     "*://www.google.com/maps/",
     "<%= all_google_maps_urls %>"
