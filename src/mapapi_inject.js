@@ -111,17 +111,17 @@ if (window.SM_INJECT === undefined) {
     // Init
     let lastEventTime = 0;
     const THORTTLE_TIME_MS = 2000;
-    window.addEventListener('mousewheel', (e) => {
+    window.addEventListener('wheel', (e) => {
         if (e.timeStamp - lastEventTime > THORTTLE_TIME_MS) {
             scrollifyExistingMaps();
             lastEventTime = e.timeStamp;
         }
     }, true);
     poll(scrollifyExistingMaps, 2000, 3);
-    SM_INJECT.injectScript(document.documentElement, 'inject_content.min.js');
+    // SM_INJECT.injectScript(document.documentElement, 'inject_content.min.js');
 
     window.addEventListener('mapsFound', function (event) {
-        var map = event.target;
+        let map = event.target;
         new ScrollableMap(map, event.detail.type, SM_INJECT.count++);
     }, true);
 }
