@@ -97,16 +97,27 @@ if (window.SM_INJECT === undefined) {
         return true;
     }
 
+    function poll(func, timeout, count) {
+        if (count <= 0) {
+            return;
+        }
+        window.setTimeout(() => {
+            if (!func()) {
+                poll(func, timeout, count - 1);
+            }
+        }, timeout);
+    }
+
     // Init
     let lastEventTime = 0;
     const THORTTLE_TIME_MS = 2000;
-    scrollifyExistingMaps();
     window.addEventListener('mousewheel', (e) => {
         if (e.timeStamp - lastEventTime > THORTTLE_TIME_MS) {
             scrollifyExistingMaps();
             lastEventTime = e.timeStamp;
         }
     }, true);
+    poll(scrollifyExistingMaps, 2000, 3);
     SM_INJECT.injectScript(document.documentElement, 'inject_content.min.js');
 
     window.addEventListener('mapsFound', function (event) {
