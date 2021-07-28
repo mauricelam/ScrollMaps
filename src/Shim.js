@@ -40,7 +40,7 @@ var Extension = {};
 (function () {
 
     Extension.getURL = function (path) {
-        return chrome.extension.getURL(path);
+        return chrome.runtime.getURL(path);
     };
 
     Extension.forAllTabs = function (fn) {
