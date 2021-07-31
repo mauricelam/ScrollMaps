@@ -5,7 +5,7 @@ var Message = {};
     Message.tab = {};
 
     Message.tab.addListener = function (listener) {
-        chrome.extension.onMessage.addListener(function (message, sender, sendResponse) {
+        chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             var action = message.action;
             var data = message.data;
             listener.call(this, action, data, sender, sendResponse);
@@ -21,7 +21,7 @@ var Message = {};
     Message.extension = {};
 
     Message.extension.addListener = function (listener) {
-        chrome.extension.onMessage.addListener(function (message, sender, sendResponse) {
+        chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             var action = message.action;
             var data = message.data;
             listener.call(this, action, data, sender, sendResponse);
@@ -30,7 +30,7 @@ var Message = {};
 
     Message.extension.sendMessage = function (action, data, responseCallback) {
         responseCallback = responseCallback || function () {};
-        chrome.extension.sendMessage({ 'action': action, 'data': data }, responseCallback);
+        chrome.runtime.sendMessage({ 'action': action, 'data': data }, responseCallback);
     };
 
 })();
@@ -40,7 +40,7 @@ var Extension = {};
 (function () {
 
     Extension.getURL = function (path) {
-        return chrome.extension.getURL(path);
+        return chrome.runtime.getURL(path);
     };
 
     Extension.forAllTabs = function (fn) {
