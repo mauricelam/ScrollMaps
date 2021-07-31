@@ -1,6 +1,6 @@
 /*global Message */
 
-const DEBUG = chrome.app.getDetails().version == 10000;
+const DEBUG = chrome.runtime.getManifest().version == 10000;
 
 const BADGE_ACTIVE = '\u2713';
 const BADGE_LOADING = '\u21bb';
