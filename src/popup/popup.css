@@ -1,7 +1,7 @@
 body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial, sans-serif; font-size: 14px; }
 
 #box {
-    background: -webkit-linear-gradient(top, #DDD 0%, #EAEAEA 1% );
+    background: linear-gradient(top, #DDD 0%, #EAEAEA 1% );
     border: 1px solid #BBB;
     margin: auto;
     position: relative;

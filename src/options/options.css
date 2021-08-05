@@ -1,7 +1,7 @@
 body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial, sans-serif; font-size: 14px; }
 
 #box {
-    background: -webkit-linear-gradient(top, #DDD 0%, #EAEAEA 1% );
+    background: linear-gradient(top, #DDD 0%, #EAEAEA 1% );
     border: 1px solid #BBB;
     margin: auto;
     margin-top: 50px;
@@ -12,7 +12,7 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
     box-sizing: border-box;
 }
 #box-content { padding: 15px; }
-#header {   font-family: Century Gothic, Arial, sans-serif; -webkit-user-select: none; cursor: default;
+#header {   font-family: Century Gothic, Arial, sans-serif; user-select: none; cursor: default;
             font-size: 30px; margin: auto; color: #333; text-shadow: 0 1px 1px white; 
         }
 
@@ -22,13 +22,13 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
 #checkboxes { display: inline-block; width: 350px; height: 480px; float: left; position: relative; }
 #mapsdemo { width: 300px; height: 470px; border: 1px solid #BBB; float: right; }
 
-#zoomhint { position: absolute; bottom: 3px; right: 5px; font-size: 12px; text-shadow: 0 1px 1px white; color: #888; -webkit-user-select: none; cursor: default; }
+#zoomhint { position: absolute; bottom: 3px; right: 5px; font-size: 12px; text-shadow: 0 1px 1px white; color: #888; user-select: none; cursor: default; }
 
 .PMcheckbox { margin: 7px 0px; white-space: nowrap; vertical-align: middle; }
 .PMcheckbox input { margin-right: 10px; }
 .PMcheckbox label { vertical-align: middle; display: inline-block; }
 
-.PMcheckbox_labelwrap { display: inline-block; -webkit-user-select: none; margin: 5px 0px; }
+.PMcheckbox_labelwrap { display: inline-block; user-select: none; margin: 5px 0px; }
 .PMcheckbox_labeltext { margin: 2px 0px; }
 .PMcheckbox_smalltext { color: #666; font-size: 12px; }
 

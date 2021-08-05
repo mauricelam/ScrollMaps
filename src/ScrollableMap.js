@@ -49,7 +49,7 @@ var ScrollableMap = function (div, type, id) {
     div.setAttribute('data-scrollmaps', id);
 
     var style = document.createElement('style');
-    style.innerHTML =   '.gmnoprint, .gm-style .place-card, .gm-style .login-control { -webkit-transition: opacity 0.3s !important; }' +
+    style.innerHTML =   '.gmnoprint, .gm-style .place-card, .gm-style .login-control { transition: opacity 0.3s !important; }' +
                         '.scrollMapsHideControls .gmnoprint, .scrollMapsHideControls .gm-style .place-card, .scrollMapsHideControls .gm-style .login-control { opacity: 0.5 !important; }';
     document.head.appendChild(style);
 
@@ -74,7 +74,7 @@ var ScrollableMap = function (div, type, id) {
     var averageY = new SMLowPassFilter(2);
 
     var accelero = new SM2DAccelerationDetector();
-    
+
     self.init = function (div, type) {
         self.type = type;
         div.addEventListener('wheel', self.handleWheelEvent, true);
@@ -273,8 +273,7 @@ var ScrollableMap = function (div, type, id) {
         }
 
         var target = e.target || e.srcElement;
-        var isAccelerating =
-            accelero.isAccelerating(e.wheelDeltaX, e.wheelDeltaY, e.timeStamp);
+        var isAccelerating = accelero.isAccelerating(e.deltaX, e.deltaY, e.timeStamp);
 
         if (Scrollability.hasScrollableParent(target, div)) {
             // something is scrollable, let's allow it to scroll
@@ -308,10 +307,10 @@ var ScrollableMap = function (div, type, id) {
                     break;
                 case States.scrolling:
                     setTimer('flushAverage', function () { averageX.flush(); averageY.flush(); }, 200);
-                    // TODO: replace wheelDelta with delta for standards compliance
-                    averageX.push(e.wheelDeltaX); averageY.push(e.wheelDeltaY);
+                    averageX.push(e.deltaX); averageY.push(e.deltaY);
 
-                    var speedFactor = ( pref('scrollSpeed') / 100 ) * ( pref('invertScroll') ? -1 : 1 );
+                    const scrollSpeedDenominator = isFirefox() ? 25 : 100;
+                    var speedFactor = ( pref('scrollSpeed') / scrollSpeedDenominator ) * ( pref('invertScroll') ? 1 : -1 );
                     var dx = averageX.getAverage() * speedFactor;
                     var dy = averageY.getAverage() * speedFactor;
 
@@ -326,6 +325,10 @@ var ScrollableMap = function (div, type, id) {
         e.stopPropagation();
         e.preventDefault();
     };
+
+    function isFirefox() {
+        return navigator.userAgent.indexOf('Firefox') !== -1;
+    }
 
     self.onUnhandledWheelEvent = function(e) {
         // console.log('unhandled wheel event', e);
