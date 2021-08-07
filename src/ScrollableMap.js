@@ -309,10 +309,9 @@ var ScrollableMap = function (div, type, id) {
                     setTimer('flushAverage', function () { averageX.flush(); averageY.flush(); }, 200);
                     averageX.push(e.deltaX); averageY.push(e.deltaY);
 
-                    const scrollSpeedDenominator = isFirefox() ? 25 : 100;
-                    var speedFactor = ( pref('scrollSpeed') / scrollSpeedDenominator ) * ( pref('invertScroll') ? 1 : -1 );
-                    var dx = averageX.getAverage() * speedFactor;
-                    var dy = averageY.getAverage() * speedFactor;
+                    const speedFactor = ( pref('scrollSpeed') / 100 ) * ( pref('invertScroll') ? 1 : -1 );
+                    const dx = averageX.getAverage() * speedFactor;
+                    const dy = averageY.getAverage() * speedFactor;
 
                     if (dx !== 0 || dy !== 0) {
                         self.move(mousePos, dx, dy, target);

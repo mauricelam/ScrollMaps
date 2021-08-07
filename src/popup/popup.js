@@ -1,6 +1,8 @@
 (function(){
 
-    let siteStatus = loadSiteStatus();
+    const DEBUG = chrome.runtime.getManifest().version === '10000';
+    console.log('Runtime version: ', chrome.runtime.getManifest());
+    const siteStatus = loadSiteStatus();
 
     function getTabUrl() {
         return new Promise((resolve, reject) => {
@@ -18,6 +20,16 @@
         let url = await getTabUrl();
         return await Permission.loadSiteStatus(url);
     }
+
+    $('#reload').on('click', () => {
+        chrome.runtime.reload();
+    });
+    if (DEBUG) $('#reload').show(); else $('#reload').hide();
+
+    $('#options').on('click', () => {
+        chrome.runtime.openOptionsPage();
+        return false;
+    });
 
     $('#site_granted').change(function() {
         siteStatus.then((status) => {

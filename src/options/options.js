@@ -18,7 +18,7 @@ var Options = {};
         );
         box.append(enableForFramesCheckbox);
 
-        var scrollSpeedSlider = PrefMaker.makeSlider('scrollSpeed', 'Scrolling speed', 100, 5, 5);
+        var scrollSpeedSlider = PrefMaker.makeSlider('scrollSpeed', 'Scrolling speed', 500, 5, 5);
         box.append(scrollSpeedSlider);
 
         var zoomSpeedSlider = PrefMaker.makeSlider('zoomSpeed', 'Zoom speed', 500, 10, 10);

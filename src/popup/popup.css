@@ -11,6 +11,15 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
 }
 .box-content { padding: 15px; }
 
+.button_bar {
+    text-align: right;
+    padding: 4px;
+}
+
+.button_bar > a {
+    text-decoration: none;
+}
+
 .disable-options .PMcheckbox { display: none; }
 
 .PMcheckbox { margin: 7px 0px; display: flex; vertical-align: middle; }
