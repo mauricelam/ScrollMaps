@@ -7,10 +7,12 @@ Permission.getPermissions = function (urls) {
 }
 
 Permission.loadSiteStatus = async function (url) {
-    let [isSiteGranted, isAllGranted] = await Promise.all([
+    let [isSiteGrantedResult, isAllGrantedResult] = await Promise.allSettled([
         Permission.getPermissions([url]),
         Permission.getPermissions(['<all_urls>'])
     ]);
+    isSiteGranted = isSiteGrantedResult.status === 'fulfilled' && isSiteGrantedResult.value;
+    isAllGranted = isAllGrantedResult.status === 'fulfilled' && isAllGrantedResult.value;
     return {
         'tabUrl': url,
         'isSiteGranted': isSiteGranted || Permission.isMapsSite(url),

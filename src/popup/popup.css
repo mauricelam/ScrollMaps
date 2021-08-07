@@ -9,7 +9,7 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
     border-radius: 5px;
     box-sizing: border-box;
 }
-.box-content { padding: 15px; }
+.box-content { padding: 15px; padding-top: 4px; }
 
 .button_bar {
     text-align: right;
@@ -17,7 +17,12 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
 }
 
 .button_bar > a {
+    font-size: 12px;
     text-decoration: none;
+}
+
+.button_bar > a:hover {
+    opacity: 0.8;
 }
 
 .disable-options .PMcheckbox { display: none; }

@@ -47,7 +47,9 @@ function injectScript(tabId, frameId) {
 
 chrome.browserAction.onClicked.addListener((tab) => {
     if (tab.url.indexOf('chrome://') === 0
-        || tab.url.indexOf('chrome-extension://') === 0) {
+        || tab.url.indexOf('chrome-extension://') === 0
+        || tab.url.indexOf('about:') === 0
+        || tab.url.indexOf('moz-extension://') === 0) {
         // This extension can't inject into chrome:// pages. Just show the popup
         // directly
         setBrowserActionBadge(tab.id, BADGE_DISABLED)
@@ -114,7 +116,7 @@ function setBrowserActionBadge(
             'text': badge,
             'tabId': tabId
         });
-        if (badge) {
+        if (badge !== '') {
             chrome.browserAction.setBadgeBackgroundColor({
                 'color': BADGE_COLORS[badge]
             });

@@ -1,7 +1,6 @@
 (function(){
 
     const DEBUG = chrome.runtime.getManifest().version === '10000';
-    console.log('Runtime version: ', chrome.runtime.getManifest());
     const siteStatus = loadSiteStatus();
 
     function getTabUrl() {
@@ -17,8 +16,7 @@
     }
 
     async function loadSiteStatus() {
-        let url = await getTabUrl();
-        return await Permission.loadSiteStatus(url);
+        return await Permission.loadSiteStatus(await getTabUrl());
     }
 
     $('#reload').on('click', () => {
@@ -28,6 +26,7 @@
 
     $('#options').on('click', () => {
         chrome.runtime.openOptionsPage();
+        window.close();
         return false;
     });
 
@@ -59,35 +58,35 @@
         $('label[for=site_granted]').toggleClass('disabled', allGranted);
     }
 
-    $(function(){
-        siteStatus.then(status => {
-            if (Permission.isMapsSite(status.tabUrl)) {
-                $(document.body).addClass('disable-options');
-                $('#permissionExplanation').text(
-                    'ScrollMaps is enabled on this Google Maps page.');
-                return;
-            }
-            let protocol = new URL(status.tabUrl).protocol;
-            if (protocol === 'chrome:' || protocol === 'chrome-extension:') {
-                $(document.body).addClass('disable-options');
-                $('#permissionExplanation').text(
-                    `ScrollMaps cannot be enabled on ${protocol}// pages`);
-                return;
-            }
-            let host = new URL(status.tabUrl).host;
-            if (Permission.isRequiredPermission(status.tabUrl)) {
-                $(document.body).addClass('disable-options');
-                $('#permissionExplanation').text(
-                    `ScrollMaps is enabled on ${host}`);
-                return;
-            }
+    $(async () => {
+        const status = await siteStatus;
+        if (Permission.isMapsSite(status.tabUrl)) {
+            $(document.body).addClass('disable-options');
+            $('#permissionExplanation').text(
+                'ScrollMaps is enabled on this Google Maps page.');
+            return;
+        }
+        let protocol = new URL(status.tabUrl).protocol;
+        if (protocol === 'chrome:' || protocol === 'chrome-extension:'
+            || protocol === 'about:' || protocol === 'moz-extension:') {
+            $(document.body).addClass('disable-options');
+            $('#permissionExplanation').text(
+                `ScrollMaps cannot be enabled on "${protocol}" pages`);
+            return;
+        }
+        let host = new URL(status.tabUrl).host;
+        if (Permission.isRequiredPermission(status.tabUrl)) {
+            $(document.body).addClass('disable-options');
+            $('#permissionExplanation').text(
+                `ScrollMaps is enabled on ${host}`);
+            return;
+        }
 
-            $('label[for=site_granted] .PMcheckbox_smalltext')
-                .text(`Enable ScrollMaps on ${host} without having to click on the extension icon`);
+        $('label[for=site_granted] .PMcheckbox_smalltext')
+            .text(`Enable ScrollMaps on ${host} without having to click on the extension icon`);
 
-            $('#all_granted').prop('checked', status.isAllGranted);
-            $('#site_granted').prop('checked', status.isSiteGranted);
-            refreshCheckboxEnabledStates(status.isAllGranted);
-        });
+        $('#all_granted').prop('checked', status.isAllGranted);
+        $('#site_granted').prop('checked', status.isSiteGranted);
+        refreshCheckboxEnabledStates(status.isAllGranted);
     });
 })();
