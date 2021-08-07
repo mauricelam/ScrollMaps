@@ -21,6 +21,7 @@
 
     $('#reload').on('click', () => {
         chrome.runtime.reload();
+        return false;
     });
     $('#reload').toggle(DEBUG);
 

@@ -18,7 +18,9 @@
     "url": "https://github.com/mauricelam/ScrollMaps/issues"
   },
   "homepage": "https://github.com/mauricelam/ScrollMaps",
-  "dependencies": {},
+  "dependencies": {
+    "jquery": "^3.6.0"
+  },
   "devDependencies": {
     "grunt": "^1.4.1",
     "grunt-contrib-compress": "^1.6.0",

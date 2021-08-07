@@ -24,7 +24,7 @@ grunt.initConfig({
                 {
                     dest: '<%= pluginDir %>/mapapi_inject.min.js',
                     src: [
-                        "src/jquery.js",
+                        "node_modules/jquery/dist/jquery.min.js",
                         "src/Shim.js",
                         "src/prefreader.js",
                         "src/Scrollability.js",
@@ -35,14 +35,14 @@ grunt.initConfig({
                 {
                     dest: '<%= pluginDir %>/scrollability_inject.min.js',
                     src: [
-                        "src/jquery.js",
+                        "node_modules/jquery/dist/jquery.min.js",
                         "src/Scrollability.js"
                     ]
                 },
                 {
                     dest: '<%= pluginDir %>/inject_frame.min.js',
                     src: [
-                        "src/jquery.js",
+                        "node_modules/jquery/dist/jquery.min.js",
                         "src/Shim.js",
                         "src/prefreader.js",
                         "src/Scrollability.js",
@@ -95,6 +95,14 @@ grunt.initConfig({
                     'src/**/*.html',
                 ],
                 dest: '<%= pluginDir %>'
+            }]
+        },
+        node_modules: {
+            files: [{
+                src: [
+                    'node_modules/jquery/dist/jquery.min.js',
+                ],
+                dest: '<%= pluginDir %>/src/jquery.js'
             }]
         },
         manifest: {
@@ -174,6 +182,7 @@ grunt.registerTask('build', [
     'concat:all',
     'generate_domains',
     'copy:all',
+    'copy:node_modules',
     'copy:manifest',
     'newer:imagemin']);
 
