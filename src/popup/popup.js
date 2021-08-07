@@ -22,7 +22,7 @@
     $('#reload').on('click', () => {
         chrome.runtime.reload();
     });
-    if (DEBUG) $('#reload').show(); else $('#reload').hide();
+    $('#reload').toggle(DEBUG);
 
     $('#options').on('click', () => {
         chrome.runtime.openOptionsPage();
