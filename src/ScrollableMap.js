@@ -78,7 +78,6 @@ var ScrollableMap = function (div, type, id) {
     self.init = function (div, type) {
         self.type = type;
         div.addEventListener('wheel', self.handleWheelEvent, true);
-        div.addEventListener('wheel', self.onUnhandledWheelEvent, false);
 
         window.addEventListener('mousemove', function (e) {
             if (e.detail !== 88) {
@@ -328,19 +327,6 @@ var ScrollableMap = function (div, type, id) {
     function isFirefox() {
         return navigator.userAgent.indexOf('Firefox') !== -1;
     }
-
-    self.onUnhandledWheelEvent = function(e) {
-        // console.log('unhandled wheel event', e);
-        // let mousePos = [e.clientX, e.clientY];
-        // if (e.screenX == -88 && e.screenY == -88) {
-        //     // backdoor for zooming unhandled. Map to keyboard shortcuts
-        //     if (e.deltaY < 0) {
-        //         self.zoomIn(mousePos, e.target, null);
-        //     } else if (e.deltaY > 0) {
-        //         self.zoomOut(mousePos, e.target, null);
-        //     }
-        // }
-    };
 
     self.init(div, type);
 

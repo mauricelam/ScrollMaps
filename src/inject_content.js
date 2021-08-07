@@ -3,7 +3,6 @@
     const TYPE_WEB = 0;
     const TYPE_IFRAME = 1;
     const TYPE_API = 2;
-    const TYPE_NEWWEB = 3;
     const TYPE_STREETVIEW_API = 4;
 
     function init() {
