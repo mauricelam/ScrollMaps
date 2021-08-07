@@ -157,7 +157,10 @@ grunt.initConfig({
                 'src/**/*.html',
                 'src/**/*.css'
             ],
-            tasks: ['dev']
+            tasks: ['dev'],
+            options: {
+                atBegin: true
+            }
         }
     }
 });

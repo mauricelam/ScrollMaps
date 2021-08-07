@@ -114,9 +114,11 @@ function setBrowserActionBadge(
             'text': badge,
             'tabId': tabId
         });
-        chrome.browserAction.setBadgeBackgroundColor({
-            'color': BADGE_COLORS[badge]
-        });
+        if (badge) {
+            chrome.browserAction.setBadgeBackgroundColor({
+                'color': BADGE_COLORS[badge]
+            });
+        }
     }
     chrome.browserAction.setPopup({
         'tabId': tabId,
