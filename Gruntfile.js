@@ -7,6 +7,7 @@ grunt.loadNpmTasks('grunt-contrib-compress');
 grunt.loadNpmTasks('grunt-contrib-concat');
 grunt.loadNpmTasks('grunt-contrib-copy');
 grunt.loadNpmTasks('grunt-contrib-uglify-es');
+grunt.loadNpmTasks('grunt-contrib-watch');
 grunt.loadNpmTasks('grunt-contrib-imagemin');
 grunt.loadNpmTasks('grunt-mocha-test');
 grunt.loadNpmTasks('grunt-newer');
@@ -147,6 +148,17 @@ grunt.initConfig({
         },
         src: ['test/**/*.js']
       }
+    },
+    watch: {
+        all: {
+            files: [
+                'Gruntfile.js',
+                'src/**/*.js',
+                'src/**/*.html',
+                'src/**/*.css'
+            ],
+            tasks: ['dev']
+        }
     }
 });
 
