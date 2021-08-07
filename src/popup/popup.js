@@ -61,16 +61,15 @@
 
     $(async () => {
         const status = await siteStatus;
-        if (Permission.isMapsSite(status.tabUrl)) {
+        if (Permission.isOwnExtensionPage(status.tabUrl) || Permission.isMapsSite(status.tabUrl)) {
             $(document.body).addClass('disable-options');
             $('#permissionExplanation').text(
                 'ScrollMaps is enabled on this Google Maps page.');
             return;
         }
-        let protocol = new URL(status.tabUrl).protocol;
-        if (protocol === 'chrome:' || protocol === 'chrome-extension:'
-            || protocol === 'about:' || protocol === 'moz-extension:') {
+        if (!Permission.canInjectIntoPage(status.tabUrl)) {
             $(document.body).addClass('disable-options');
+            let protocol = new URL(status.tabUrl).protocol;
             $('#permissionExplanation').text(
                 `ScrollMaps cannot be enabled on "${protocol}" pages`);
             return;

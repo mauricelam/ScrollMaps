@@ -70,7 +70,7 @@ function pref(label){
                 let error = chrome.runtime.lastError;
                 let errorMessage = error ? error.message : undefined;
                 if (errorMessage && errorMessage.indexOf('Receiving end does not exist') === -1) {
-                    console.warn(error);
+                    console.warn(errorMessage);
                 }
             });
         });

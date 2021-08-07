@@ -20,6 +20,20 @@ Permission.loadSiteStatus = async function (url) {
     };
 }
 
+Permission.canInjectIntoPage = function (url) {
+    let protocol = new URL(url).protocol;
+    return Permission.isOwnExtensionPage(url) ||
+        (protocol !== 'chrome:'
+        && protocol !== 'chrome-extension:'
+        && protocol !== 'about:'
+        && protocol !== 'moz-extension:')
+}
+
+Permission.isOwnExtensionPage = function (url) {
+    return url.indexOf(`chrome-extension://${chrome.runtime.id}`) === 0
+        || url.indexOf(`moz-extension://${chrome.runtime.id}`) === 0;
+}
+
 Permission.isMapsSite = function (url) {
     for (let domain of SCROLLMAPS_DOMAINS) {
         if (_matchPattern(domain, url)) {

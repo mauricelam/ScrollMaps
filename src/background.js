@@ -32,37 +32,48 @@ const INJECT_EXPECTED_ERRORS = [
 ];
 
 function injectScript(tabId, frameId) {
-    chrome.tabs.executeScript(tabId, {
-        'file': 'mapapi_inject.min.js',
-        'runAt': 'document_start',
-        'frameId': frameId === 'all' ? null : frameId,
-        'allFrames': frameId === 'all'
-    }, () => checkErrors('inject mapapi', INJECT_EXPECTED_ERRORS));
-    chrome.tabs.executeScript(tabId, {
-        'file': 'scrollability_inject.min.js',
-        'runAt': 'document_idle',
-        'allFrames': true
-    }, () => checkErrors('inject scrollability', INJECT_EXPECTED_ERRORS));
+    return Promise.allSettled([
+        new Promise((resolve, reject) => {
+            chrome.tabs.executeScript(tabId, {
+                'file': 'mapapi_inject.min.js',
+                'runAt': 'document_start',
+                'frameId': frameId === 'all' ? null : frameId,
+                'allFrames': frameId === 'all'
+            }, () => {
+                checkErrors('inject mapapi', INJECT_EXPECTED_ERRORS);
+                resolve();
+            });
+        }),
+        new Promise((resolve, reject) => {
+            chrome.tabs.executeScript(tabId, {
+                'file': 'scrollability_inject.min.js',
+                'runAt': 'document_idle',
+                'allFrames': true
+            }, () => {
+                checkErrors('inject scrollability', INJECT_EXPECTED_ERRORS);
+                resolve();
+            });
+        })
+    ]);
 }
 
-chrome.browserAction.onClicked.addListener((tab) => {
-    if (tab.url.indexOf('chrome://') === 0
-        || tab.url.indexOf('chrome-extension://') === 0
-        || tab.url.indexOf('about:') === 0
-        || tab.url.indexOf('moz-extension://') === 0) {
+
+
+chrome.browserAction.onClicked.addListener(async (tab) => {
+    if (!Permission.canInjectIntoPage(tab.url)) {
         // This extension can't inject into chrome:// pages. Just show the popup
         // directly
         setBrowserActionBadge(tab.id, BADGE_DISABLED)
         return;
     }
-    if (Permission.isRequiredPermission(tab.url)) {
+    if (Permission.isOwnExtensionPage(tab.url) || Permission.isRequiredPermission(tab.url)) {
         // If the permission is required (e.g. if it is on the domain
         // google.com), we cannot allow users to toggle the permission.
-        setBrowserActionBadge(tab.id, '')
-        return;
+        setBrowserActionBadge(tab.id, '');
     }
 
-    injectScript(tab.id, 'all');
+    await injectScript(tab.id, 'all');
+    chrome.tabs.sendMessage(tab.id, {'action': 'browserActionClicked'});
     setBrowserActionBadge(tab.id, BADGE_LOADING);
     setTimeout(() => {
         // Remove the loading badge if no maps responded in 10s

@@ -4,7 +4,13 @@ const DEBUG = false;
 
 var ScrollableMap = function (div, type, id) {
 
-    chrome.runtime.sendMessage({'action': 'mapLoaded'});
+    let enabled = false;
+
+    function enable() {
+        enabled = true;
+        chrome.runtime.sendMessage({'action': 'mapLoaded'});
+        hideControls();
+    }
 
     function _findAncestorScrollMap(node) {
         if (!(node instanceof Element)) {
@@ -90,6 +96,19 @@ var ScrollableMap = function (div, type, id) {
         Pref.onPreferenceChanged('frameRequireFocus', function(pair){
             (pair.value) ? hideControls() : showControls();
         });
+
+        Pref.onPreferenceChanged('enabled', (pair) => {
+            console.log('enabled changed', pair);
+            if (pair.value) enable();
+        });
+
+        chrome.runtime.onMessage.addListener(
+            (request, sender, sendResponse) => {
+                if (request.action === 'browserActionClicked') {
+                    enable();
+                }
+            });
+
         div.addEventListener('click', handleClick, true);
         div.addEventListener('mousedown', blockEventIfNotActivated, true);
         div.addEventListener('mouseup', blockEventIfNotActivated, true)
@@ -119,7 +138,7 @@ var ScrollableMap = function (div, type, id) {
         }
     }
     function hideControls() {
-        if (mapRequiresActivation() && pref('enabled') && pref('frameRequireFocus')) {
+        if (mapRequiresActivation() && enabled && pref('frameRequireFocus')) {
             mapClicked = false;
             $(div).addClass('scrollMapsHideControls');
         }
@@ -258,7 +277,7 @@ var ScrollableMap = function (div, type, id) {
 
     var lastTarget;
     self.handleWheelEvent = function (e) {
-        if (!pref('enabled') && !window.safari) return;
+        if (!enabled && !window.safari) return;
         let isFrameType = self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API;
         if (isFrameType && !pref('enableForFrames')) {
             return;

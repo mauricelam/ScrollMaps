@@ -7,18 +7,19 @@ var Options = {};
 
         var enabledCheckbox = PrefMaker.makeBooleanCheckbox(
             'enabled',
-            'Enable on this computer',
-            'Enable this extension individually on different machines'
+            'Activate automatically',
+            'Activate automatically on sites you have already granted permissions'
         );
         box.append(enabledCheckbox);
 
+        // TODO: Remove this option and let the permissions control this
         var enableForFramesCheckbox = PrefMaker.makeBooleanCheckbox('enableForFrames',
             'Enable in embedded maps',
             'Scroll in Google Maps embedded in third-party web pages'
         );
         box.append(enableForFramesCheckbox);
 
-        var scrollSpeedSlider = PrefMaker.makeSlider('scrollSpeed', 'Scrolling speed', 500, 5, 5);
+        var scrollSpeedSlider = PrefMaker.makeSlider('scrollSpeed', 'Scrolling speed', 500, 10, 10);
         box.append(scrollSpeedSlider);
 
         var zoomSpeedSlider = PrefMaker.makeSlider('zoomSpeed', 'Zoom speed', 500, 10, 10);

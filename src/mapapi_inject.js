@@ -118,7 +118,6 @@ if (window.SM_INJECT === undefined) {
         }
     }, true);
     poll(scrollifyExistingMaps, 2000, 3);
-    // SM_INJECT.injectScript(document.documentElement, 'inject_content.min.js');
 
     window.addEventListener('mapsFound', function (event) {
         let map = event.target;

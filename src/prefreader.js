@@ -14,7 +14,7 @@ function pref(key){
 }
 
 (function(){
-    
+
     PrefReader.options = {};
 
     Message.extension.addListener(function (action, data, sender, sendResponse) {
