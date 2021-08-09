@@ -278,10 +278,6 @@ var ScrollableMap = function (div, type, id) {
     var lastTarget;
     self.handleWheelEvent = function (e) {
         if (!enabled && !window.safari) return;
-        let isFrameType = self.type == ScrollableMap.TYPE_IFRAME || self.type == ScrollableMap.TYPE_API;
-        if (isFrameType && !pref('enableForFrames')) {
-            return;
-        }
         if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
             e.stopPropagation(); return;
         }

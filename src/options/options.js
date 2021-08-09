@@ -12,13 +12,6 @@ var Options = {};
         );
         box.append(enabledCheckbox);
 
-        // TODO: Remove this option and let the permissions control this
-        var enableForFramesCheckbox = PrefMaker.makeBooleanCheckbox('enableForFrames',
-            'Enable in embedded maps',
-            'Scroll in Google Maps embedded in third-party web pages'
-        );
-        box.append(enableForFramesCheckbox);
-
         var scrollSpeedSlider = PrefMaker.makeSlider('scrollSpeed', 'Scrolling speed', 500, 10, 10);
         box.append(scrollSpeedSlider);
 

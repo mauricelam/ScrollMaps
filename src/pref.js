@@ -13,7 +13,6 @@ function pref(label){
         'enabled': true,
         'invertScroll': false,
         'invertZoom': false,
-        'enableForFrames': true,
         'isolateZoomScroll': true,
         'frameRequireFocus': true,
         'scrollSpeed': 200,
