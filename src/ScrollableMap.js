@@ -164,8 +164,10 @@ var ScrollableMap = function (div, type, id) {
         zoomOutWeb(mousePos, target, originalEvent);
     };
 
-    var lastZoomTime = 0;
-    var MINZOOMINTERVAL = 200;
+    let lastZoomTime = 0;
+    const MINZOOMINTERVAL = 200;
+    const DELTA_PER_ZOOM_LEVEL = 50;
+    let accumulatedZoomDelta = 0;
 
     function createBackdoorWheelEvent(originalEvent, zoomIn, scale) {
         if (originalEvent instanceof WheelEvent) {
@@ -204,9 +206,11 @@ var ScrollableMap = function (div, type, id) {
                     // behave naturally. It zooms a specific increment on each wheel event
                     // and doesn't look at deltaY. Throttle the number of events to keep the
                     // zooming at a reasonable rate.
-                    const minZoomInterval = MINZOOMINTERVAL * 2.5 / scale;
-                    if (Date.now() - lastZoomTime < minZoomInterval) return;
+                    if (Date.now() - lastZoomTime > 3000) accumulatedZoomDelta = 0;
+                    accumulatedZoomDelta += originalEvent.deltaY * scale;
                     lastZoomTime = Date.now();
+                    if (accumulatedZoomDelta > -DELTA_PER_ZOOM_LEVEL) return;
+                    accumulatedZoomDelta += DELTA_PER_ZOOM_LEVEL;
                 }
             }
             let e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
@@ -257,9 +261,11 @@ var ScrollableMap = function (div, type, id) {
                     // behave naturally. It zooms a specific increment on each wheel event
                     // and doesn't look at deltaY. Throttle the number of events to keep the
                     // zooming at a reasonable rate.
-                    const minZoomInterval = MINZOOMINTERVAL * 2.5 / scale;
-                    if (Date.now() - lastZoomTime < minZoomInterval) return;
+                    if (Date.now() - lastZoomTime > 3000) accumulatedZoomDelta = 0;
+                    accumulatedZoomDelta += originalEvent.deltaY * scale;
                     lastZoomTime = Date.now();
+                    if (accumulatedZoomDelta < DELTA_PER_ZOOM_LEVEL) return;
+                    accumulatedZoomDelta -= DELTA_PER_ZOOM_LEVEL;
                 }
             }
             let e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
