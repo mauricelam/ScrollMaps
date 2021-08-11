@@ -98,7 +98,6 @@ var ScrollableMap = function (div, type, id) {
         });
 
         Pref.onPreferenceChanged('enabled', (pair) => {
-            console.log('enabled changed', pair);
             if (pair.value) enable();
         });
 
@@ -337,6 +336,7 @@ var ScrollableMap = function (div, type, id) {
         }
         e.stopPropagation();
         e.preventDefault();
+        return false;
     };
 
     function isFirefox() {
