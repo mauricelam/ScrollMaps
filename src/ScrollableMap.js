@@ -199,6 +199,15 @@ var ScrollableMap = function (div, type, id) {
             if (originalEvent.ctrlKey) {
                 scale = pref('zoomSpeed') / 100;
                 if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
+                if (is2dCanvas(target)) {
+                    // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
+                    // behave naturally. It zooms a specific increment on each wheel event
+                    // and doesn't look at deltaY. Throttle the number of events to keep the
+                    // zooming at a reasonable rate.
+                    const minZoomInterval = MINZOOMINTERVAL * 2.5 / scale;
+                    if (Date.now() - lastZoomTime < minZoomInterval) return;
+                    lastZoomTime = Date.now();
+                }
             }
             let e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
             target.dispatchEvent(e);
@@ -243,6 +252,15 @@ var ScrollableMap = function (div, type, id) {
             if (originalEvent.ctrlKey) {
                 scale = pref('zoomSpeed') / 100;
                 if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
+                if (is2dCanvas(target)) {
+                    // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
+                    // behave naturally. It zooms a specific increment on each wheel event
+                    // and doesn't look at deltaY. Throttle the number of events to keep the
+                    // zooming at a reasonable rate.
+                    const minZoomInterval = MINZOOMINTERVAL * 2.5 / scale;
+                    if (Date.now() - lastZoomTime < minZoomInterval) return;
+                    lastZoomTime = Date.now();
+                }
             }
             let e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
             target.dispatchEvent(e);
@@ -274,6 +292,11 @@ var ScrollableMap = function (div, type, id) {
         dispatchRightClick('mouseup');
     }
 
+    function is2dCanvas(target) {
+        if (!(target instanceof HTMLCanvasElement)) return false;
+        return !!target.getContext('2d');
+    }
+
     var lastTarget;
     self.handleWheelEvent = function (e) {
         if (!enabled && !window.safari) return;
@@ -297,7 +320,6 @@ var ScrollableMap = function (div, type, id) {
             target = lastTarget;
         else
             lastTarget = target;
-
 
         var destinationState = (e.metaKey || e.ctrlKey || e.altKey) ? States.zooming : States.scrolling;
         if (isAccelerating || state == destinationState) {
