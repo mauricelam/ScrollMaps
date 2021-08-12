@@ -1,8 +1,10 @@
 const assert = require('assert');
 const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
+const firefox = require('selenium-webdriver/firefox');
 const process = require('process');
 require('chromedriver')
+require('geckodriver')
 
 
 describe('Suite', function() {
@@ -12,13 +14,25 @@ describe('Suite', function() {
     let defaultWindow;
 
     before(async () => {
-        driver = new webdriver.Builder()
-            .forBrowser('chrome')
-            .setChromeOptions(
-                new chrome.Options()
-                    .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000`)
-            )
-            .build();
+        if (process.env.BROWSER === 'chrome') {
+            driver = new webdriver.Builder()
+                .forBrowser('chrome')
+                .setChromeOptions(
+                    new chrome.Options()
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000`)
+                )
+                .build();
+        } else if (process.env.BROWSER === 'firefox') {
+            driver = new webdriver.Builder()
+                .forBrowser('firefox')
+                .setFirefoxOptions(
+                    new firefox.Options()
+                        .addExtensions(`${process.cwd()}/gen/scrollmaps-10000.zip`)
+                )
+                .build();
+        } else {
+            throw 'Environment variable $BROWSER not defined';
+        }
         defaultWindow = (await driver.getAllWindowHandles())[0];
         console.log('defaultWindow', defaultWindow);
     });

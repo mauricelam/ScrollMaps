@@ -12,6 +12,7 @@ grunt.loadNpmTasks('grunt-contrib-imagemin');
 grunt.loadNpmTasks('grunt-mocha-test');
 grunt.loadNpmTasks('grunt-newer');
 grunt.loadNpmTasks('grunt-exec');
+grunt.loadNpmTasks('grunt-env');
 
 grunt.initConfig({
     uglify: {
@@ -126,6 +127,17 @@ grunt.initConfig({
                 src: ['**'],
                 dest: '/'
             }]
+        },
+        firefoxtest: {
+            options: {
+                archive: 'gen/scrollmaps-<%= version %>.zip'
+            },
+            files: [{
+                expand: true,
+                cwd: '<%= pluginDir %>',
+                src: ['**'],
+                dest: '/'
+            }]
         }
     },
     exec: {
@@ -169,6 +181,14 @@ grunt.initConfig({
             options: {
                 atBegin: true
             }
+        }
+    },
+    env: {
+        chrome: {
+            BROWSER: 'chrome'
+        },
+        firefox: {
+            BROWSER: 'firefox'
         }
     }
 });
@@ -315,6 +335,17 @@ grunt.registerTask('manualtest', function () {
 
 // ========== Unit tests ========== //
 
-grunt.registerTask('test', 'mochaTest');
+grunt.registerTask('test:chrome', [
+    'env:chrome',
+    'mochaTest'
+]);
+
+grunt.registerTask('test:firefox', [
+    'set_version:10000',
+    'build',
+    'compress:firefoxtest',
+    'env:firefox',
+    'mochaTest'
+]);
 
 };
