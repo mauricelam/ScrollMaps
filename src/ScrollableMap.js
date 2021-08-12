@@ -156,18 +156,63 @@ var ScrollableMap = function (div, type, id) {
         dragger.simulateDrag(target, point, dx, dy);
     };
 
+    const zoomDeltaTracker = new ZoomDeltaTracker();
+
     self.zoomIn = function (mousePos, target, originalEvent) {
-        zoomInWeb(mousePos, target, originalEvent);
+        // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
+        // keep that behavior for Cmd-scrolling.
+        if (originalEvent instanceof WheelEvent) {
+            // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
+            // have much less "delta" than scroll
+            let scale = 1;
+            if (originalEvent.ctrlKey) {
+                scale = pref('zoomSpeed') / 100;
+                if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
+                if (type !== ScrollableMap.TYPE_NEWWEB || !isWebGlCanvas(target)) {
+                    // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
+                    // behave naturally. It zooms a specific increment on each wheel event
+                    // and doesn't look at deltaY. Throttle the number of events to keep the
+                    // zooming at a reasonable rate.
+                    if (!zoomDeltaTracker.zoomInDelta(originalEvent.deltaY * scale)) {
+                        return;
+                    }
+                }
+            }
+            let e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
+            target.dispatchEvent(e);
+            return;
+        } else {
+            console.warn('ScrollMaps unexpected event', originalEvent);
+        }
     };
 
     self.zoomOut = function (mousePos, target, originalEvent) {
-        zoomOutWeb(mousePos, target, originalEvent);
+        // New Google Maps zooms much better using unmodified mouse wheel events. Let's
+        // keep that behavior for Cmd-scrolling.
+        if (originalEvent instanceof WheelEvent) {
+            // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
+            // have much less "delta" than scroll
+            let scale = 1;
+            if (originalEvent.ctrlKey) {
+                scale = pref('zoomSpeed') / 100;
+                if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
+                if (type !== ScrollableMap.TYPE_NEWWEB || !isWebGlCanvas(target)) {
+                    // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
+                    // behave naturally. It zooms a specific increment on each wheel event
+                    // and doesn't look at deltaY. Throttle the number of events to keep the
+                    // zooming at a reasonable rate.
+                    if (!zoomDeltaTracker.zoomOutDelta(originalEvent.deltaY * scale)) {
+                        return;
+                    }
+                }
+            }
+            let e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
+            target.dispatchEvent(e);
+            return;
+        } else {
+            console.warn('ScrollMaps unexpected event', originalEvent);
+        }
     };
-
-    let lastZoomTime = 0;
-    const MINZOOMINTERVAL = 200;
-    const DELTA_PER_ZOOM_LEVEL = 50;
-    let accumulatedZoomDelta = 0;
 
     function createBackdoorWheelEvent(originalEvent, zoomIn, scale) {
         if (originalEvent instanceof WheelEvent) {
@@ -191,116 +236,9 @@ var ScrollableMap = function (div, type, id) {
         }
     }
 
-    function zoomInWeb (mousePos, target, originalEvent) {
-        // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
-        // keep that behavior for Cmd-scrolling.
-        if (originalEvent instanceof WheelEvent) {
-            // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
-            // have much less "delta" than scroll
-            let scale = 1;
-            if (originalEvent.ctrlKey) {
-                scale = pref('zoomSpeed') / 100;
-                if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
-                if (is2dCanvas(target)) {
-                    // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
-                    // behave naturally. It zooms a specific increment on each wheel event
-                    // and doesn't look at deltaY. Throttle the number of events to keep the
-                    // zooming at a reasonable rate.
-                    if (Date.now() - lastZoomTime > 3000) accumulatedZoomDelta = 0;
-                    accumulatedZoomDelta += originalEvent.deltaY * scale;
-                    lastZoomTime = Date.now();
-                    if (accumulatedZoomDelta > -DELTA_PER_ZOOM_LEVEL) return;
-                    accumulatedZoomDelta += DELTA_PER_ZOOM_LEVEL;
-                }
-            }
-            let e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
-            target.dispatchEvent(e);
-            return;
-        }
-
-        // Fallback, just-in-case the original event is not a wheel event (e.g. programmatic call,
-        // or keyboard +/-)
-        if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
-        lastZoomTime = Date.now();
-        // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
-        let dispatchClick = (event) => {
-            let e = new MouseEvent(event, {
-                bubbles: true,
-                cancelable: true,
-                screenX: -88,
-                screenY: -88,
-                button: 1,
-                buttons: 1,
-                clientX: mousePos[0],
-                clientY: mousePos[1],
-                view: window
-            });
-            target.dispatchEvent(e);
-        };
-        dispatchClick('mousedown');
-        dispatchClick('mouseup');
-        dispatchClick('click');
-        dispatchClick('mousedown');
-        dispatchClick('mouseup');
-        dispatchClick('click');
-        dispatchClick('dblclick');
-    }
-
-    function zoomOutWeb (mousePos, target, originalEvent) {
-        // New Google Maps zooms much better using unmodified mouse wheel events. Let's
-        // keep that behavior for Cmd-scrolling.
-        if (originalEvent instanceof WheelEvent) {
-            // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
-            // have much less "delta" than scroll
-            let scale = 1;
-            if (originalEvent.ctrlKey) {
-                scale = pref('zoomSpeed') / 100;
-                if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
-                if (is2dCanvas(target)) {
-                    // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
-                    // behave naturally. It zooms a specific increment on each wheel event
-                    // and doesn't look at deltaY. Throttle the number of events to keep the
-                    // zooming at a reasonable rate.
-                    if (Date.now() - lastZoomTime > 3000) accumulatedZoomDelta = 0;
-                    accumulatedZoomDelta += originalEvent.deltaY * scale;
-                    lastZoomTime = Date.now();
-                    if (accumulatedZoomDelta < DELTA_PER_ZOOM_LEVEL) return;
-                    accumulatedZoomDelta -= DELTA_PER_ZOOM_LEVEL;
-                }
-            }
-            let e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
-            target.dispatchEvent(e);
-            return;
-        }
-
-        // Fallback, just-in-case the original event is not a wheel event (e.g. programmatic call,
-        // or keyboard +/-)
-        if (Date.now() - lastZoomTime < MINZOOMINTERVAL) return;
-        lastZoomTime = Date.now();
-        // (-88, -88) is to pass through backdoor that the ScrollMaps event handler left open
-        let dispatchRightClick = (event) => {
-            let e = new MouseEvent(event, {
-                bubbles: true,
-                cancelable: true,
-                screenX: -88,
-                screenY: -88,
-                button: 2,
-                buttons: 2,
-                clientX: mousePos[0],
-                clientY: mousePos[1],
-                view: window
-            });
-            target.dispatchEvent(e);
-        };
-        dispatchRightClick('mousedown');
-        dispatchRightClick('mouseup');
-        dispatchRightClick('mousedown');
-        dispatchRightClick('mouseup');
-    }
-
-    function is2dCanvas(target) {
+    function isWebGlCanvas(target) {
         if (!(target instanceof HTMLCanvasElement)) return false;
-        return !!target.getContext('2d');
+        return !!target.getContext('webgl');
     }
 
     var lastTarget;
@@ -398,6 +336,34 @@ ScrollableMap.TYPE_IFRAME = 1;
 ScrollableMap.TYPE_API = 2;
 ScrollableMap.TYPE_NEWWEB = 3;
 ScrollableMap.TYPE_STREETVIEW_API = 4;
+
+
+const DELTA_PER_ZOOM_LEVEL = 50;
+
+class ZoomDeltaTracker {
+    constructor() {
+        this.accumulatedZoomDelta = 0;
+        this.lastZoomTime = 0;
+    }
+
+    zoomInDelta(delta) {
+        if (Date.now() - this.lastZoomTime > 1000) this.accumulatedZoomDelta = 0;
+        this.accumulatedZoomDelta += delta;
+        this.lastZoomTime = Date.now();
+        if (this.accumulatedZoomDelta > -DELTA_PER_ZOOM_LEVEL) return false;
+        this.accumulatedZoomDelta += DELTA_PER_ZOOM_LEVEL;
+        return true;
+    }
+
+    zoomOutDelta(delta) {
+        if (Date.now() - this.lastZoomTime > 1000) this.accumulatedZoomDelta = 0;
+        this.accumulatedZoomDelta += delta;
+        this.lastZoomTime = Date.now();
+        if (this.accumulatedZoomDelta < DELTA_PER_ZOOM_LEVEL) return false;
+        this.accumulatedZoomDelta -= DELTA_PER_ZOOM_LEVEL;
+        return true;
+    }
+}
 
 var SMLowPassFilter = function SMLowPassFilter () { this.init.apply(this, arguments); };
 SMLowPassFilter.SMOOTHING = 0.5;
