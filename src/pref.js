@@ -9,7 +9,7 @@ function pref(label){
 
 (function(){
 
-	var defaults = {
+	const defaults = {
         'enabled': true,
         'invertScroll': false,
         'invertZoom': false,
@@ -18,6 +18,8 @@ function pref(label){
         'scrollSpeed': 200,
         'zoomSpeed': 250
 	};
+
+    const listeners = [];
 
 	function getDefault(label) {
         return defaults[label];
@@ -36,11 +38,14 @@ function pref(label){
     };
 
 	PrefManager.setOption = function(key, value) {
-		var options = getOptions();
+		const options = getOptions();
 		if (!options) options = {};
+        if (options[key] === value) return;
 		options[key] = value;
 		localStorage['options'] = JSON.stringify(options);
-        $(window).trigger('preferenceChanged', [{key: key, value: value}]);
+        for (const listener of listeners) {
+            listener(key, value);
+        }
 		console.log('Options saved');
 	};
 
@@ -54,17 +59,17 @@ function pref(label){
 	};
 
     PrefManager.onPreferenceChanged = function(key, func) {
-        $(window).bind('preferenceChanged', function(event, pair) {
-            if (pair.key === key)
-                func(pair);
+        listeners.push((changedkey, changedvalue) => {
+            if (changedkey === key) func(changedkey, changedvalue);
         });
     };
 
     // support for PrefReader which reads preferences from content scripts (which do not have access
     // to localStorage of the extension)
 
-    $(window).bind('preferenceChanged', function(event, pair) {
+    listeners.push((key, value) => {
         Extension.forAllTabs(function (tab) {
+            const pair = {key: key, value: value};
             Message.tab.sendMessage(tab, 'preferenceChanged', pair, (result) => {
                 let error = chrome.runtime.lastError;
                 let errorMessage = error ? error.message : undefined;

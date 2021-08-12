@@ -46,7 +46,7 @@ var PrefMaker = new (function _PrefMaker(){
         label.click(updateOption);
         updateView();
 
-        Pref.onPreferenceChanged(key, function(pair){
+        Pref.onPreferenceChanged(key, (key, value) => {
             if(!prefChange)
                 updateView();
             prefChange = false;
@@ -81,7 +81,7 @@ var PrefMaker = new (function _PrefMaker(){
         slider.on('input', () => preview.text(slider.val()))
         updateView();
 
-        Pref.onPreferenceChanged(key, function(pair){
+        Pref.onPreferenceChanged(key, (key, value) => {
             if(!prefChange) updateView();
             prefChange = false;
         });

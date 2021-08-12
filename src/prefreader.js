@@ -16,21 +16,26 @@ function pref(key){
 (function(){
 
     PrefReader.options = {};
+    const listeners = [];
 
     Message.extension.addListener(function (action, data, sender, sendResponse) {
         switch (action) {
             case 'preferenceChanged':
                 PrefReader.options[data.key] = data.value;
-                $(window).trigger('preferenceChanged', [{ key: data.key, value: data.value }]);
+                for (const listener of listeners) {
+                    listener(data.key, data.value);
+                }
                 break;
         }
     });
 
     $(function(){
-        Message.extension.sendMessage('getAllPreferences', {}, function(_options){
+        Message.extension.sendMessage('getAllPreferences', {}, (_options) => {
             $.extend(PrefReader.options, _options);
-            for (var key in _options) {
-                $(window).trigger('preferenceChanged', [{ key: key, value: _options[key] }]);
+            for (const key in _options) {
+                for (const listener of listeners) {
+                    listener(key, _options[key]);
+                }
             }
         });
     });
@@ -45,9 +50,8 @@ function pref(key){
     };
 
     PrefReader.onPreferenceChanged = function(key, func){
-        $(window).bind('preferenceChanged', function(event, pair){
-            if(pair.key == key)
-                func(pair);
+        listeners.push((changedkey, changedvalue) => {
+            if (changedkey === key) func(changedkey, changedvalue);
         });
     };
 })();

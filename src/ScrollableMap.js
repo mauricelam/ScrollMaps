@@ -93,12 +93,12 @@ var ScrollableMap = function (div, type, id) {
         }, true);
 
         mapClicked = false;
-        Pref.onPreferenceChanged('frameRequireFocus', function(pair){
-            (pair.value) ? hideControls() : showControls();
+        Pref.onPreferenceChanged('frameRequireFocus', (key, value) => {
+            (value) ? hideControls() : showControls();
         });
 
-        Pref.onPreferenceChanged('enabled', (pair) => {
-            if (pair.value) enable();
+        Pref.onPreferenceChanged('enabled', (key, value) => {
+            if (value) enable();
         });
 
         chrome.runtime.onMessage.addListener(
