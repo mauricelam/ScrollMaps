@@ -108,6 +108,10 @@ var ScrollableMap = function (div, type, id) {
                 }
             });
 
+        if (pref('enabled')) {
+            enable();
+        }
+
         div.addEventListener('click', handleClick, true);
         div.addEventListener('mousedown', blockEventIfNotActivated, true);
         div.addEventListener('mouseup', blockEventIfNotActivated, true)
