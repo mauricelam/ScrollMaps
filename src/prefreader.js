@@ -29,15 +29,13 @@ function pref(key){
         }
     });
 
-    $(function(){
-        Message.extension.sendMessage('getAllPreferences', {}, (_options) => {
-            $.extend(PrefReader.options, _options);
-            for (const key in _options) {
-                for (const listener of listeners) {
-                    listener(key, _options[key]);
-                }
+    Message.extension.sendMessage('getAllPreferences', {}, (_options) => {
+        $.extend(PrefReader.options, _options);
+        for (const key in _options) {
+            for (const listener of listeners) {
+                listener(key, _options[key]);
             }
-        });
+        }
     });
 
     PrefReader.setOption = function(key, value){

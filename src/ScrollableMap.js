@@ -70,7 +70,7 @@ var ScrollableMap = function (div, type, id) {
     });
 
     function mapRequiresActivation () {
-        return self.type != ScrollableMap.TYPE_NEWWEB && bodyScrolls;
+        return self.type !== ScrollableMap.TYPE_NEWWEB && bodyScrolls;
     }
 
     var States = { idle: 0, scrolling: 1, zooming: 2 };
@@ -112,7 +112,7 @@ var ScrollableMap = function (div, type, id) {
         div.addEventListener('mousedown', blockEventIfNotActivated, true);
         div.addEventListener('mouseup', blockEventIfNotActivated, true)
         $(div).mouseleave(hideControls);
-        if (mapRequiresActivation()){
+        if (mapRequiresActivation()) {
             setTimeout(hideControls, 500);
         }
     }
