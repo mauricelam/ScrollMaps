@@ -6,14 +6,19 @@ const process = require('process');
 require('chromedriver')
 require('geckodriver')
 
+const TEST_TIMEOUT = 10 * 60 * 1000;
 
-describe('Suite', function() {
-    this.slow(600000);
-    this.timeout(600000);
+
+describe('Manual test suite', function() {
+    console.log(`
+    This is a manual test case. Go through each tab and make sure ScrollMap
+    works correctly on each of them. Close the tab once you are done testing
+    with that page.`)
+    this.slow(TEST_TIMEOUT);
+    this.timeout(TEST_TIMEOUT);
     let driver;
-    let defaultWindow;
 
-    before(async () => {
+    beforeEach(async () => {
         if (process.env.BROWSER === 'chrome') {
             driver = new webdriver.Builder()
                 .forBrowser('chrome')
@@ -25,23 +30,19 @@ describe('Suite', function() {
         } else if (process.env.BROWSER === 'firefox') {
             driver = new webdriver.Builder()
                 .forBrowser('firefox')
-                .setFirefoxOptions(
-                    new firefox.Options()
-                        .addExtensions(`${process.cwd()}/gen/scrollmaps-10000.zip`)
-                )
+                .setFirefoxOptions(new firefox.Options())
                 .build();
+            await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000.zip`, true)
         } else {
             throw 'Environment variable $BROWSER not defined';
         }
-        defaultWindow = (await driver.getAllWindowHandles())[0];
-        console.log('defaultWindow', defaultWindow);
     });
-    after(async () => {
+    afterEach(async () => {
         await driver.quit();
     })
 
     const TEST_SITES = [
-        'https://www.google.com/maps',
+        'https://www.google.com/maps?force=webgl',
         'https://developers.google.com/maps/documentation/javascript/styling',
         'https://developers.google.com/maps/documentation/embed/guide',
         'https://developers.google.com/maps/documentation/javascript/examples/polygon-draggable',
@@ -59,10 +60,8 @@ describe('Suite', function() {
 
     for (const site of TEST_SITES) {
         it(`Site: ${site}`, async () => {
-            await driver.switchTo().newWindow('tab');
             await driver.get(site);
-            await waitForNewTab(driver);
-            await driver.switchTo().window(defaultWindow);
+            await waitForEnd(driver);
         });
     }
 });
@@ -72,9 +71,13 @@ function sleep(timeout) {
     return new Promise((resolve, reject) => setTimeout(resolve, timeout));
 }
 
-async function waitForNewTab(driver) {
+async function waitForEnd(driver) {
     return await driver.wait(async () => {
-        const wh = await driver.getAllWindowHandles();
-        return wh.length == 1;
-    }, 60000);
+        try {
+            await driver.getCurrentUrl();
+            return false;
+        } catch (e) {
+            return true;
+        }
+    }, TEST_TIMEOUT);
 }

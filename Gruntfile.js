@@ -175,7 +175,8 @@ grunt.initConfig({
                 'Gruntfile.js',
                 'src/**/*.js',
                 'src/**/*.html',
-                'src/**/*.css'
+                'src/**/*.css',
+                'manifest_template.json'
             ],
             tasks: ['dev'],
             options: {

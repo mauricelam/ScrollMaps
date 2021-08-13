@@ -91,7 +91,7 @@ if (window.SM_INJECT === undefined) {
         if (maps.length <= 0) {
             return false;
         }
-        for (map of maps) {
+        for (const map of maps) {
             new ScrollableMap(map, ScrollableMap.TYPE_API, SM_INJECT.count++);
         }
         return true;
