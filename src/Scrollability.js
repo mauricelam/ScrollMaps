@@ -1,6 +1,7 @@
 /*global Scrollability */
 
 if (window.Scrollability === undefined) {
+    const DEBUG = chrome.runtime.getManifest().version === '10000';
     window.Scrollability = {};
 
     // Whether an element is scrollable
@@ -9,7 +10,7 @@ if (window.Scrollability === undefined) {
         if (element.scrollHeight <= element.clientHeight) return false;
         // if (element.clientHeight === 0 || element.clientWidth === 0) return false;
 
-        var overflow = window.getComputedStyle(element).getPropertyValue('overflow');
+        const overflow = window.getComputedStyle(element).getPropertyValue('overflow');
         if (overflow === 'hidden') return false;
         // Body and document element will scroll even if overflow is visible
         if (element === document.body || element === document.documentElement) return true;
@@ -31,7 +32,7 @@ if (window.Scrollability === undefined) {
     };
 
     Scrollability.isWindowScrollable = function () {
-        var hasContentBelowFold = $(document.documentElement).outerHeight(true /* includeMargin */) +
+        let hasContentBelowFold = $(document.documentElement).outerHeight(true /* includeMargin */) +
                 $(document.documentElement).position().top > $(window).height();
         hasContentBelowFold |= $(document.body).outerHeight(true /* includeMargin */) +
                 $(document.body).position().top > $(window).height();
@@ -40,12 +41,14 @@ if (window.Scrollability === undefined) {
     };
 
     Scrollability._monitorPotentialScrollabilityChange = function (element, callback) {
-        window.addEventListener('keydown', function (e) {
-            if (e.keyCode === 192) {  // `
-                console.log('force refreshing scrollability');
-                callback();
-            }
-        });
+        if (DEBUG) {
+            window.addEventListener('keydown', function (e) {
+                if (e.keyCode === 192) {  // `
+                    console.log('force refreshing scrollability');
+                    callback();
+                }
+            });
+        }
 
         window.addEventListener('resize', callback);
         document.addEventListener('load', callback);
@@ -53,10 +56,10 @@ if (window.Scrollability === undefined) {
 
     // Monitor parent scrollability for given element across iframes
     Scrollability.monitorScrollabilitySuper = function (element, callback) {
-        var overallScrollable = null;
-        var ancestorScrollable = false;  // Scrollability of parent documents of this frame
+        let overallScrollable = null;
+        let ancestorScrollable = false;  // Scrollability of parent documents of this frame
 
-        var updateScrollability = function () {
+        const updateScrollability = () => {
             // Maybe not all cases need to calculate hasScrollableParent?
             var newOverallScrollable = ancestorScrollable || Scrollability.hasScrollableParent(element);
             if (overallScrollable !== newOverallScrollable) {
@@ -81,7 +84,7 @@ if (window.Scrollability === undefined) {
 
             askParentFrameForScrollability();
 
-            window.addEventListener('message', function (message) {
+            window.addEventListener('message', (message) => {
                 parentResultReceived = true;
                 if (message.data.action === 'pageNeedsScrolling') {
                     ancestorScrollable = Boolean(message.data.value);
@@ -97,11 +100,9 @@ if (window.Scrollability === undefined) {
     };
 
     function getIframeForWindow(win) {
-        var iframes = document.getElementsByTagName('iframe');
-
-        for (var i = 0; i < iframes.length; i++) {
-            if (iframes[i].contentWindow === win) {
-                return iframes[i];
+        for (const iframe of document.getElementsByTagName('iframe')) {
+            if (iframe.contentWindow === win) {
+                return iframe;
             }
         }
     }
@@ -111,8 +112,7 @@ if (window.Scrollability === undefined) {
 
     window.addEventListener('message', function(message) {
         if (message.data.action === 'monitorScroll') {
-            var iframe = getIframeForWindow(message.source);
-
+            const iframe = getIframeForWindow(message.source);
             if (!iframe) {
                 console.warn('No matching iframe for message', message);
                 return;

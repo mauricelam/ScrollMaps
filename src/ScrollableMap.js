@@ -11,7 +11,7 @@ if (window.ScrollableMap === undefined) {
             if (enabled) return;
             enabled = true;
             chrome.runtime.sendMessage({'action': 'mapLoaded'});
-            hideControls();
+            refreshActivationAffordance();
             div.setAttribute('data-scrollmaps-enabled', 'true');
         }
 
@@ -50,14 +50,14 @@ if (window.ScrollableMap === undefined) {
         if (div.__scrollMapEnabled) return;
         div.__scrollMapEnabled = true;
 
-        var self = this;
+        const self = this;
 
-        var mapClicked; // whether the map has ever been clicked (to activate the map)
-        var bodyScrolls = false;
+        let mapClicked; // whether the map has ever been clicked (to activate the map)
+        let bodyScrolls = false;
 
         div.setAttribute('data-scrollmaps', id);
 
-        var style = document.createElement('style');
+        const style = document.createElement('style');
         style.innerHTML =   '.gmnoprint, .gm-style .place-card, .gm-style .login-control { transition: opacity 0.3s !important; }' +
                             '.scrollMapsHideControls .gmnoprint, .scrollMapsHideControls .gm-style .place-card, .scrollMapsHideControls .gm-style .login-control { opacity: 0.5 !important; }';
         document.head.appendChild(style);
@@ -69,12 +69,8 @@ if (window.ScrollableMap === undefined) {
 
         Scrollability.monitorScrollabilitySuper(div, (scrolls) => {
             bodyScrolls = scrolls;
-            if (bodyScrolls) { hideControls(); } else { showControls(); }
+            refreshActivationAffordance();
         });
-
-        function mapRequiresActivation () {
-            return self.type !== ScrollableMap.TYPE_NEWWEB && bodyScrolls;
-        }
 
         var States = { idle: 0, scrolling: 1, zooming: 2 };
         var state = States.idle;
@@ -97,7 +93,7 @@ if (window.ScrollableMap === undefined) {
 
             mapClicked = false;
             Pref.onPreferenceChanged('frameRequireFocus', (key, value) => {
-                (value) ? hideControls() : showControls();
+                refreshActivationAffordance();
             });
 
             Pref.onPreferenceChanged('enabled', (key, value) => {
@@ -115,38 +111,45 @@ if (window.ScrollableMap === undefined) {
                 enable();
             }
 
-            div.addEventListener('click', handleClick, true);
+            div.addEventListener('click', (event) => {
+                if (_isMapActivatable()) {
+                    if (event) event.stopPropagation();
+                    mapClicked = true;
+                }
+                refreshActivationAffordance();
+                lastTarget = null;
+            }, true);
+            const blockEventIfNotActivated = (event) => {
+                if (_isMapActivatable()) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+            }
             div.addEventListener('mousedown', blockEventIfNotActivated, true);
             div.addEventListener('mouseup', blockEventIfNotActivated, true)
-            $(div).mouseleave(hideControls);
-            if (mapRequiresActivation()) {
-                setTimeout(hideControls, 500);
-            }
-        }
-
-        function blockEventIfNotActivated(event) {
-            if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
-                event.stopPropagation();
-                event.preventDefault();
-            }
-        }
-
-        function handleClick(event) {
-            showControls(event);
-            lastTarget = null;
-        }
-
-        function showControls(event) {
-            if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
-                if (event) event.stopPropagation();
-                mapClicked = true;
-                $(div).removeClass('scrollMapsHideControls');
-            }
-        }
-        function hideControls() {
-            if (mapRequiresActivation() && enabled && pref('frameRequireFocus')) {
+            div.addEventListener('mouseleave', () => {
                 mapClicked = false;
-                $(div).addClass('scrollMapsHideControls');
+                refreshActivationAffordance();
+            });
+            setTimeout(refreshActivationAffordance, 500);
+        }
+
+        // A map is activatable when
+        //   1. relevant settings and scrollability requirements are met, and
+        //   2. it is not currently activated.
+        function _isMapActivatable() {
+            return self.type !== ScrollableMap.TYPE_NEWWEB &&  // Web maps are never activatable
+                bodyScrolls &&
+                pref('frameRequireFocus') &&
+                enabled &&
+                !mapClicked;
+        }
+
+        function refreshActivationAffordance() {
+            if (_isMapActivatable()) {
+                div.classList.add('scrollMapsHideControls');
+            } else {
+                div.classList.remove('scrollMapsHideControls');
             }
         }
 
@@ -251,7 +254,7 @@ if (window.ScrollableMap === undefined) {
         var lastTarget;
         self.handleWheelEvent = function (e) {
             if (!enabled && !window.safari) return;
-            if (pref('frameRequireFocus') && mapRequiresActivation() && !mapClicked) {
+            if (_isMapActivatable()) {
                 e.stopPropagation(); return;
             }
 
