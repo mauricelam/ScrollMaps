@@ -127,12 +127,11 @@ if (chrome.contentScripts) {
         matches: ['<all_urls>']
     });
 }
-chrome.tabs.onUpdated.addListener(
-    (tabId, changeInfo, tab) => {
-        if (changeInfo.status === 'loading') {
-            injectScript(tab.id, 'all');
-        }
-    });
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'loading' || changeInfo.status === 'complete') {
+        injectScript(tab.id, 'all');
+    }
+});
 
 
 function setBrowserActionBadge(

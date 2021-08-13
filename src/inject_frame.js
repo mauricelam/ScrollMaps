@@ -1,12 +1,12 @@
 /*global ScrollableMap */
 
-var SM = SM || { count: 0 };
+let SM = SM || { count: 0 };
 SM.inframe = (window.top !== window);
 
-var retries = 3;
+let retries = 3;
 
 function injectMaps() {
-    var elem = document.getElementById('content-container');
+    const elem = document.getElementById('content-container');
     if (elem) {
         new ScrollableMap(elem, ScrollableMap.TYPE_NEWWEB, SM.count++);
     } else if (retries > 0) {
