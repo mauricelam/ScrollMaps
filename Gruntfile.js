@@ -141,8 +141,6 @@ grunt.initConfig({
         }
     },
     exec: {
-        // chrome_extension_reload: '(./chrome-cli open chrome://extensions && ./chrome-cli reload && ./chrome-cli close) || echo "Skipping chrome reload"',
-        chrome_extension_reload: ':',
         git_push: 'git push',
         npm_version: 'npm version <%= version %>"'
     },
@@ -210,7 +208,6 @@ grunt.registerTask('build', [
 grunt.registerTask('dev', [
     'set_version:10000',
     'build',
-    'exec:chrome_extension_reload'
 ]);
 
 grunt.registerTask('release', function () {
@@ -306,44 +303,21 @@ function getGoogleMapUrls() {
 
 // ========== Manual Test Sites ========== //
 
-const TEST_SITES = [
-    'https://developers.google.com/maps/documentation/javascript/styling',
-    'https://developers.google.com/maps/documentation/embed/guide',
-    'https://developers.google.com/maps/documentation/javascript/examples/polygon-draggable',
-    'https://developers.google.com/maps/documentation/javascript/examples/layer-data-quakes',
-    'https://developers.google.com/maps/documentation/javascript/examples/layer-georss',
-    'https://developers.google.com/maps/documentation/javascript/examples/streetview-embed',
-    'https://developers.google.com/maps/documentation/javascript/examples/drawing-tools',
-    'https://www.google.com/maps?force=canvas',
-    'https://www.google.com/maps/d/u/0/viewer?msa=0&mid=1ntHquqDTqNB6fcmjKDSJT3VusG0&ll=37.34262853432693%2C-121.3232905&z=7',
-    'http://la.smorgasburg.com/info/',
-    'https://www.yelp.com/search?find_desc=Restaurants&find_loc=Chicago%2C%20IL',
-    'https://www.google.com/travel/explore',
-    'https://www.heywhatsthat.com/?view=P5XIGCII'
-];
-
-const MAPBOX_TEST_SITES = [
-    'http://en.parkopedia.com/parking/san_francisco_ca_united_states/?ac=1&country=US&lat=37.7749295&lng=-122.41941550000001',
-    'https://www.wunderground.com/'
-];
-
-grunt.registerTask('manualtest', function () {
-    execSync(`./chrome-cli open "http://www.google.com/maps" -n`, { encoding: 'utf-8' });
-    for (test of TEST_SITES) {
-        execSync(`./chrome-cli open "${test}"`, { encoding: 'utf-8' })
-    }
-});
+// const MAPBOX_TEST_SITES = [
+//     'http://en.parkopedia.com/parking/san_francisco_ca_united_states/?ac=1&country=US&lat=37.7749295&lng=-122.41941550000001',
+//     'https://www.wunderground.com/'
+// ];
 
 // ========== Unit tests ========== //
 
-grunt.registerTask('test:chrome', [
+grunt.registerTask('manualtest:chrome', [
+    'dev',
     'env:chrome',
     'mochaTest'
 ]);
 
-grunt.registerTask('test:firefox', [
-    'set_version:10000',
-    'build',
+grunt.registerTask('manualtest:firefox', [
+    'dev',
     'compress:firefoxtest',
     'env:firefox',
     'mochaTest'
