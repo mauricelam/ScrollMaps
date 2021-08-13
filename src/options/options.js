@@ -24,9 +24,7 @@ var Options = {};
         );
         box.append(invertScrollCheckbox);
 
-        var invertZoomDescription = window.safari ?
-            'Invert the direction for zooming' :
-            'Recommended for "natural" scrolling direction users';
+        var invertZoomDescription = 'Invert the direction for zooming';
         var invertZoomCheckbox = PrefMaker.makeBooleanCheckbox(
             'invertZoom',
             'Invert Zoom',
