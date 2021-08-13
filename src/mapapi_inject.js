@@ -1,6 +1,7 @@
 /*global $ Message ScrollableMap */
 
 if (window.SM_INJECT === undefined) {
+    const DEBUG = chrome.runtime.getManifest().version === '10000';
     window.SM_INJECT = { count: 0 };
 
     SM_INJECT.injectScript = function(host, src) {
@@ -85,9 +86,7 @@ if (window.SM_INJECT === undefined) {
 
     function scrollifyExistingMaps() {
         maps = GoogleMapFinder.findMaps();
-        if (DEBUG) {
-            console.log('existing maps', maps);
-        }
+        if (DEBUG) console.log('existing maps', maps);
         if (maps.length <= 0) {
             return false;
         }
