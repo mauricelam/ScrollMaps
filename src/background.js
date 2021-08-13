@@ -58,8 +58,14 @@ function injectScript(tabId, frameId) {
 }
 
 
+function getBadgeText(tabId) {
+    return new Promise((resolve, reject) => {
+        chrome.browserAction.getBadgeText({'tabId': tabId}, resolve);
+    });
+}
 
-chrome.browserAction.onClicked.addListener(async (tab) => {
+
+async function handleBrowserActionClicked(tab) {
     if (!Permission.canInjectIntoPage(tab.url)) {
         // This extension can't inject into chrome:// pages. Just show the popup
         // directly
@@ -75,31 +81,46 @@ chrome.browserAction.onClicked.addListener(async (tab) => {
     chrome.tabs.executeScript(tab.id, {
         'code': 'window.SCROLLMAPS_enabled = true',
         'allFrames': true
-    })
+    });
     await injectScript(tab.id, 'all');
     chrome.tabs.sendMessage(tab.id, {'action': 'browserActionClicked'});
     setBrowserActionBadge(tab.id, BADGE_LOADING);
-    setTimeout(() => {
+    refreshScrollMapsStatus(tab.id);
+    setTimeout(async () => {
         // Remove the loading badge if no maps responded in 10s
-        chrome.browserAction.getBadgeText({'tabId': tab.id}, (text) => {
-            if (text === BADGE_LOADING) {
-                setBrowserActionBadge(tab.id, '');
-            }
-        });
+        if (await getBadgeText(tab.id) === BADGE_LOADING) {
+            setBrowserActionBadge(tab.id, '');
+        }
     }, 10000);
+}
+
+
+chrome.browserAction.onClicked.addListener(async (tab) => {
+    await handleBrowserActionClicked(tab);
 });
 
-function refreshScrollMapsStatus(tabId, tab) {
+function refreshScrollMapsStatus(tabId) {
     // Check if the map already has a scrollmaps injected (e.g. after extension reloading)
     chrome.tabs.executeScript(tabId, {
-        'code': '!!document.querySelector("[data-scrollmaps-enabled]")',
-        'runAt': 'document_start'
-    }, (response) => {
+        code: '!!document.querySelector("[data-scrollmaps-enabled]")',
+        runAt: 'document_start',
+        allFrames: true,
+    }, async (responses) => {
         if (DEBUG) {
-            console.log('Map probe response', tab, response);
+            console.log('Map probe responses', tabId, responses);
         }
-        if (response && response[0]) {
+        const any = (arr) => {
+            for (const v of arr || []) {
+                if (v) return true;
+            }
+            return false;
+        };
+        if (any(responses)) {
             setBrowserActionBadge(tabId, BADGE_ACTIVE);
+        } else {
+            if (await getBadgeText(tabId) === BADGE_ACTIVE) {
+                setBrowserActionBadge(tabId, '');
+            }
         }
         checkErrors('map probe', ['Cannot access']);
     });
@@ -108,7 +129,7 @@ function refreshScrollMapsStatus(tabId, tab) {
 function updateAllTabs() {
     chrome.tabs.query({}, (tabs) => {
         for (let tab of tabs) {
-            refreshScrollMapsStatus(tab.id, tab);
+            refreshScrollMapsStatus(tab.id);
         }
     });
 }
@@ -127,31 +148,27 @@ if (chrome.contentScripts) {
         matches: ['<all_urls>']
     });
 }
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
     if (changeInfo.status === 'loading' || changeInfo.status === 'complete') {
-        injectScript(tab.id, 'all');
+        injectScript(tabId, 'all');
+
+        // For single-page applications, if the loading state changed, check if
+        // a scrollmap element is still present if the tab is "updated".
+        // TODO: Maybe use chrome.tabs.connect for more robust status monitoring
+        refreshScrollMapsStatus(tabId);
     }
 });
 
 
-function setBrowserActionBadge(
-        tabId,
-        badge,
-        {popup = true} = {}) {
-    if (badge !== undefined) {
-        chrome.browserAction.setBadgeText({
-            'text': badge,
-            'tabId': tabId
-        });
-        if (badge !== '') {
-            chrome.browserAction.setBadgeBackgroundColor({
-                'color': BADGE_COLORS[badge]
-            });
-        }
+function setBrowserActionBadge(tabId, badge) {
+    chrome.browserAction.setBadgeText({ 'text': badge, 'tabId': tabId });
+    if (badge !== '') {
+        chrome.browserAction.setBadgeBackgroundColor(
+            { 'color': BADGE_COLORS[badge], 'tabId': tabId });
     }
     chrome.browserAction.setPopup({
         'tabId': tabId,
-        'popup': popup ? chrome.runtime.getURL('src/popup/popup.html') : '',
+        'popup': badge !== '' ? chrome.runtime.getURL('src/popup/popup.html') : '',
     });
 }
 
@@ -167,5 +184,11 @@ chrome.runtime.onMessage.addListener(
             } else {
                 console.warn('mapLoaded sent without tab', sender);
             }
+        } else if (request.action === 'popupLoaded') {
+            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                for (const tab of tabs) {
+                    handleBrowserActionClicked(tab);
+                }
+            });
         }
     });

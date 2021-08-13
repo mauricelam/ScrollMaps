@@ -47,8 +47,8 @@ if (window.ScrollableMap === undefined) {
         }
 
         // Avoid adding multiple event listeners to the same map
-        if (div.__scrollMapEnabled) return;
-        div.__scrollMapEnabled = true;
+        if (div.__scrollMapAttached) return;
+        div.__scrollMapAttached = true;
 
         const self = this;
 
@@ -100,12 +100,11 @@ if (window.ScrollableMap === undefined) {
                 if (value) enable();
             });
 
-            chrome.runtime.onMessage.addListener(
-                (request, sender, sendResponse) => {
-                    if (request.action === 'browserActionClicked') {
-                        enable();
-                    }
-                });
+            chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+                if (request.action === 'browserActionClicked') {
+                    enable();
+                }
+            });
 
             if (window.SCROLLMAPS_enabled || pref('enabled')) {
                 enable();

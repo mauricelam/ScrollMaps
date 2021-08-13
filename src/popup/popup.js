@@ -60,6 +60,8 @@
     }
 
     $(async () => {
+        chrome.runtime.sendMessage({action: 'popupLoaded'});
+
         const status = await siteStatus;
         if (Permission.isOwnExtensionPage(status.tabUrl) || Permission.isMapsSite(status.tabUrl)) {
             $(document.body).addClass('disable-options');
