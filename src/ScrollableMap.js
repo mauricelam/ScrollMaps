@@ -7,9 +7,11 @@ var ScrollableMap = function (div, type, id) {
     let enabled = false;
 
     function enable() {
+        if (enabled) return;
         enabled = true;
         chrome.runtime.sendMessage({'action': 'mapLoaded'});
         hideControls();
+        div.setAttribute('data-scrollmaps-enabled', 'true');
     }
 
     function _findAncestorScrollMap(node) {
@@ -108,7 +110,7 @@ var ScrollableMap = function (div, type, id) {
                 }
             });
 
-        if (pref('enabled')) {
+        if (window.SCROLLMAPS_enabled || pref('enabled')) {
             enable();
         }
 

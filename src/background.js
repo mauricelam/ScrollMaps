@@ -72,6 +72,10 @@ chrome.browserAction.onClicked.addListener(async (tab) => {
         setBrowserActionBadge(tab.id, '');
     }
 
+    chrome.tabs.executeScript(tab.id, {
+        'code': 'window.SCROLLMAPS_enabled = true',
+        'allFrames': true
+    })
     await injectScript(tab.id, 'all');
     chrome.tabs.sendMessage(tab.id, {'action': 'browserActionClicked'});
     setBrowserActionBadge(tab.id, BADGE_LOADING);
@@ -88,7 +92,7 @@ chrome.browserAction.onClicked.addListener(async (tab) => {
 function refreshScrollMapsStatus(tabId, tab) {
     // Check if the map already has a scrollmaps injected (e.g. after extension reloading)
     chrome.tabs.executeScript(tabId, {
-        'code': '!!document.querySelector("[data-scrollmaps]")',
+        'code': '!!document.querySelector("[data-scrollmaps-enabled]")',
         'runAt': 'document_start'
     }, (response) => {
         if (DEBUG) {
@@ -111,12 +115,25 @@ function updateAllTabs() {
 
 updateAllTabs();
 
+if (chrome.contentScripts) {
+    // chrome.contentScripts API is currently Firefox only. It allows us to
+    // inject the script into frames that loads after the original page load
+    // (and therefore not caught by chrome.tabs.onUpdated).
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=1054624 tracks
+    // adding a similar feature to Chrome.
+    chrome.contentScripts.register({
+        allFrames: true,
+        js: [{file: 'mapapi_inject.min.js'}],
+        matches: ['<all_urls>']
+    });
+}
 chrome.tabs.onUpdated.addListener(
     (tabId, changeInfo, tab) => {
         if (changeInfo.status === 'loading') {
             injectScript(tab.id, 'all');
         }
     });
+
 
 function setBrowserActionBadge(
         tabId,

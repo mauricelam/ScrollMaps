@@ -38,7 +38,7 @@ function pref(label){
     };
 
 	PrefManager.setOption = function(key, value) {
-		const options = getOptions();
+		let options = getOptions();
 		if (!options) options = {};
         if (options[key] === value) return;
 		options[key] = value;
@@ -50,9 +50,9 @@ function pref(label){
 	};
 
 	PrefManager.getOption = function(key) {
-		var options = getOptions();
+		let options = getOptions();
 		if (!options) return getDefault(key);
-		var output = options[key];
+		const output = options[key];
 		if (output === undefined)
 			return getDefault(key);
 		return output;
