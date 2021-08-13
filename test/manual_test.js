@@ -52,6 +52,7 @@ describe('Manual test suite', function() {
         'https://developers.google.com/maps/documentation/javascript/examples/drawing-tools',
         'https://www.google.com/maps?force=canvas',
         'https://www.google.com/maps/d/u/0/viewer?msa=0&mid=1ntHquqDTqNB6fcmjKDSJT3VusG0&ll=37.34262853432693%2C-121.3232905&z=7',
+        'https://www.google.com/maps/@37.4219933,-122.0839072,3a,75y,8.52h,91.87t/data=!3m7!1e1!3m5!1sAF1QipMTIbIwyp8-XiyAGV95fPGmHuKi-lZkyUsliSVH!2e10!3e11!7i10000!8i5000',
         'http://la.smorgasburg.com/info/',
         'https://www.yelp.com/search?find_desc=Restaurants&find_loc=Chicago%2C%20IL',
         'https://www.google.com/travel/explore',

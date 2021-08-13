@@ -5,18 +5,21 @@
 var PrefMaker = new (function _PrefMaker(){
 
     this.makePermissionCheckbox = function(key, origin, label, secondLine) {
-        if(typeof secondLine == 'string'){
+        if (typeof secondLine === 'string') {
             label = createTwoLineBox(label, secondLine);
+        } else if (typeof secondLine === 'object') {
+            // secondLine can also be in the form
+            // { true: 'string when enabled', false: 'string when disabled' }
+            label = createTwoLineBox(label, secondLine[false]);
         }
         var div = $('<div class="PMcheckbox"></div>');
         var box = $('<input id="PMcheckbox_' + key + '" type="checkbox" />');
         label = $('<label for="PMcheckbox_' + key + '">' + label + '</label>');
         div.append(box).append(label);
-        box.click(updateOption);
-        label.click(updateOption);
+        box.on('click', updateOption);
+        label.on('click', updateOption);
         updateView();
 
-        var prefChange = false;
         function updateOption(){
             if (box.prop('checked')) {
                 chrome.permissions.request({origins: [origin]});
@@ -24,9 +27,12 @@ var PrefMaker = new (function _PrefMaker(){
                 chrome.permissions.remove({origins: [origin]});
             }
         }
-        async function updateView(){
-            let permission = await Permission.getPermissions([origin]);
+        async function updateView() {
+            const permission = await Permission.getPermissions([origin]);
             box.attr('checked', permission);
+            if (typeof secondLine === 'object') {
+                label.find('.PMcheckbox_smalltext').text(secondLine[permission]);
+            }
         }
         chrome.permissions.onAdded.addListener(updateView);
         chrome.permissions.onRemoved.addListener(updateView);
@@ -35,30 +41,39 @@ var PrefMaker = new (function _PrefMaker(){
     };
 
     this.makeBooleanCheckbox = function(key, label, secondLine) {
-        if(typeof secondLine == 'string'){
+        if (typeof secondLine === 'string') {
             label = createTwoLineBox(label, secondLine);
+        } else if (typeof secondLine === 'object') {
+            // secondLine can also be in the form
+            // { true: 'string when enabled', false: 'string when disabled' }
+            label = createTwoLineBox(label, secondLine[false]);
         }
-        var div = $('<div class="PMcheckbox"></div>');
-        var box = $('<input id="PMcheckbox_' + key + '" type="checkbox" />');
-        label = $('<label for="PMcheckbox_' + key + '">' + label + '</label>');
-        div.append(box).append(label);
-        box.click(updateOption);
-        label.click(updateOption);
-        updateView();
+        const div = $('<div class="PMcheckbox"></div>');
+        const box = $('<input id="PMcheckbox_' + key + '" type="checkbox" />');
+        const labelElem = $('<label for="PMcheckbox_' + key + '">' + label + '</label>');
+        div.append(box).append(labelElem);
+        box.on('click', updateOption);
+        labelElem.on('click', updateOption);
+        updateView(false);
 
+        let prefChange = false;
         Pref.onPreferenceChanged(key, (key, value) => {
-            if(!prefChange)
-                updateView();
+            updateView(prefChange);
             prefChange = false;
         });
 
-        var prefChange = false;
-        function updateOption(){
+        function updateOption() {
             prefChange = true;
             Pref.setOption(key, box.prop('checked'));
         }
-        function updateView(){
-            box.attr('checked', pref(key)); // convert to string to comply with HTML (otherwise error thrown);
+        function updateView(prefChange) {
+            const prefValue = pref(key);
+            if (!prefChange) {
+                box.attr('checked', prefValue); // convert to string to comply with HTML (otherwise error thrown);
+            }
+            if (typeof secondLine === 'object') {
+                labelElem.find('.PMcheckbox_smalltext').text(secondLine[prefValue]);
+            }
         }
 
         return div;
