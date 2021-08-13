@@ -67,7 +67,7 @@ if (window.ScrollableMap === undefined) {
             return hoverElement && div.contains(hoverElement) ? hoverElement : div;
         }
 
-        Scrollability.monitorScrollabilitySuper(div, function (scrolls) {
+        Scrollability.monitorScrollabilitySuper(div, (scrolls) => {
             bodyScrolls = scrolls;
             if (bodyScrolls) { hideControls(); } else { showControls(); }
         });
@@ -372,40 +372,41 @@ if (window.ScrollableMap === undefined) {
         }
     }
 
-    var SMLowPassFilter = function SMLowPassFilter () { this.init.apply(this, arguments); };
-    SMLowPassFilter.SMOOTHING = 0.5;
+    const SM_LOW_PASS_FILTER_SMOOTHING = 0.5;
 
-    SMLowPassFilter.prototype = {
-        init: function () {
+    class SMLowPassFilter {
+        constructor() {
             this.data = 0;
             this.lastDataTime = 0;
-        },
-        push: function (data, time) {
-            this.data = this.data * SMLowPassFilter.SMOOTHING + data * (1 - SMLowPassFilter.SMOOTHING);
+        }
+
+        push(data, time) {
+            this.data = this.data * SM_LOW_PASS_FILTER_SMOOTHING + data * (1 - SM_LOW_PASS_FILTER_SMOOTHING);
             this.lastDataTime = time || Date.now();
-        },
-        getAverage: function (time) {
+        }
+
+        getAverage(time) {
             time = time || Date.now();
             if (this.lastDataTime === 0) {
                 return 0;
             }
-            return this.data * Math.pow(SMLowPassFilter.SMOOTHING, (time - this.lastDataTime) / 20);
-        },
-        flush: function () {
+            return this.data * Math.pow(SM_LOW_PASS_FILTER_SMOOTHING, (time - this.lastDataTime) / 20);
+        }
+
+        flush() {
             this.data = 0;
         }
-    };
+    }
 
-    var SMAccelerationDetector = function SMAccelerationDetector() { this.init.apply(this, arguments); };
-
-    SMAccelerationDetector.prototype = {
-        init: function () {
+    class SMAccelerationDetector {
+        constructor() {
             this.max = 0;
             this.maxTime = 0;
             this.lastDelta = 0;
             this.lastTime = Date.now();
-        },
-        isAccelerating: function(delta, time){
+        }
+
+        isAccelerating(delta, time) {
             delta = delta / (time - this.lastTime);
             setTimer('stateChangeTimer', this.newScrollAction.bind(this), 200);
 
@@ -426,31 +427,29 @@ if (window.ScrollableMap === undefined) {
                 output = true;
             }
             return output;
-        },
-        newScrollAction: function (){
+        }
+
+        newScrollAction() {
             this.max = 0;
             this.maxTime = 0;
             this.lastDelta = 0;
         }
-    };
+    }
 
-    var SM2DAccelerationDetector = function SM2DAccelerationDetector() { this.init.apply(this, arguments); };
-
-    SM2DAccelerationDetector.prototype = {
-        init: function () {
+    class SM2DAccelerationDetector {
+        constructor() {
             this.yAccelerationDetector = new SMAccelerationDetector();
             this.xAccelerationDetector = new SMAccelerationDetector();
-        },
-        isAccelerating: function (deltaX, deltaY, time) {
+        }
+
+        isAccelerating(deltaX, deltaY, time) {
             var x = this.xAccelerationDetector.isAccelerating(deltaX, time);
             var y = this.yAccelerationDetector.isAccelerating(deltaY, time);
             return x || y;
         }
-    };
+    }
 
-    var DragSimulator = function DragSimulator() { this.init.apply(this, arguments); };
-
-    DragSimulator.defaultOpts = {
+    const DRAG_SIMULATOR_DEFAULT_OPTS = {
         // The minimum distance to simulate a drag, to avoid the event being interpreted as
         // a click. If the scroll gesture's distance is smaller than this, it will be scaled
         // up to reach this distance.
@@ -469,18 +468,19 @@ if (window.ScrollableMap === undefined) {
         'mouseUpDelay': 100,
     };
 
-    DragSimulator.prototype = {
-        init: function (opts) {
+    class DragSimulator {
+        constructor(opts) {
             this.opts = {};
-            for (var i in DragSimulator.defaultOpts) {
+            for (var i in DRAG_SIMULATOR_DEFAULT_OPTS) {
                 if (i in opts) {
                     this.opts[i] = opts[i];
                 } else {
-                    this.opts[i] = DragSimulator.defaultOpts[i];
+                    this.opts[i] = DRAG_SIMULATOR_DEFAULT_OPTS[i];
                 }
             }
-        },
-        simulateMouseDown: function (target, point) {
+        }
+
+        simulateMouseDown(target, point) {
             this.mouseDownPoint = [point[0], point[1]];  // Deep copy
             this.simulatedMousePoint = point;
             var downEvent = new MouseEvent('mousedown', {
@@ -493,8 +493,9 @@ if (window.ScrollableMap === undefined) {
                 'buttons': 1
             });
             target.dispatchEvent(downEvent);
-        },
-        simulateMouseUp: function (target) {
+        }
+
+        simulateMouseUp(target) {
             if (!this.mouseDownPoint) return;
             var upEvent = new MouseEvent('mouseup', {
                 'bubbles': true,
@@ -507,8 +508,9 @@ if (window.ScrollableMap === undefined) {
             });
             target.dispatchEvent(upEvent);
             this.mouseDownPoint = null;
-        },
-        simulateMouseMove: function (target, dx, dy) {
+        }
+
+        simulateMouseMove(target, dx, dy) {
             this.simulatedMousePoint[0] += dx;
             this.simulatedMousePoint[1] += dy;
             var moveEvent = new MouseEvent('mousemove', {
@@ -521,8 +523,9 @@ if (window.ScrollableMap === undefined) {
                 'buttons': 1  // Left mouse button should be down when simulating drag-move
             })
             target.dispatchEvent(moveEvent);
-        },
-        simulateDrag: function (target, point, dx, dy) {
+        }
+
+        simulateDrag(target, point, dx, dy) {
             var minDragDistance = this.opts.minDragDistance;
             var diffX = Math.abs(dx), diffY = Math.abs(dy);
             if (diffX < minDragDistance && diffY < minDragDistance) {
@@ -556,6 +559,6 @@ if (window.ScrollableMap === undefined) {
                     this.opts.mouseUpDelay);
             }
         }
-    };
+    }
 
 }
