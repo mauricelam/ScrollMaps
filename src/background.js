@@ -176,18 +176,14 @@ function setBrowserActionBadge(tabId, badge) {
 chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
         if (request.action === 'mapLoaded') {
-            if (DEBUG) {
-                console.log('mapLoaded', sender.tab);
-            }
+            if (DEBUG) console.log('mapLoaded', sender.tab);
             if (sender.tab) {
                 refreshScrollMapsStatus(sender.tab.id);
             } else {
                 console.warn('mapLoaded sent without tab', sender);
             }
         } else if (request.action === 'mapUnloaded') {
-            if (DEBUG) {
-                console.log('mapUnloaded', sender.tab);
-            }
+            if (DEBUG) console.log('mapUnloaded', sender.tab);
             if (sender.tab) {
                 refreshScrollMapsStatus(sender.tab.id);
             } else {
