@@ -115,7 +115,7 @@ if (window.SM_INJECT === undefined) {
     // Init
     let lastEventTime = 0;
     const THROTTLE_TIME_MS = 2000;
-    window.addEventListener('mousewheel', (e) => {
+    window.addEventListener('wheel', (e) => {
         if (e.timeStamp - lastEventTime > THROTTLE_TIME_MS) {
             scrollifyExistingMaps();
             lastEventTime = e.timeStamp;

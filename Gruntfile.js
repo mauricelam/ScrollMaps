@@ -159,13 +159,21 @@ grunt.initConfig({
         }
     },
     mochaTest: {
-      test: {
-        options: {
-          reporter: 'spec',
-          noFail: false // Optionally set to not fail on failed tests (will still fail on other errors)
+        all: {
+            options: {
+                reporter: 'spec',
+                noFail: false // Optionally set to not fail on failed tests (will still fail on other errors)
+            },
         },
-        src: ['test/**/*.js']
-      }
+        manual: {
+            src: ['test/manual/*.js']
+        },
+        semimanual: {
+            src: ['test/semimanual/*.js']
+        },
+        auto: {
+            src: ['test/auto/*.js']
+        }
     },
     watch: {
         all: {
@@ -310,17 +318,13 @@ function getGoogleMapUrls() {
 
 // ========== Unit tests ========== //
 
-grunt.registerTask('manualtest:chrome', [
-    'dev',
-    'env:chrome',
-    'mochaTest'
-]);
-
-grunt.registerTask('manualtest:firefox', [
-    'dev',
-    'compress:firefoxtest',
-    'env:firefox',
-    'mochaTest'
-]);
+grunt.registerTask('test', (browser, test) => {
+    grunt.task.run([
+        'dev',
+        'compress:firefoxtest',
+        `env:${browser}`,
+        `mochaTest:${test}`
+    ]);
+});
 
 };
