@@ -3,8 +3,8 @@ const webdriver = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
 const firefox = require('selenium-webdriver/firefox');
 const process = require('process');
-require('chromedriver')
-require('geckodriver')
+require('chromedriver');
+require('geckodriver');
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 

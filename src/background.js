@@ -180,9 +180,18 @@ chrome.runtime.onMessage.addListener(
                 console.log('mapLoaded', sender.tab);
             }
             if (sender.tab) {
-                setBrowserActionBadge(sender.tab.id, BADGE_ACTIVE);
+                refreshScrollMapsStatus(sender.tab.id);
             } else {
                 console.warn('mapLoaded sent without tab', sender);
+            }
+        } else if (request.action === 'mapUnloaded') {
+            if (DEBUG) {
+                console.log('mapUnloaded', sender.tab);
+            }
+            if (sender.tab) {
+                refreshScrollMapsStatus(sender.tab.id);
+            } else {
+                console.warn('mapUnloaded sent without tab', sender);
             }
         } else if (request.action === 'popupLoaded') {
             chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {

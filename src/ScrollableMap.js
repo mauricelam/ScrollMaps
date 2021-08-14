@@ -126,6 +126,24 @@ if (window.ScrollableMap === undefined) {
                 refreshActivationAffordance();
             });
             setTimeout(refreshActivationAffordance, 500);
+
+            // Observe if the scroll map element is removed. Send a message to the background
+            // page so it can update the browser action status.
+            const mutationObserver = new MutationObserver((mutationList, observer) => {
+                for (const mutation of mutationList) {
+                    for (const removedNode of mutation.removedNodes) {
+                        if (removedNode.isSameNode(div) || removedNode.contains(div)) {
+                            chrome.runtime.sendMessage({action: 'mapUnloaded'});
+                        }
+                    }
+                }
+            });
+            mutationObserver.observe(document.documentElement, { childList: true, subtree: true });
+
+            window.addEventListener('unload', () => {
+                // For the case where ScrollMap is loaded in an iframe, and that iframe is removed.
+                chrome.runtime.sendMessage({action: 'mapUnloaded'});
+            });
         }
 
         // A map is activatable when
