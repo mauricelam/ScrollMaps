@@ -12,7 +12,7 @@ if (window.ScrollableMap === undefined) {
             enabled = true;
             chrome.runtime.sendMessage({'action': 'mapLoaded'});
             refreshActivationAffordance();
-            div.setAttribute('data-scrollmaps-enabled', 'true');
+            div.setAttribute('data-scrollmaps', 'enabled');
         }
 
         function _findAncestorScrollMap(node) {
@@ -55,17 +55,12 @@ if (window.ScrollableMap === undefined) {
         let mapClicked; // whether the map has ever been clicked (to activate the map)
         let bodyScrolls = false;
 
-        div.setAttribute('data-scrollmaps', id);
+        div.setAttribute('data-scrollmaps', 'false');
 
         const style = document.createElement('style');
         style.innerHTML =   '.gmnoprint, .gm-style .place-card, .gm-style .login-control { transition: opacity 0.3s !important; }' +
                             '.scrollMapsHideControls .gmnoprint, .scrollMapsHideControls .gm-style .place-card, .scrollMapsHideControls .gm-style .login-control { opacity: 0.5 !important; }';
         document.head.appendChild(style);
-
-        function getWheelEventTarget(mousePos) {
-            var hoverElement = document.elementFromPoint(mousePos[0], mousePos[1]);
-            return hoverElement && div.contains(hoverElement) ? hoverElement : div;
-        }
 
         Scrollability.monitorScrollabilitySuper(div, (scrolls) => {
             bodyScrolls = scrolls;

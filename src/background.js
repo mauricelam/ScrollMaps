@@ -102,7 +102,7 @@ chrome.browserAction.onClicked.addListener(async (tab) => {
 function refreshScrollMapsStatus(tabId) {
     // Check if the map already has a scrollmaps injected (e.g. after extension reloading)
     chrome.tabs.executeScript(tabId, {
-        code: '!!document.querySelector("[data-scrollmaps-enabled]")',
+        code: '!!document.querySelector("[data-scrollmaps=\'enabled\']")',
         runAt: 'document_start',
         allFrames: true,
     }, async (responses) => {
