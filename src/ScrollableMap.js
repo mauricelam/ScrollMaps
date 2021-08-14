@@ -130,12 +130,9 @@ if (window.ScrollableMap === undefined) {
             // Observe if the scroll map element is removed. Send a message to the background
             // page so it can update the browser action status.
             const mutationObserver = new MutationObserver((mutationList, observer) => {
-                for (const mutation of mutationList) {
-                    for (const removedNode of mutation.removedNodes) {
-                        if (removedNode.isSameNode(div) || removedNode.contains(div)) {
-                            chrome.runtime.sendMessage({action: 'mapUnloaded'});
-                        }
-                    }
+                const hasRemovedNodes = mutationList.some(m => m.removedNodes.length > 0);
+                if (hasRemovedNodes && !document.contains(div)) {
+                    chrome.runtime.sendMessage({action: 'mapUnloaded'});
                 }
             });
             mutationObserver.observe(document.documentElement, { childList: true, subtree: true });

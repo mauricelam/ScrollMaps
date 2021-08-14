@@ -87,11 +87,16 @@ if (window.SM_INJECT === undefined) {
     function scrollifyExistingMaps() {
         maps = GoogleMapFinder.findMaps();
         if (DEBUG) console.log('Found Google maps in page', maps);
+        console.trace();
         if (maps.length <= 0) {
             return false;
         }
         for (const map of maps) {
-            new ScrollableMap(map, ScrollableMap.TYPE_API, SM_INJECT.count++);
+            if (!map.hasAttribute('data-scrollmaps')) {
+                new ScrollableMap(map, ScrollableMap.TYPE_API, SM_INJECT.count++);
+            } else {
+                console.log('Skipping already scrollified map');
+            }
         }
         return true;
     }
@@ -109,9 +114,9 @@ if (window.SM_INJECT === undefined) {
 
     // Init
     let lastEventTime = 0;
-    const THORTTLE_TIME_MS = 2000;
-    window.addEventListener('wheel', (e) => {
-        if (e.timeStamp - lastEventTime > THORTTLE_TIME_MS) {
+    const THROTTLE_TIME_MS = 2000;
+    window.addEventListener('mousewheel', (e) => {
+        if (e.timeStamp - lastEventTime > THROTTLE_TIME_MS) {
             scrollifyExistingMaps();
             lastEventTime = e.timeStamp;
         }
