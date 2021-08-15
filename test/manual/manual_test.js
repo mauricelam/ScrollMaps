@@ -12,13 +12,13 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 describe('Manual test suite', function() {
     console.log(`
     This is a manual test case. Go through each tab and make sure ScrollMap
-    works correctly on each of them. Close the tab once you are done testing
+    works correctly on each of them. Press Ctrl-Esc once you are done testing
     with that page.`)
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;
 
-    beforeEach(async () => {
+    before(async () => {
         if (process.env.BROWSER === 'chrome') {
             driver = new webdriver.Builder()
                 .forBrowser('chrome')
@@ -36,8 +36,9 @@ describe('Manual test suite', function() {
         } else {
             throw 'Environment variable $BROWSER not defined';
         }
+        driver.manage().setTimeouts({'script': TEST_TIMEOUT});
     });
-    afterEach(async () => {
+    after(async () => {
         await driver.quit();
     })
 
@@ -73,12 +74,11 @@ function sleep(timeout) {
 }
 
 async function waitForEnd(driver) {
-    return await driver.wait(async () => {
-        try {
-            await driver.getCurrentUrl();
-            return false;
-        } catch (e) {
-            return true;
-        }
-    }, TEST_TIMEOUT);
+    return await driver.executeAsyncScript((done) => {
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape' && e.ctrlKey) {
+                done();
+            }
+        }, true);
+    });
 }
