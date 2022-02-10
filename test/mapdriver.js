@@ -16,13 +16,13 @@ class MapDriver {
                 .forBrowser('chrome')
                 .setChromeOptions(
                     new chrome.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000`)
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000`, 'window-size=800,600')
                 )
                 .build();
         } else if (process.env.BROWSER === 'firefox') {
             driver = new webdriver.Builder()
                 .forBrowser('firefox')
-                .setFirefoxOptions(new firefox.Options())
+                .setFirefoxOptions(new firefox.Options().windowSize({width: 800, height: 600}))
                 .build();
             await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000.zip`, true)
         } else {
@@ -114,8 +114,8 @@ class MapDriver {
                         ...opts
                     }));
                 };
-                for (let i = 0; i < 10; i++) {
-                    wheel(dx / 10, dy / 10);
+                for (let i = 0; i < 30; i++) {
+                    wheel(dx / 30, dy / 30);
                     await sleep(50);
                 }
             } finally {

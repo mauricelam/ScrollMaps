@@ -27,20 +27,21 @@ describe('google.com/travel test suite', function() {
         const elem = await mapDriver.waitForScrollMapsLoaded();
         // Execute scroll action
         await waitForCities(['Chicago']);
-        await mapDriver.scroll(elem, 550, -40);
+        await sleep(2000);
+        await mapDriver.scroll(elem, 300, -40);
         await waitForCities(['London']);
         assert.deepStrictEqual(
-            await findCities(['Chicago', 'London', 'Paris', 'Moscow']),
+            await findCities(['Chicago', 'London', 'Paris', 'Beijing']),
             ['London', 'Paris']);
 
         // Execute zoom action
-        await mapDriver.pinchGesture(elem, 120);
+        await mapDriver.pinchGesture(elem, 32);
         await waitForCities(['Chicago', 'London', 'Moscow']);
 
-        await mapDriver.pinchGesture(elem, -120);
+        await mapDriver.pinchGesture(elem, -32);
         await sleep(2000);
         assert.deepStrictEqual(
-            await findCities(['Chicago', 'London', 'Paris', 'Moscow']),
+            await findCities(['Chicago', 'London', 'Paris', 'Beijing']),
             ['London', 'Paris']);
     });
 

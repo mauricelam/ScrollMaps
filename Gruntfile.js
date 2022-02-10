@@ -6,9 +6,8 @@ module.exports = function(grunt) {
 grunt.loadNpmTasks('grunt-contrib-compress');
 grunt.loadNpmTasks('grunt-contrib-concat');
 grunt.loadNpmTasks('grunt-contrib-copy');
-grunt.loadNpmTasks('grunt-contrib-uglify-es');
+grunt.loadNpmTasks('grunt-contrib-uglify');
 grunt.loadNpmTasks('grunt-contrib-watch');
-grunt.loadNpmTasks('grunt-contrib-imagemin');
 grunt.loadNpmTasks('grunt-mocha-test');
 grunt.loadNpmTasks('grunt-newer');
 grunt.loadNpmTasks('grunt-exec');
@@ -114,7 +113,14 @@ grunt.initConfig({
             options: {
                 process: processManifestTemplate
             }
-        }
+        },
+        images: {
+            files: [{
+                expand: true,
+                src: ['images/**/*.png'],
+                dest: '<%= pluginDir %>'
+            }]
+        },
     },
     compress: {
         release: {
@@ -148,15 +154,6 @@ grunt.initConfig({
         gen_dir: 'gen',
         github_release: 'https://github.com/mauricelam/ScrollMaps/releases/new?tag=v<%= version %>',
         webstore: 'https://chrome.google.com/webstore/developer/edit/jifommjndpnefcfplgnbhabocomgdjjg'
-    },
-    imagemin: {
-        dynamic: {
-            files: [{
-                expand: true,
-                src: ['images/**/*.png'],
-                dest: '<%= pluginDir %>'
-            }]
-        }
     },
     mochaTest: {
         all: {
@@ -211,7 +208,7 @@ grunt.registerTask('build', [
     'copy:all',
     'copy:node_modules',
     'copy:manifest',
-    'newer:imagemin']);
+    'newer:copy:images']);
 
 grunt.registerTask('dev', [
     'set_version:10000',
@@ -319,6 +316,10 @@ function getGoogleMapUrls() {
 // ========== Unit tests ========== //
 
 grunt.registerTask('test', (browser, test) => {
+    if (!browser || !test) {
+        console.error('Usage: grunt test:<chrome|firefox>:<auto|semimanual|manual>');
+        return;
+    }
     grunt.task.run([
         'dev',
         'compress:firefoxtest',

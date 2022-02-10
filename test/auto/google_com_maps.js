@@ -31,14 +31,14 @@ describe('google.com/maps test suite', function() {
         });
 
         // Execute zoom action
-        await mapDriver.pinchGesture(elem, 120);
+        await mapDriver.pinchGesture(elem, 64);
         await mapDriver.assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [8, 11]
+            zoom: [5, 11]
         });
 
-        await mapDriver.pinchGesture(elem, -120);
+        await mapDriver.pinchGesture(elem, -64);
         await mapDriver.assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
@@ -57,14 +57,14 @@ describe('google.com/maps test suite', function() {
             zoom: [14, 14]
         });
         // Execute zoom action
-        await mapDriver.pinchGesture(elem, 120);
+        await mapDriver.pinchGesture(elem, 64);
         await mapDriver.assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [8, 11]
+            zoom: [5, 11]
         });
 
-        await mapDriver.pinchGesture(elem, -120);
+        await mapDriver.pinchGesture(elem, -64);
         await mapDriver.assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
@@ -83,14 +83,14 @@ describe('google.com/maps test suite', function() {
             zoom: [14, 14]
         });
         // Execute zoom action
-        await mapDriver.pinchGesture(elem, 120);
+        await mapDriver.pinchGesture(elem, 64);
         await mapDriver.assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [8, 11]
+            zoom: [5, 11]
         });
 
-        await mapDriver.pinchGesture(elem, -120);
+        await mapDriver.pinchGesture(elem, -64);
         await mapDriver.assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
