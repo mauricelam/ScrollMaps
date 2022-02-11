@@ -188,12 +188,9 @@ grunt.initConfig({
         }
     },
     env: {
-        chrome: {
-            BROWSER: 'chrome'
-        },
-        firefox: {
-            BROWSER: 'firefox'
-        }
+        chrome: { BROWSER: 'chrome' },
+        firefox: { BROWSER: 'firefox' },
+        edge: { BROWSER: 'edge' },
     }
 });
 
@@ -317,7 +314,7 @@ function getGoogleMapUrls() {
 
 grunt.registerTask('test', (browser, test) => {
     if (!browser || !test) {
-        console.error('Usage: grunt test:<chrome|firefox>:<auto|semimanual|manual>');
+        console.error('Usage: grunt test:<chrome|edge|firefox>:<auto|semimanual|manual>');
         return;
     }
     grunt.task.run([

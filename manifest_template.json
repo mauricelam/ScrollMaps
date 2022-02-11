@@ -41,7 +41,6 @@
     "48": "images/maps_48.png",
     "128": "images/maps_128.png"
   },
-  "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3XeoaqQRtfyt5UOKmdyeGm6ynNFixgxA6+L49HQCm9SffiesKkWh14JrhDpydJco8rN8Eaa/mVhYctZzjQK8LlUjceUrPY3pWAIooQFC94ELrTh5JfwaUd5g/2LOSpH22nUdpEEQ/ffiQOhGSwPaAwavXjNpK3QYRDEz8+RG7EQIDAQAB",
   "browser_action": {},
   "permissions": [
     "activeTab",

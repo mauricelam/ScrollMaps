@@ -1,9 +1,5 @@
 const webdriver = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
-const firefox = require('selenium-webdriver/firefox');
 const process = require('process');
-require('chromedriver');
-require('geckodriver');
 
 const By = webdriver.By;
 
@@ -12,6 +8,8 @@ class MapDriver {
     static async create() {
         let driver;
         if (process.env.BROWSER === 'chrome') {
+            const chrome = require('selenium-webdriver/chrome');
+            require('chromedriver');
             driver = new webdriver.Builder()
                 .forBrowser('chrome')
                 .setChromeOptions(
@@ -19,7 +17,20 @@ class MapDriver {
                         .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000`, 'window-size=800,600')
                 )
                 .build();
+        } else if (process.env.BROWSER === 'edge') {
+            const edge = require('selenium-webdriver/edge');
+            const edgePaths = await require('ms-chromium-edge-driver').installDriver();
+            driver = new webdriver.Builder()
+                .forBrowser('MicrosoftEdge')
+                .setEdgeOptions(
+                    new edge.Options()
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000`, 'window-size=800,600')
+                )
+                .setEdgeService(new edge.ServiceBuilder(edgePaths.driverPath))
+                .build();
         } else if (process.env.BROWSER === 'firefox') {
+            const firefox = require('selenium-webdriver/firefox');
+            require('geckodriver');
             driver = new webdriver.Builder()
                 .forBrowser('firefox')
                 .setFirefoxOptions(new firefox.Options().windowSize({width: 800, height: 600}))

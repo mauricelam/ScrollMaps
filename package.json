@@ -24,6 +24,7 @@
   "devDependencies": {
     "chromedriver": "^98.0.0",
     "geckodriver": "^3.0.1",
+    "ms-chromium-edge-driver": "^0.4.3",
     "grunt": "^1.4.1",
     "grunt-contrib-compress": "^1.6.0",
     "grunt-contrib-concat": "^1.0.1",
