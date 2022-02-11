@@ -1,7 +1,8 @@
 # ScrollMaps
 Lets you scroll with two fingers on your trackpad within Google Maps
 
-Chrome web store link: https://chrome.google.com/webstore/detail/scrollmaps/jifommjndpnefcfplgnbhabocomgdjjg
+- Chrome web store link: https://chrome.google.com/webstore/detail/scrollmaps/jifommjndpnefcfplgnbhabocomgdjjg
+- Firefox Add-ons store link: https://addons.mozilla.org/en-US/firefox/addon/scrollmaps
 
 ## Contributing
 
