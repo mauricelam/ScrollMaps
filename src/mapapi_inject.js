@@ -87,15 +87,15 @@ if (window.SM_INJECT === undefined) {
         }
     }
 
-    function scrollifyExistingMaps() {
-        maps = GoogleMapFinder.findMaps();
+    async function scrollifyExistingMaps() {
+        const maps = GoogleMapFinder.findMaps();
         if (DEBUG) console.log('Found Google maps in page', maps);
         if (maps.length <= 0) {
             return false;
         }
         for (const map of maps) {
             if (!map.hasAttribute('data-scrollmaps')) {
-                new ScrollableMap(map, ScrollableMap.TYPE_API, SM_INJECT.count++);
+                new ScrollableMap(map, ScrollableMap.TYPE_API, SM_INJECT.count++, await Pref.getAllOptions());
             } else {
                 if (DEBUG) console.log('Skipping already scrollified map');
             }
@@ -117,16 +117,16 @@ if (window.SM_INJECT === undefined) {
     // Init
     let lastEventTime = 0;
     const THROTTLE_TIME_MS = 2000;
-    window.addEventListener('wheel', (e) => {
+    window.addEventListener('wheel', async (e) => {
         if (e.timeStamp - lastEventTime > THROTTLE_TIME_MS) {
-            scrollifyExistingMaps();
+            await scrollifyExistingMaps();
             lastEventTime = e.timeStamp;
         }
     }, true);
     poll(scrollifyExistingMaps, 2000, 3);
 
-    window.addEventListener('mapsFound', function (event) {
+    window.addEventListener('mapsFound', async function (event) {
         let map = event.target;
-        new ScrollableMap(map, event.detail.type, SM_INJECT.count++);
+        new ScrollableMap(map, event.detail.type, SM_INJECT.count++, await Pref.getAllOptions());
     }, true);
 }

@@ -19,13 +19,12 @@ class PrefMaker {
         labelElem.htmlFor = 'PMcheckbox_' + key;
         labelElem.appendChild(label);
         div.appendChild(box);
-        div.appendChild(label);
-        box.addEventListener('click', updateOption, false);
-        labelElem.addEventListener('click', updateOption, false);
+        div.appendChild(labelElem);
+        box.addEventListener('change', updateOption, false);
         updateView();
 
         function updateOption(){
-            if (box.prop('checked')) {
+            if (box.checked) {
                 chrome.permissions.request({origins: [origin]});
             } else {
                 chrome.permissions.remove({origins: [origin]});
@@ -62,13 +61,12 @@ class PrefMaker {
         labelElem.appendChild(label);
         div.appendChild(box);
         div.appendChild(labelElem);
-        box.addEventListener('click', updateOption, false);
-        labelElem.addEventListener('click', updateOption, false);
+        box.addEventListener('change', updateOption, false);
         updateView(false);
 
         let prefChange = false;
-        Pref.onPreferenceChanged(key, (key, value) => {
-            updateView(prefChange);
+        Pref.onPreferenceChanged(key, async (key, value) => {
+            await updateView(prefChange);
             prefChange = false;
         });
 
@@ -76,8 +74,8 @@ class PrefMaker {
             prefChange = true;
             Pref.setOption(key, box.checked);
         }
-        function updateView(prefChange) {
-            const prefValue = pref(key);
+        async function updateView(prefChange) {
+            const prefValue = await pref(key);
             if (!prefChange) {
                 box.checked = prefValue;
             }
@@ -87,7 +85,7 @@ class PrefMaker {
         }
 
         return div;
-    };
+    }
 
     static makeSlider(key, label, max, min, step) {
         step = step || 1;
@@ -110,22 +108,24 @@ class PrefMaker {
         div.appendChild(preview);
         let prefChange = false;
 
-        slider.addEventListener('change', () => {
+        slider.addEventListener('change', async () => {
             prefChange = true;
-            Pref.setOption(key, slider.value);
-            preview.innerText = pref(key);
+            await Pref.setOption(key, slider.value);
+            preview.innerText = await pref(key);
         }, false);
         slider.addEventListener('input', () => { preview.innerText = slider.value; }, false)
         updateView();
 
-        Pref.onPreferenceChanged(key, (key, value) => {
-            if(!prefChange) updateView();
+        Pref.onPreferenceChanged(key, async (key, value) => {
+            if(!prefChange) {
+                await updateView(value);
+            }
             prefChange = false;
         });
 
-        function updateView(){
-            slider.value = pref(key);
-            preview.innerText = pref(key);
+        async function updateView() {
+            slider.value = await pref(key);
+            preview.innerText =  await pref(key);
         }
 
         return div;

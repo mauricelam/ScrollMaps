@@ -51,7 +51,7 @@ describe('heywhatsthat test suite', function() {
         await sleep(2000);
         await mapDriver.click({ x: 150, y: 80 });
         await sleep(1000);
-        await assertLatLng({ lat: 24.4829, lng: 121.1124, tolerance: 0.03 });
+        await assertLatLng({ lat: 24.617852, lng: 120.769135, tolerance: 0.03 });
         await mapDriver.assertRuler('20 km');
     });
 

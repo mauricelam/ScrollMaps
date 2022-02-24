@@ -10,17 +10,20 @@ const BADGE_COLORS = {
     [BADGE_DISABLED]: '#BDBDBD'
 }
 
-function checkErrors(name, expectedErrors) {
-    let lastError = chrome.runtime.lastError;
-    let errorMessage = lastError ? lastError.message : undefined;
-    if (DEBUG && errorMessage) {
-        for (let expectedError of expectedErrors) {
-            if (errorMessage.indexOf(expectedError) !== -1) {
-                console.log(name, errorMessage);
-                return;
+async function checkErrors(promise, name, expectedErrors) {
+    try {
+        await promise;
+    } catch (e) {
+        let errorMessage = e ? e.message : undefined;
+        if (DEBUG && errorMessage) {
+            for (let expectedError of expectedErrors) {
+                if (errorMessage.indexOf(expectedError) !== -1) {
+                    console.log(name, errorMessage);
+                    return;
+                }
             }
+            console.warn(name, errorMessage);
         }
-        console.warn(name, errorMessage);
     }
 }
 
@@ -31,39 +34,35 @@ const INJECT_EXPECTED_ERRORS = [
 
 function injectScript(tabId, frameId) {
     return Promise.allSettled([
-        new Promise((resolve, reject) => {
-            chrome.tabs.executeScript(tabId, {
-                'file': 'mapapi_inject.min.js',
-                'runAt': 'document_start',
-                'frameId': frameId === 'all' ? null : frameId,
-                'allFrames': frameId === 'all'
-            }, () => {
-                checkErrors('inject mapapi', INJECT_EXPECTED_ERRORS);
-                resolve();
-            });
-        }),
-        new Promise((resolve, reject) => {
-            chrome.tabs.executeScript(tabId, {
-                'file': 'scrollability_inject.min.js',
-                'runAt': 'document_idle',
-                'allFrames': true
-            }, () => {
-                checkErrors('inject scrollability', INJECT_EXPECTED_ERRORS);
-                resolve();
-            });
-        })
+        checkErrors(
+            chrome.scripting.executeScript({
+                target: {
+                    tabId: tabId,
+                    frameIds: frameId === 'all' ? null : [frameId],
+                    allFrames: frameId === 'all',
+                },
+                files: ['mapapi_inject.min.js'],
+            }),
+            'inject mapapi',
+            INJECT_EXPECTED_ERRORS
+        ),
+        checkErrors(
+            chrome.scripting.executeScript({
+                target: {
+                    'tabId': tabId,
+                    'allFrames': true
+                },
+                files: ['scrollability_inject.min.js'],
+            }),
+            'inject scrollability',
+            INJECT_EXPECTED_ERRORS
+        )
     ]);
 }
 
 
-function getBadgeText(tabId) {
-    return new Promise((resolve, reject) => {
-        chrome.browserAction.getBadgeText({'tabId': tabId}, resolve);
-    });
-}
-
-
 async function handleBrowserActionClicked(tab) {
+    // BUG: The checkmark seems to be shown on all pages
     if (!Permission.canInjectIntoPage(tab.url)) {
         // This extension can't inject into chrome:// pages. Just show the popup
         // directly
@@ -76,9 +75,12 @@ async function handleBrowserActionClicked(tab) {
         setBrowserActionBadge(tab.id, '');
     }
 
-    chrome.tabs.executeScript(tab.id, {
-        'code': 'window.SCROLLMAPS_enabled = true',
-        'allFrames': true
+    chrome.scripting.executeScript({
+        func: () => { window.SCROLLMAPS_enabled = true },
+        target: {
+            tabId: tab.id,
+            allFrames: true
+        }
     });
     await injectScript(tab.id, 'all');
     chrome.tabs.sendMessage(tab.id, {'action': 'browserActionClicked'});
@@ -86,42 +88,41 @@ async function handleBrowserActionClicked(tab) {
     refreshScrollMapsStatus(tab.id);
     setTimeout(async () => {
         // Remove the loading badge if no maps responded in 10s
-        if (await getBadgeText(tab.id) === BADGE_LOADING) {
+        if (await chrome.action.getBadgeText(tab.id) === BADGE_LOADING) {
             setBrowserActionBadge(tab.id, '');
         }
     }, 10000);
 }
 
 
-chrome.browserAction.onClicked.addListener(async (tab) => {
-    await handleBrowserActionClicked(tab);
-});
+chrome.action.onClicked.addListener(handleBrowserActionClicked);
 
-function refreshScrollMapsStatus(tabId) {
+async function refreshScrollMapsStatus(tabId) {
     // Check if the map already has a scrollmaps injected (e.g. after extension reloading)
-    chrome.tabs.executeScript(tabId, {
-        code: '!!document.querySelector("[data-scrollmaps=\'enabled\']")',
-        runAt: 'document_start',
-        allFrames: true,
-    }, async (responses) => {
-        if (DEBUG) {
-            console.log('Map probe responses', tabId, responses);
-        }
-        const any = (arr) => {
-            for (const v of arr || []) {
-                if (v) return true;
-            }
-            return false;
-        };
-        if (any(responses)) {
-            setBrowserActionBadge(tabId, BADGE_ACTIVE);
-        } else {
-            if (await getBadgeText(tabId) === BADGE_ACTIVE) {
-                setBrowserActionBadge(tabId, '');
-            }
-        }
-        checkErrors('map probe', ['Cannot access']);
+    const responses = await chrome.scripting.executeScript({
+        target: {
+            tabId: tabId,
+            allFrames: true
+        },
+        func: () => !!document.querySelector("[data-scrollmaps='enabled']"),
     });
+    if (DEBUG) {
+        console.log('Map probe responses', tabId, responses);
+    }
+    const any = (arr) => {
+        for (const v of arr || []) {
+            if (v) return true;
+        }
+        return false;
+    };
+    if (any(responses)) {
+        setBrowserActionBadge(tabId, BADGE_ACTIVE);
+    } else {
+        if (await chrome.action.getBadgeText(tabId) === BADGE_ACTIVE) {
+            setBrowserActionBadge(tabId, '');
+        }
+    }
+    checkErrors('map probe', ['Cannot access']);
 }
 
 function updateAllTabs() {
@@ -145,6 +146,21 @@ if (chrome.contentScripts) {
         js: [{file: 'mapapi_inject.min.js'}],
         matches: ['<all_urls>']
     });
+} else if (chrome.scripting) {
+    (async () => {
+        try {
+            chrome.scripting.registerContentScripts([
+                {
+                    id: 'global_mapapi_inject',
+                    allFrames: true,
+                    matches: ['<all_urls>'],
+                    js: ['mapapi_inject.min.js']
+                }
+            ]);
+        } catch (e) {
+            console.error(e);
+        }
+    })();
 }
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
     if (changeInfo.status === 'loading' || changeInfo.status === 'complete') {
@@ -159,12 +175,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 
 function setBrowserActionBadge(tabId, badge) {
-    chrome.browserAction.setBadgeText({ 'text': badge, 'tabId': tabId });
+    chrome.action.setBadgeText({ 'text': badge, 'tabId': tabId });
     if (badge !== '') {
-        chrome.browserAction.setBadgeBackgroundColor(
+        chrome.action.setBadgeBackgroundColor(
             { 'color': BADGE_COLORS[badge], 'tabId': tabId });
     }
-    chrome.browserAction.setPopup({
+    chrome.action.setPopup({
         'tabId': tabId,
         'popup': badge !== '' ? chrome.runtime.getURL('src/popup/popup.html') : '',
     });

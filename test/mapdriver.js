@@ -31,7 +31,7 @@ class MapDriver {
                 .setChromeService(new chrome.ServiceBuilder().setPort(port))
                 .setChromeOptions(
                     new chrome.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`, 'window-size=800,729')
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`, 'window-size=800,600')
                 )
                 .build();
         } else if (process.env.BROWSER === 'edge') {
@@ -40,7 +40,7 @@ class MapDriver {
                 .forBrowser('MicrosoftEdge')
                 .setEdgeOptions(
                     new edge.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-edge`, 'window-size=855,720')
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-edge`, 'window-size=800,600')
                 )
                 .setEdgeService(
                     new edge.ServiceBuilder(edgePaths.driverPath)
@@ -53,7 +53,7 @@ class MapDriver {
                 .setFirefoxService(new firefox.ServiceBuilder().setPort(port))
                 .setFirefoxOptions(
                     new firefox.Options()
-                        .windowSize({width: 800, height: 685})
+                        .windowSize({width: 800, height: 600})
                 )
                 .build();
             await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000-firefox.zip`, true)
@@ -62,13 +62,18 @@ class MapDriver {
         }
         const mapDriver = new MapDriver(driver, port);
         try {
+            let currentSize = [800, 600];
             // Make sure the browser height is normalized
             await driver.wait(async () => {
                 const innerSize = await driver.executeScript(() => [window.innerWidth, window.innerHeight]);
-                // Make sure the inner size is the same as expected so our assertions work.
-                // If this hangs in a loop, try changing the `window-size=` above.
-                console.log('Window inner size=', innerSize);
-                return innerSize[0] === 800 && innerSize[1] === 600;
+                const sizeDiff = [innerSize[0] - 800, innerSize[1] - 600];
+                if (sizeDiff[0] === 0 && sizeDiff[1] === 0) {
+                    return true;
+                }
+                currentSize = [currentSize[0] - sizeDiff[0], currentSize[1] - sizeDiff[1]];
+                console.log('Tweaking window size to be 800x600. Current=', currentSize);
+                await driver.manage().window().setRect({width: currentSize[0], height: currentSize[1]});
+                return false;
             });
         } catch (e) {
             await mapDriver.quit();
