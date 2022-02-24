@@ -31,7 +31,7 @@
   "web_accessible_resources": [
     "inject_content.min.js"
   ],
-  "content_security_policy": "script-src 'self' https://maps.googleapis.com https://maps.gstatic.com; object-src 'self'",
+  "content_security_policy": "script-src 'self'; object-src 'self'",
   "options_ui": {
     "page": "src/options/options.html",
     "open_in_tab": true
