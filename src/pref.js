@@ -15,29 +15,28 @@ const PrefManager = {
         return this._DEFAULTS[label];
 	},
 
-	getOptions() {
-		const opt = localStorage['options'];
-		if (!opt) return false;
-		const options = JSON.parse(opt);
+	async getOptions() {
+		const options = await chrome.storage.sync.get();
 		if (!options) return false;
 		return options;
 	},
 
-	setOption(key, value) {
-		let options = this.getOptions();
-		if (!options) options = {};
-        if (options[key] === value) return;
-		options[key] = value;
-		localStorage['options'] = JSON.stringify(options);
+    async getAllOptions() {
+        const options = await this.getOptions();
+        return {...DEFAULTS, ...options};
+    },
+
+	async setOption(key, value) {
+		await chrome.storage.sync.set({[key]: value});
+		console.log('Options saved');
         for (const listener of this.listeners) {
             listener(key, value);
         }
-		console.log('Options saved');
 	},
 
-	getOption(key) {
-		let options = this.getOptions();
-		if (!options) return this.getDefault(key);
+	async getOption(key) {
+		let options = await this.getOptions();
+		if (!options) return getDefault(key);
 		const output = options[key];
 		if (output === undefined) {
 			return this.getDefault(key);
@@ -46,11 +45,14 @@ const PrefManager = {
 	},
 
     onPreferenceChanged(key, func) {
-        this.listeners.push((changedkey, changedvalue) => {
-            if (changedkey === key) func(changedkey, changedvalue);
+        chrome.storage.onChanged.addListener((changes, area) => {
+            for (const changedKey in changes) {
+                if (changedKey === key) {
+                    func(changedKey, changes[key]);
+                }
+            }
         });
-    },
-
+    }
     // support for PrefReader which reads preferences from content scripts (which do not have access
     // to localStorage of the extension)
 }
@@ -59,11 +61,13 @@ PrefManager.listeners.push((key, value) => {
     chrome.windows.getAll({populate: true}, (windows) => {
         for (const window of windows) {
             for (const tab of window.tabs) {
+                console.log('Sending pref change to tab ', tab);
                 chrome.tabs.sendMessage(
                     tab.id,
                     { 'action': 'preferenceChanged', 'data': {key: key, value: value} }
                 );
             }
+            // Support for PrefReader which reads preferences from content scripts
         }
     });
 });
@@ -82,6 +86,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 const Pref = PrefManager;
 
-function pref(label){
-    return PrefManager.getOption(label);
+async function pref(label){
+    return await PrefManager.getOption(label);
 }

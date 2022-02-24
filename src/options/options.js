@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const box = document.getElementById('checkboxes');
 
     const enabledCheckbox = PrefMaker.makeBooleanCheckbox(

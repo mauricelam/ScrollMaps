@@ -4,10 +4,10 @@ if (window.SM_FRAME === undefined) {
 
     let retries = 3;
 
-    function injectMaps() {
+    async function injectMaps() {
         const elem = document.getElementById('content-container');
         if (elem) {
-            new ScrollableMap(elem, ScrollableMap.TYPE_NEWWEB, SM_FRAME.count++);
+            new ScrollableMap(elem, ScrollableMap.TYPE_NEWWEB, SM_FRAME.count++, await Pref.getAllOptions());
         } else if (retries > 0) {
             // Retry a few times because the new map canvas is not installed on DOM load
             retries--;
@@ -15,14 +15,15 @@ if (window.SM_FRAME === undefined) {
         }
     }
 
-    function injectFrame() {
+    async function injectFrame() {
         let elem = document.getElementById('map');
         elem = elem || document.getElementById('mapDiv');
         if (elem) {
             new ScrollableMap(
                 elem,
                 (SM_FRAME.inframe) ? ScrollableMap.TYPE_IFRAME : ScrollableMap.TYPE_WEB,
-                SM_FRAME.count++);
+                SM_FRAME.count++,
+                await Pref.getAllOptions());
         } else if (!SM_FRAME.inframe) {
             injectMaps();
         }

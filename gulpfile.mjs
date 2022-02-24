@@ -1,7 +1,7 @@
 import gulp from 'gulp';
 const { src, dest, series, parallel } = gulp;
 import concat from 'gulp-concat';
-import * as del from 'del';
+import { deleteAsync, deleteSync } from 'del';
 import rename from 'gulp-rename';
 import zip from 'gulp-zip';
 import mocha from 'gulp-mocha';
@@ -23,9 +23,10 @@ for (const browser of BROWSERS) {
 
 function doubleInclusionGuard() {
     return contentTransform((contents, file, enc) =>
-        `if (!window["..SMLoaded:${file.basename}"]) {` +
-        `${contents}window["..SMLoaded:${file.basename}"]=true;` +
-        `}`);
+`if (!self["..SMLoaded:${file.basename}"]) {
+${contents};
+self["..SMLoaded:${file.basename}"]=true;
+}`);
 }
 
 class BuildContext {
@@ -70,7 +71,7 @@ class BuildContext {
     }
 
     processManifest() {
-        return src('manifest_template.json')
+        return src(this.browser === 'firefox' ? 'manifest_template.json' : 'manifest_chrome_template.json')
             .pipe(newer({ dest: `${this.pluginDir()}/manifest.json`, extra: __filename }))
             .pipe(contentTransform(this._processManifestTemplate))
             .pipe(rename('manifest.json'))
@@ -151,21 +152,29 @@ class BuildContext {
         return output;
     }
 
-    MINIFY_FILES = {
-        'mapapi_inject': [
-            "src/prefreader.js",
-            "src/Scrollability.js",
-            "src/ScrollableMap.js",
-            "src/mapapi_inject.js"
-        ],
-        'inject_content': ['src/inject_content.js'],
-        'scrollability_inject': ["src/Scrollability.js"],
-        'inject_frame': [
-            "src/prefreader.js",
-            "src/Scrollability.js",
-            "src/ScrollableMap.js",
-            "src/inject_frame.js"
-        ]
+    MINIFY_FILES() {
+        return {
+            'mapapi_inject': [
+                "src/prefreader.js",
+                "src/Scrollability.js",
+                "src/ScrollableMap.js",
+                "src/mapapi_inject.js"
+            ],
+            'inject_content': ['src/inject_content.js'],
+            'scrollability_inject': ["src/Scrollability.js"],
+            'inject_frame': [
+                "src/prefreader.js",
+                "src/Scrollability.js",
+                "src/ScrollableMap.js",
+                "src/inject_frame.js"
+            ],
+            'background': [
+                "src/pref.js",
+                "src/permission.js",
+                "src/background.js",
+                `${this.pluginDir()}/src/domains.js`,
+            ],
+        }
     }
 
     zipExtension() {
@@ -176,7 +185,7 @@ class BuildContext {
     }
 
     async build() {
-        const minifyTasks = Object.entries(this.MINIFY_FILES).map(([output, sourceFiles]) => {
+        const minifyTasks = Object.entries(this.MINIFY_FILES()).map(([output, sourceFiles]) => {
             const minifyTask = () =>
                 src(sourceFiles)
                     .pipe(newer({ dest: `${this.pluginDir()}/${output}.min.js`, extra: __filename }))
@@ -189,14 +198,13 @@ class BuildContext {
         const buildUnpacked = parallel(
             ...minifyTasks,
             this.copySourceFiles,
-            this.generateDomainDotJs,
             this.copyImages,
             this.processManifest,
         );
         if (this.browser === 'firefox') {
-            return runSeries(buildUnpacked, this.zipExtension);
+            return runSeries(this.generateDomainDotJs, buildUnpacked, this.zipExtension);
         } else {
-            return makePromise(buildUnpacked);
+            return runSeries(this.generateDomainDotJs, buildUnpacked);
         }
     }
 
@@ -343,6 +351,7 @@ function watchDevBuild() {
             'src/**',
             'gulputils.js',
             'manifest_template.json',
+            'manifest_chrome_template.json',
             'images/*',
             __filename,
         ],
@@ -386,8 +395,8 @@ export async function publish() {
     await bc.openStoreLink();
 }
 
-export function clean() {
-    return del(['gen/*']);
+export async function clean() {
+    return await deleteAsync(['gen/*']);
 }
 clean.description = 'Remove all build outputs';
 

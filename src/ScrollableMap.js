@@ -1,7 +1,7 @@
 if (window.ScrollableMap === undefined) {
 
     const DEBUG = chrome.runtime.getManifest().version === '10000';
-    window.ScrollableMap = function (div, type, id) {
+    window.ScrollableMap = function (div, type, id, prefs) {
 
         let enabled = false;
 
@@ -99,7 +99,7 @@ if (window.ScrollableMap === undefined) {
                 }
             });
 
-            if (window.SCROLLMAPS_enabled || pref('enabled')) {
+            if (window.SCROLLMAPS_enabled || prefs['enabled']) {
                 enable();
             }
 
@@ -147,7 +147,7 @@ if (window.ScrollableMap === undefined) {
         function _isMapActivatable() {
             return self.type !== ScrollableMap.TYPE_NEWWEB &&  // Web maps are never activatable
                 bodyScrolls &&
-                pref('frameRequireFocus') &&
+                prefs['frameRequireFocus'] &&
                 enabled &&
                 !mapClicked;
         }
@@ -183,7 +183,7 @@ if (window.ScrollableMap === undefined) {
                 // have much less "delta" than scroll
                 let scale = 1;
                 if (originalEvent.ctrlKey) {
-                    scale = pref('zoomSpeed') / 100;
+                    scale = prefs['zoomSpeed'] / 100;
                     if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
                     if (type !== ScrollableMap.TYPE_NEWWEB || !isWebGlCanvas(target)) {
                         // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
@@ -211,7 +211,7 @@ if (window.ScrollableMap === undefined) {
                 // have much less "delta" than scroll
                 let scale = 1;
                 if (originalEvent.ctrlKey) {
-                    scale = pref('zoomSpeed') / 100;
+                    scale = prefs['zoomSpeed'] / 100;
                     if (type !== ScrollableMap.TYPE_NEWWEB) scale *= 3;
                     if (type !== ScrollableMap.TYPE_NEWWEB || !isWebGlCanvas(target)) {
                         // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
@@ -291,7 +291,7 @@ if (window.ScrollableMap === undefined) {
                     case States.zooming:
                         // In Chrome, ctrl + wheel => pinch gesture. Do not invert zoom for the pinch
                         // gesture.
-                        var factor = (pref('invertZoom') && !(window.chrome && e.ctrlKey)) ? -1 : 1;
+                        var factor = (prefs['invertZoom'] && !(window.chrome && e.ctrlKey)) ? -1 : 1;
                         if (window.safari && e.webkitDirectionInvertedFromDevice) {
                             factor *= -1;
                         }
@@ -305,7 +305,8 @@ if (window.ScrollableMap === undefined) {
                         setTimer('flushAverage', function () { averageX.flush(); averageY.flush(); }, 200);
                         averageX.push(e.deltaX); averageY.push(e.deltaY);
 
-                        const speedFactor = ( pref('scrollSpeed') / 100 ) * ( pref('invertScroll') ? 1 : -1 );
+                        console.log('invertscroll', prefs['invertScroll']);
+                        const speedFactor = ( prefs['scrollSpeed'] / 100 ) * ( prefs['invertScroll'] ? 1 : -1 );
                         const dx = averageX.getAverage() * speedFactor;
                         const dy = averageY.getAverage() * speedFactor;
 
