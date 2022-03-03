@@ -7,6 +7,7 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
 describe('google.com/travel test suite', function() {
+    this.retries(5);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;
