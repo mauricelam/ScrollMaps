@@ -56,7 +56,7 @@ describe('google.com/travel test suite', function() {
             try {
                 return await elem.getText();
             } catch (e) {
-                return 'ERROR';
+                return `ERROR: ${e}`;
             }
         }));
         return [...new Set(result.filter(x => x))].sort();

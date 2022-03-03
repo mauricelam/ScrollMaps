@@ -153,7 +153,9 @@ grunt.initConfig({
     open: {
         gen_dir: 'gen',
         github_release: 'https://github.com/mauricelam/ScrollMaps/releases/new?tag=v<%= version %>',
-        webstore: 'https://chrome.google.com/webstore/developer/edit/jifommjndpnefcfplgnbhabocomgdjjg'
+        webstore: 'https://chrome.google.com/webstore/developer/edit/jifommjndpnefcfplgnbhabocomgdjjg',
+        mozillastore: 'https://addons.mozilla.org/en-US/developers/addon/scrollmaps/ownership',
+        edgestore: 'https://partner.microsoft.com/en-us/dashboard/microsoftedge/27ae3b1c-3f31-477b-b8e3-bddb29477f74/packages'
     },
     mochaTest: {
         all: {
@@ -227,7 +229,9 @@ grunt.registerTask('postversion', [
     'open:gen_dir',
     'exec:git_push',
     'open:github_release',
-    'open:webstore']);
+    'open:webstore',
+    'open:mozillastore',
+    'open:edgestore']);
 
 grunt.registerTask('version', ['exec:npm_version'])
 
