@@ -279,7 +279,7 @@ if (window.ScrollableMap === undefined) {
                 return;
             }
 
-            if (lastTarget && arrayContainsElement($(lastTarget).parents(), div))
+            if (lastTarget && div.contains(lastTarget))
                 target = lastTarget;
             else
                 lastTarget = target;
@@ -324,25 +324,9 @@ if (window.ScrollableMap === undefined) {
             return false;
         };
 
-        function isFirefox() {
-            return navigator.userAgent.indexOf('Firefox') !== -1;
-        }
-
         self.init(div, type);
 
     };
-
-    function arrayContainsElement (array, element) {
-        if (!array) return false;
-        for (var i = 0; i < array.length; i++) {
-            try {
-                if (element.isSameNode(array[i])) return true;
-            } catch (e) {
-                console.warn(e, array, element);
-            }
-        }
-        return false;
-    }
 
     function setTimer (timerID, newFunction, newDelay) {
         window._timers = window._timers || {};

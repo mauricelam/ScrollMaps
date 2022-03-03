@@ -9,11 +9,11 @@ Lets you scroll with two fingers on your trackpad within Google Maps
 
 After checking out the source, initialize the dependencies using `npm install`.
 
-After making changes, build a development version using `grunt dev`. This will create an unpacked extension under `gen/plugin-10000` that can then be loaded into Chrome as an unpacked extension.
+After making changes, build a development version using `grunt dev:chrome`, `grunt dev:firefox`, or `grunt dev:edge`. This will create an unpacked extension under `gen/plugin-10000-<browser>` that can then be loaded into Chrome as an unpacked extension.
 
-You can also use `grunt watch` to watch for changes and build new dev versions automatically.
+You can also use `grunt watch:<browser>` to watch for changes and build new dev versions automatically.
 
-To build the current release version, use `grunt release`.
+To build the current release version for all browsers, use `grunt release`.
 
 ## Testing
 

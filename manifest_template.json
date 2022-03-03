@@ -7,6 +7,9 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "{c0dd22ca-492e-4bcf-ab68-53c6633892fe}"
+    },
+    "chrome": {
+      "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3XeoaqQRtfyt5UOKmdyeGm6ynNFixgxA6+L49HQCm9SffiesKkWh14JrhDpydJco8rN8Eaa/mVhYctZzjQK8LlUjceUrPY3pWAIooQFC94ELrTh5JfwaUd5g/2LOSpH22nUdpEEQ/ffiQOhGSwPaAwavXjNpK3QYRDEz8+RG7EQIDAQAB"
     }
   },
   "content_scripts": [

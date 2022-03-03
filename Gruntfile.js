@@ -1,5 +1,4 @@
 const open = require('open');
-const { execSync } = require('child_process')
 
 module.exports = function(grunt) {
 
@@ -174,7 +173,7 @@ grunt.initConfig({
         }
     },
     watch: {
-        all: {
+        chrome: {
             files: [
                 'Gruntfile.js',
                 'src/**/*.js',
@@ -182,11 +181,37 @@ grunt.initConfig({
                 'src/**/*.css',
                 'manifest_template.json'
             ],
-            tasks: ['dev'],
+            tasks: ['dev:chrome'],
             options: {
                 atBegin: true
             }
-        }
+        },
+        firefox: {
+            files: [
+                'Gruntfile.js',
+                'src/**/*.js',
+                'src/**/*.html',
+                'src/**/*.css',
+                'manifest_template.json'
+            ],
+            tasks: ['dev:firefox'],
+            options: {
+                atBegin: true
+            }
+        },
+        edge: {
+            files: [
+                'Gruntfile.js',
+                'src/**/*.js',
+                'src/**/*.html',
+                'src/**/*.css',
+                'manifest_template.json'
+            ],
+            tasks: ['dev:edge'],
+            options: {
+                atBegin: true
+            }
+        },
     },
     env: {
         chrome: { BROWSER: 'chrome' },
@@ -208,15 +233,26 @@ grunt.registerTask('build', [
     'copy:manifest',
     'newer:copy:images']);
 
-grunt.registerTask('dev', [
-    'set_version:10000',
-    'build',
+grunt.registerTask('dev', (browser) => {
+    if (!browser) {
+        grunt.fatal('Usage: grunt dev:{chrome/firefox/edge}')
+    }
+    grunt.task.run([
+        `set_version:${browser}:10000`,
+        'build',
+    ]);
+});
+
+grunt.registerTask('release', [
+    'releasebrowser:chrome',
+    'releasebrowser:firefox',
+    'releasebrowser:edge'
 ]);
 
-grunt.registerTask('release', function () {
+grunt.registerTask('releasebrowser', (browser) => {
     let pkg = grunt.file.readJSON('package.json')
     grunt.task.run([
-        `set_version:${pkg.version || ''}`,
+        `set_version:${browser}:${pkg.version || ''}`,
         'build',
         'compress:release'
     ]);
@@ -234,9 +270,10 @@ grunt.registerTask('postversion', [
 
 grunt.registerTask('version', ['exec:npm_version'])
 
-grunt.registerTask('set_version', (version) => {
+grunt.registerTask('set_version', (browser, version) => {
     if (!version) grunt.fatal(`Invalid version "${version}"`);
-    grunt.config.set('pluginDir', `gen/plugin-${version}`);
+    grunt.config.set('pluginDir', `gen/plugin-${version}-${browser}`);
+    grunt.config.set('browser', browser);
     grunt.config.set('version', version);
 });
 
@@ -263,6 +300,15 @@ function processManifestTemplate(content) {
             for (let o in obj) {
                 if (typeof obj[o] === 'object') {
                     processObj(obj[o]);
+                }
+            }
+            if (grunt.config.get('browser') === 'chrome') {
+                const chromeSettings = obj?.browser_specific_settings?.chrome
+                if (chromeSettings) {
+                    for (const i in chromeSettings) {
+                        obj[i] = chromeSettings[i];
+                    }
+                    delete obj['browser_specific_settings']
                 }
             }
         }
@@ -321,7 +367,7 @@ grunt.registerTask('test', (browser, test) => {
         return;
     }
     grunt.task.run([
-        'dev',
+        `dev:${browser}`,
         'compress:firefoxtest',
         `env:${browser}`,
         `mochaTest:${test}`
