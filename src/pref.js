@@ -68,22 +68,30 @@ function pref(label){
     // to localStorage of the extension)
 
     listeners.push((key, value) => {
-        Extension.forAllTabs(function (tab) {
-            const pair = {key: key, value: value};
-            Message.tab.sendMessage(tab, 'preferenceChanged', pair, (result) => {
-                let error = chrome.runtime.lastError;
-                let errorMessage = error ? error.message : undefined;
-                if (errorMessage && errorMessage.indexOf('Receiving end does not exist') === -1) {
-                    console.warn(errorMessage);
+        chrome.windows.getAll({populate: true}, (windows) => {
+            for (const window of windows) {
+                for (const tab of window.tabs) {
+                    const pair = {key: key, value: value};
+                    chrome.tabs.sendMessage(
+                        tab.id,
+                        { 'action': 'preferenceChanged', 'data': pair },
+                        (result) => {
+                            let error = chrome.runtime.lastError;
+                            let errorMessage = error ? error.message : undefined;
+                            if (errorMessage && errorMessage.indexOf('Receiving end does not exist') === -1) {
+                                console.warn(errorMessage);
+                            }
+                        }
+                    );
                 }
-            });
+            }
         });
     });
 
-    Message.extension.addListener(function(action, data, sender, sendResponse) {
-        switch(action) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        switch (message.action) {
             case 'setPreference':
-                PrefManager.setOption(data.key, data.value);
+                PrefManager.setOption(message.data.key, message.data.value);
                 break;
             case 'getAllPreferences':
                 var allOptions = $.extend(defaults, PrefManager.getAllOptions());

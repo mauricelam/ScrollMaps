@@ -25,7 +25,6 @@ grunt.initConfig({
                     dest: '<%= pluginDir %>/mapapi_inject.min.js',
                     src: [
                         "node_modules/jquery/dist/jquery.min.js",
-                        "src/Shim.js",
                         "src/prefreader.js",
                         "src/Scrollability.js",
                         "src/ScrollableMap.js",
@@ -43,7 +42,6 @@ grunt.initConfig({
                     dest: '<%= pluginDir %>/inject_frame.min.js',
                     src: [
                         "node_modules/jquery/dist/jquery.min.js",
-                        "src/Shim.js",
                         "src/prefreader.js",
                         "src/Scrollability.js",
                         "src/ScrollableMap.js",
@@ -161,7 +159,8 @@ grunt.initConfig({
         all: {
             options: {
                 reporter: 'spec',
-                noFail: false // Optionally set to not fail on failed tests (will still fail on other errors)
+                noFail: false, // Optionally set to not fail on failed tests (will still fail on other errors)
+                timeout: 100000
             },
         },
         manual: {

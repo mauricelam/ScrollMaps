@@ -7,7 +7,7 @@ if (window.SM_INJECT === undefined) {
     SM_INJECT.injectScript = function(host, src) {
         var script = document.createElement('script');
         script.setAttribute('id', '..scrollmaps_inject');
-        script.src = Extension.getURL(src);
+        script.src = chrome.runtime.getURL(path);
         host.insertBefore(script, host.firstChild);
         if (host.contains(script)) {
             host.removeChild(script);

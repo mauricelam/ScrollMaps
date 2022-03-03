@@ -18,18 +18,18 @@ function pref(key){
     PrefReader.options = {};
     const listeners = [];
 
-    Message.extension.addListener(function (action, data, sender, sendResponse) {
-        switch (action) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        switch (message.action) {
             case 'preferenceChanged':
-                PrefReader.options[data.key] = data.value;
+                PrefReader.options[message.data.key] = message.data.value;
                 for (const listener of listeners) {
-                    listener(data.key, data.value);
+                    listener(message.data.key, message.data.value);
                 }
                 break;
         }
     });
 
-    Message.extension.sendMessage('getAllPreferences', {}, (_options) => {
+    chrome.runtime.sendMessage({ 'action': 'getAllPreferences', 'data': {} }, (_options) => {
         $.extend(PrefReader.options, _options);
         for (const key in _options) {
             for (const listener of listeners) {
@@ -40,7 +40,7 @@ function pref(key){
 
     PrefReader.setOption = function(key, value){
         PrefReader.options[key] = value;
-        Message.extension.sendMessage('setPreference', {key: key, value: value});
+        chrome.runtime.sendMessage({'action': 'setPreference', 'data': {key: key, value: value}});
     };
 
     PrefReader.getOption = function(key){
