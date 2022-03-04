@@ -23,7 +23,6 @@
   "background": {
     "scripts": [
       "src/jquery.js",
-      "src/Shim.js",
       "src/pref.js",
       "src/domains.js",
       "src/permission.js",
