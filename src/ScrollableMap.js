@@ -1,5 +1,3 @@
-/*global $ Message pref */
-
 if (window.ScrollableMap === undefined) {
 
     const DEBUG = chrome.runtime.getManifest().version === '10000';

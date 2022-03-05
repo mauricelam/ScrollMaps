@@ -1,5 +1,3 @@
-/*global $ Message ScrollableMap */
-
 if (window.SM_INJECT === undefined) {
     const DEBUG = chrome.runtime.getManifest().version === '10000';
     window.SM_INJECT = { count: 0 };
@@ -66,12 +64,16 @@ if (window.SM_INJECT === undefined) {
                 if (foundSet.size <= foundThreshold) {
                     return Array.from(foundSet)
                         .map(container => this._matchAncestor(container,
-                            node => $(node).is(':visible')
-                                && $(node).height() > 1
-                                && $(node).width() > 1));
+                            node => isVisible(node)
+                                && node.offsetHeight > 1
+                                && node.offsetWidth > 1));
                 }
             }
             return [];
+
+            function isVisible(node) {
+                window.getComputedStyle(node).display !== "none";
+            }
         }
 
         static findMaps() {

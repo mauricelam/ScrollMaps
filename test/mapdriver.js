@@ -14,7 +14,7 @@ class MapDriver {
                 .forBrowser('chrome')
                 .setChromeOptions(
                     new chrome.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000`, 'window-size=800,600')
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`, 'window-size=800,600')
                 )
                 .build();
         } else if (process.env.BROWSER === 'edge') {
@@ -24,7 +24,7 @@ class MapDriver {
                 .forBrowser('MicrosoftEdge')
                 .setEdgeOptions(
                     new edge.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000`, 'window-size=800,600')
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-edge`, 'window-size=800,600')
                 )
                 .setEdgeService(new edge.ServiceBuilder(edgePaths.driverPath))
                 .build();
@@ -35,7 +35,7 @@ class MapDriver {
                 .forBrowser('firefox')
                 .setFirefoxOptions(new firefox.Options().windowSize({width: 800, height: 600}))
                 .build();
-            await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000.zip`, true)
+            await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000-firefox.zip`, true)
         } else {
             throw new Error('Environment variable $BROWSER not defined');
         }

@@ -1,5 +1,3 @@
-/*global ScrollableMap */
-
 if (window.SM_FRAME === undefined) {
     window.SM_FRAME = { count: 0 };
     SM_FRAME.inframe = (window.top !== window);

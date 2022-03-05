@@ -1,5 +1,3 @@
-/*global Scrollability */
-
 if (window.Scrollability === undefined) {
     const DEBUG = chrome.runtime.getManifest().version === '10000';
     window.Scrollability = {};
@@ -32,13 +30,21 @@ if (window.Scrollability === undefined) {
     };
 
     Scrollability.isWindowScrollable = function () {
-        let hasContentBelowFold = $(document.documentElement).outerHeight(true /* includeMargin */) +
-                $(document.documentElement).position().top > $(window).height();
-        hasContentBelowFold |= $(document.body).outerHeight(true /* includeMargin */) +
-                $(document.body).position().top > $(window).height();
-        return hasContentBelowFold && $(document.body).css('overflow') !== 'hidden' &&
-                $(document.documentElement).css('overflow') !== 'hidden';
+        let hasContentBelowFold = outerHeight(document.documentElement) +
+                document.documentElement.offsetTop > window.innerHeight;
+        hasContentBelowFold |= outerHeight(document.body) +
+                document.body.offsetTop > window.innerHeight;
+        const bodyStyle = window.getComputedStyle(document.body);
+        const documentStyle = window.getComputedStyle(document.documentElement);
+        return hasContentBelowFold && bodyStyle['overflow'] !== 'hidden' &&
+                documentStyle['overflow'] !== 'hidden';
     };
+
+    function outerHeight(el) {
+        const styles = window.getComputedStyle(el);
+        const margin = parseFloat(styles['marginTop']) + parseFloat(styles['marginBottom']);
+        return Math.ceil(el.offsetHeight + margin);
+    }
 
     Scrollability._monitorPotentialScrollabilityChange = function (element, callback) {
         if (DEBUG) {

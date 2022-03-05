@@ -24,7 +24,7 @@ describe('Manual test suite', function() {
                 .forBrowser('chrome')
                 .setChromeOptions(
                     new chrome.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000`)
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`)
                 )
                 .build();
         } else if (process.env.BROWSER === 'firefox') {
@@ -32,7 +32,7 @@ describe('Manual test suite', function() {
                 .forBrowser('firefox')
                 .setFirefoxOptions(new firefox.Options())
                 .build();
-            await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000.zip`, true)
+            await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000-firefox.zip`, true)
         } else {
             throw 'Environment variable $BROWSER not defined';
         }

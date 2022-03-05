@@ -1,5 +1,3 @@
-/*global $ */
-
 /**
  * Uses message passing mechanism to read preference values from the context of the extension. This
  * class has a cache of its own to provide all required preference values instantly.
@@ -29,11 +27,11 @@ function pref(key){
         }
     });
 
-    chrome.runtime.sendMessage({ 'action': 'getAllPreferences', 'data': {} }, (_options) => {
-        $.extend(PrefReader.options, _options);
-        for (const key in _options) {
+    chrome.runtime.sendMessage({ 'action': 'getAllPreferences' }, (_options) => {
+        PrefReader.options = { ...PrefReader.options, ..._options };
+        for (const key in PrefReader.options) {
             for (const listener of listeners) {
-                listener(key, _options[key]);
+                listener(key, PrefReader.options[key]);
             }
         }
     });

@@ -34,3 +34,5 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
 label.disabled { opacity: 0.3; }
 .PMcheckbox_labeltext { margin: 2px 0px; }
 .PMcheckbox_smalltext { color: #666; font-size: 12px; }
+
+.hidden { display: none; }

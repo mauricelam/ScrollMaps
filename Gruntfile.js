@@ -23,7 +23,6 @@ grunt.initConfig({
                 {
                     dest: '<%= pluginDir %>/mapapi_inject.min.js',
                     src: [
-                        "node_modules/jquery/dist/jquery.min.js",
                         "src/prefreader.js",
                         "src/Scrollability.js",
                         "src/ScrollableMap.js",
@@ -33,14 +32,12 @@ grunt.initConfig({
                 {
                     dest: '<%= pluginDir %>/scrollability_inject.min.js',
                     src: [
-                        "node_modules/jquery/dist/jquery.min.js",
                         "src/Scrollability.js"
                     ]
                 },
                 {
                     dest: '<%= pluginDir %>/inject_frame.min.js',
                     src: [
-                        "node_modules/jquery/dist/jquery.min.js",
                         "src/prefreader.js",
                         "src/Scrollability.js",
                         "src/ScrollableMap.js",
@@ -97,9 +94,9 @@ grunt.initConfig({
         node_modules: {
             files: [{
                 src: [
-                    'node_modules/jquery/dist/jquery.min.js',
+                    // 'node_modules/jquery/dist/jquery.min.js',
                 ],
-                dest: '<%= pluginDir %>/src/jquery.js'
+                // dest: '<%= pluginDir %>/src/jquery.js'
             }]
         },
         manifest: {
@@ -122,7 +119,7 @@ grunt.initConfig({
     compress: {
         release: {
             options: {
-                archive: 'gen/scrollmaps-<%= version %>.zip'
+                archive: 'gen/scrollmaps-<%= version %>-<%= browser %>.zip'
             },
             files: [{
                 expand: true,
@@ -133,7 +130,7 @@ grunt.initConfig({
         },
         firefoxtest: {
             options: {
-                archive: 'gen/scrollmaps-<%= version %>.zip'
+                archive: 'gen/scrollmaps-<%= version %>-firefox.zip'
             },
             files: [{
                 expand: true,
@@ -231,7 +228,7 @@ grunt.registerTask('build', [
     'copy:all',
     'copy:node_modules',
     'copy:manifest',
-    'newer:copy:images']);
+    'copy:images']);
 
 grunt.registerTask('dev', (browser) => {
     if (!browser) {
@@ -366,12 +363,23 @@ grunt.registerTask('test', (browser, test) => {
         console.error('Usage: grunt test:<chrome|edge|firefox>:<auto|semimanual|manual>');
         return;
     }
-    grunt.task.run([
+    const tasks = [
         `dev:${browser}`,
-        'compress:firefoxtest',
+    ];
+    if (browser === 'firefox') {
+        tasks.push('compress:firefoxtest');
+    }
+    tasks.push(
         `env:${browser}`,
         `mochaTest:${test}`
-    ]);
+    )
+    grunt.task.run(tasks);
 });
+
+grunt.registerTask('testall', [
+    'test:chrome:auto',
+    'test:firefox:auto',
+    'test:edge:auto',
+]);
 
 };

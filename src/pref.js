@@ -1,5 +1,3 @@
-/*global $ console */
-
 var PrefManager = {};
 var Pref = PrefManager;
 
@@ -71,10 +69,9 @@ function pref(label){
         chrome.windows.getAll({populate: true}, (windows) => {
             for (const window of windows) {
                 for (const tab of window.tabs) {
-                    const pair = {key: key, value: value};
                     chrome.tabs.sendMessage(
                         tab.id,
-                        { 'action': 'preferenceChanged', 'data': pair },
+                        { 'action': 'preferenceChanged', 'data': {key: key, value: value} },
                         (result) => {
                             let error = chrome.runtime.lastError;
                             let errorMessage = error ? error.message : undefined;
@@ -94,7 +91,7 @@ function pref(label){
                 PrefManager.setOption(message.data.key, message.data.value);
                 break;
             case 'getAllPreferences':
-                var allOptions = $.extend(defaults, PrefManager.getAllOptions());
+                const allOptions = { ...defaults, ...PrefManager.getAllOptions() };
                 sendResponse(allOptions);
                 break;
         }
