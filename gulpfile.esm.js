@@ -292,6 +292,20 @@ async function postVersion() {
     );
 }
 
+function watchDevBuild() {
+    watch(
+        [
+            'src/**',
+            'gulpfile.esm.js',
+            'gulputils.esm.js',
+            'manifest_template.json',
+            'images/*',
+        ],
+        { events: 'all', ignoreInitial: false },
+        devBuild
+    )
+}
+
 function clean() {
     return del(['gen/*']);
 }
@@ -304,4 +318,5 @@ export {
     test,
     testall,
     postVersion,
+    watchDevBuild as watch,
 }
