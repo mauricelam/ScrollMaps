@@ -10,6 +10,7 @@ import open from 'open';
 import { makePromise, runParallel, runSeries, contentTransform } from './gulputils.esm.js';
 import { exec } from 'child_process';
 import util from 'util';
+import newer from 'gulp-newer';
 
 const BROWSERS = ['chrome', 'firefox', 'edge'];
 
@@ -51,16 +52,19 @@ class BuildContext {
             'src/**/*.css',
             'src/**/*.html',
         ])
+        .pipe(newer(`${this.pluginDirPath()}/src`))
         .pipe(this.pluginDir('src'));
     }
 
     copyImages() {
         return src(['images/**/*.png'])
+            .pipe(newer(`${this.pluginDirPath()}/images`))
             .pipe(this.pluginDir('images'))
     }
 
     processManifest() {
         return src('manifest_template.json')
+            .pipe(newer({ dest: `${this.pluginDirPath()}/manifest.json`, extra: __filename }))
             .pipe(contentTransform(this._processManifestTemplate))
             .pipe(rename('manifest.json'))
             .pipe(this.pluginDir());
@@ -159,6 +163,7 @@ class BuildContext {
 
     zipExtension() {
         return src([this.pluginDirPath() + '/**'])
+            .pipe(newer(`gen/scrollmaps-${this.version}-${this.browser}.zip`))
             .pipe(zip(`scrollmaps-${this.version}-${this.browser}.zip`))
             .pipe(dest('gen'));
     }
@@ -167,6 +172,7 @@ class BuildContext {
         const minifyTasks = Object.entries(this.MINIFY_FILES).map(([output, sourceFiles]) => {
             const minifyTask = () =>
                 src(sourceFiles)
+                    .pipe(newer(`${this.pluginDirPath()}/${output}.min.js`))
                     .pipe(concat(`${output}.min.js`))
                     .pipe(uglify())
                     .pipe(doubleInclusionGuard())
@@ -268,7 +274,7 @@ async function releaseBuild() {
     const tasks = BROWSERS
         .map((browser) => new BuildContext(browser, packageJson.version))
         .map((bc) => series(bc.build, bc.zipExtension));
-    return runParallel(...tasks);
+    await runParallel(...tasks);
 }
 
 
