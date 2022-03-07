@@ -1,5 +1,5 @@
 const { src, dest, series, parallel, watch } = require('gulp');
-const uglify = require('gulp-uglify-es').default;
+const uglify = require('gulp-uglify');
 const concat = require('gulp-concat');
 const del = require('del');
 const rename = require('gulp-rename');
