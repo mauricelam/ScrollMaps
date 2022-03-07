@@ -9,16 +9,15 @@ Lets you scroll with two fingers on your trackpad within Google Maps
 
 After checking out the source, initialize the dependencies using `npm install`.
 
-After making changes, build a development version using `grunt dev:chrome`, `grunt dev:firefox`, or `grunt dev:edge`. This will create an unpacked extension under `gen/plugin-10000-<browser>` that can then be loaded into Chrome as an unpacked extension.
+After making changes, build a development version using `BROWSER=<chrome/firefox/edge> gulp`. This will create an unpacked extension under `gen/plugin-10000-<browser>` that can then be loaded into Chrome as an unpacked extension.
 
-You can also use `grunt watch:<browser>` to watch for changes and build new dev versions automatically.
+You can also use `BROWSER=<chrome/firefox/edge> gulp watch` to watch for changes and build new dev versions automatically.
 
-To build the current release version for all browsers, use `grunt release`.
+To build the current release version for all browsers, use `gulp release`.
 
 ## Testing
 
-Tests can be run using `grunt test:<browser>:<suite>`, where `browser` can be either `chrome` or `firefox`, and `suite` can be
-`auto`, `semimanual`, or `manual`.
+Tests can be run using `BROWSER=<chrome/firefox/edge> gulp test`.
 
 Individual test fails can be run using `mocha` directly:
 
