@@ -1,16 +1,14 @@
-import { src, dest, series, parallel, watch } from 'gulp';
-import uglify from 'gulp-uglify-es';
-import concat from 'gulp-concat';
-import del from 'del';
-import rename from 'gulp-rename';
-import zip from 'gulp-zip';
-import mocha from 'gulp-mocha';
-import { promises as fs } from 'fs';
-import open from 'open';
-import { makePromise, runParallel, runSeries, contentTransform } from './gulputils.esm.js';
-import { exec } from 'child_process';
-import util from 'util';
-import newer from 'gulp-newer';
+const { src, dest, series, parallel, watch } = require('gulp');
+const uglify = require('gulp-uglify-es').default;
+const concat = require('gulp-concat');
+const del = require('del');
+const rename = require('gulp-rename');
+const zip = require('gulp-zip');
+const mocha = require('gulp-mocha');
+const fs = require('fs').promises;
+const open = require('open');
+const { makePromise, runParallel, runSeries, contentTransform, execTask } = require('./gulputils.js');
+const newer = require('gulp-newer');
 
 const BROWSERS = ['chrome', 'firefox', 'edge'];
 
@@ -291,7 +289,7 @@ async function postVersion() {
     await runSeries(
         parallel(...tasks),
         parallel(
-            async () => util.promisify(exec)('git push'),
+            execTask('git push'),
             async () => open('gen'),
         ),
         async () => open(`https://github.com/mauricelam/ScrollMaps/releases/new?tag=v${packageJson.version}`),
@@ -316,13 +314,13 @@ function clean() {
     return del(['gen/*']);
 }
 
-export {
-    devBuild as default,
-    devBuild as dev,
-    releaseBuild as release,
-    clean,
-    test,
-    testall,
-    postVersion,
-    watchDevBuild as watch,
+module.exports = {
+    default: devBuild,
+    dev: devBuild,
+    release: releaseBuild,
+    clean: clean,
+    test: test,
+    testall: testall,
+    postVersion: postVersion,
+    watch: watchDevBuild,
 }
