@@ -52,8 +52,8 @@ grunt.initConfig({
             process: function(src, filepath) {
                 // Double inclusion guard, since webrequest can inject the script
                 // many times
-                let name = filepath.split('/')
-                name = name[name.length - 1]
+                let name = filepath.split('/');
+                name = name[name.length - 1];
                 return `if (!window["..SMLoaded:${name}"]) {` + src +
                     `window["..SMLoaded:${name}"]=true;}`;
             }
@@ -232,7 +232,7 @@ grunt.registerTask('build', [
 
 grunt.registerTask('dev', (browser) => {
     if (!browser) {
-        grunt.fatal('Usage: grunt dev:{chrome/firefox/edge}')
+        grunt.fatal('Usage: grunt dev:{chrome/firefox/edge}');
     }
     grunt.task.run([
         `set_version:${browser}:10000`,
@@ -247,7 +247,7 @@ grunt.registerTask('release', [
 ]);
 
 grunt.registerTask('releasebrowser', (browser) => {
-    let pkg = grunt.file.readJSON('package.json')
+    let pkg = grunt.file.readJSON('package.json');
     grunt.task.run([
         `set_version:${browser}:${pkg.version || ''}`,
         'build',
@@ -265,7 +265,7 @@ grunt.registerTask('postversion', [
     'open:mozillastore',
     'open:edgestore']);
 
-grunt.registerTask('version', ['exec:npm_version'])
+grunt.registerTask('version', ['exec:npm_version']);
 
 grunt.registerTask('set_version', (browser, version) => {
     if (!version) grunt.fatal(`Invalid version "${version}"`);
@@ -300,18 +300,18 @@ function processManifestTemplate(content) {
                 }
             }
             if (grunt.config.get('browser') === 'chrome') {
-                const chromeSettings = obj?.browser_specific_settings?.chrome
+                const chromeSettings = obj?.browser_specific_settings?.chrome;
                 if (chromeSettings) {
                     for (const i in chromeSettings) {
                         obj[i] = chromeSettings[i];
                     }
-                    delete obj['browser_specific_settings']
+                    delete obj.browser_specific_settings;
                 }
             }
         }
     }
-    processObj(manifest)
-    manifest['version'] = "" + grunt.config.get('version');
+    processObj(manifest);
+    manifest.version = '' + grunt.config.get('version');
     return JSON.stringify(manifest, null, '  ');
 }
 
@@ -320,7 +320,7 @@ function getGoogleMapUrls() {
         "at", "au", "be", "br", "ca", "cf", "cg", "ch", "ci", "cl", "cn", "uk", "in", "jp", "th",
         "cz", "dj", "de", "dk", "ee", "es", "fi", "fr", "ga", "gm", "hk", "hr", "hu", "ie", "is",
         "it", "li", "lt", "lu", "lv", "mg", "mk", "mu", "mw", "nl", "no", "nz", "pl", "pt", "ro",
-        "ru", "rw", "sc", "se", "sg", "si", "sk", "sn", "st", "td", "tg", "tr", "tw", "ua", "us"]
+        "ru", "rw", "sc", "se", "sg", "si", "sk", "sn", "st", "td", "tg", "tr", "tw", "ua", "us"];
 
     const GOOGLE_MAPS_URL_FORMATS = [
         "*://www.google.{tld}/maps*",
@@ -329,32 +329,25 @@ function getGoogleMapUrls() {
         "*://maps.google.{tld}/*",
         "*://maps.google.com.{tld}/*",
         "*://maps.google.co.{tld}/*"
-    ]
+    ];
 
     const GOOGLE_MAPS_SPECIAL_URLS = [
         "*://www.google.com/maps*",
         "*://maps.google.com/*",
         "*://mapy.google.pl/*",
         "*://ditu.google.cn/*"
-    ]
+    ];
 
 
-    let output = []
-    for (tld of GOOGLE_MAPS_CCTLDS) {
-        for (format of GOOGLE_MAPS_URL_FORMATS) {
-            output.push(format.replace('{tld}', tld))
+    let output = [];
+    for (const tld of GOOGLE_MAPS_CCTLDS) {
+        for (const format of GOOGLE_MAPS_URL_FORMATS) {
+            output.push(format.replace('{tld}', tld));
         }
     }
-    output = output.concat(GOOGLE_MAPS_SPECIAL_URLS)
-    return output
+    output = output.concat(GOOGLE_MAPS_SPECIAL_URLS);
+    return output;
 }
-
-// ========== Manual Test Sites ========== //
-
-// const MAPBOX_TEST_SITES = [
-//     'http://en.parkopedia.com/parking/san_francisco_ca_united_states/?ac=1&country=US&lat=37.7749295&lng=-122.41941550000001',
-//     'https://www.wunderground.com/'
-// ];
 
 // ========== Unit tests ========== //
 
@@ -372,7 +365,7 @@ grunt.registerTask('test', (browser, test) => {
     tasks.push(
         `env:${browser}`,
         `mochaTest:${test}`
-    )
+    );
     grunt.task.run(tasks);
 });
 

@@ -60,6 +60,11 @@ describe('Manual test suite', function() {
         'https://www.heywhatsthat.com/?view=P5XIGCII'
     ]
 
+    // const MAPBOX_TEST_SITES = [
+    //     'http://en.parkopedia.com/parking/san_francisco_ca_united_states/?ac=1&country=US&lat=37.7749295&lng=-122.41941550000001',
+    //     'https://www.wunderground.com/'
+    // ];
+
     for (const site of TEST_SITES) {
         it(`Site: ${site}`, async () => {
             await driver.get(site);
