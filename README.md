@@ -9,15 +9,15 @@ Lets you scroll with two fingers on your trackpad within Google Maps
 
 After checking out the source, initialize the dependencies using `npm install`.
 
-After making changes, build a development version using `BROWSER=<chrome/firefox/edge> gulp`. This will create an unpacked extension under `gen/plugin-10000-<browser>` that can then be loaded into Chrome as an unpacked extension.
+After making changes, build a development version using `gulp --<chrome/firefox/edge>`. This will create an unpacked extension under `gen/plugin-10000-<browser>` that can then be loaded into Chrome as an unpacked extension.
 
-You can also use `BROWSER=<chrome/firefox/edge> gulp watch` to watch for changes and build new dev versions automatically.
+You can also use `gulp watch --<chrome/firefox/edge>` to watch for changes and build new dev versions automatically.
 
 To build the current release version for all browsers, use `gulp release`.
 
 ## Testing
 
-Tests can be run using `BROWSER=<chrome/firefox/edge> gulp test`.
+Tests can be run using `gulp test --<chrome/firefox/edge>`.
 
 Individual test fails can be run using `mocha` directly:
 

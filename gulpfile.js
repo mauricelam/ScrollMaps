@@ -1,5 +1,4 @@
 const { src, dest, series, parallel, watch } = require('gulp');
-const uglify = require('gulp-uglify');
 const concat = require('gulp-concat');
 const del = require('del');
 const rename = require('gulp-rename');
@@ -9,8 +8,13 @@ const fs = require('fs').promises;
 const open = require('open');
 const { makePromise, runParallel, runSeries, contentTransform, execTask } = require('./gulputils.js');
 const newer = require('gulp-newer');
+const minimist = require('minimist');
 
 const BROWSERS = ['chrome', 'firefox', 'edge'];
+const BROWSER_FLAGS = {};
+for (const browser of BROWSERS) {
+    BROWSER_FLAGS[`--${browser}`] = `for [${browser}] browser`;
+}
 
 function doubleInclusionGuard() {
     return contentTransform((contents, file, enc) =>
@@ -36,11 +40,8 @@ class BuildContext {
         }
     }
 
-    pluginDirPath() { return `gen/plugin-${this.version}-${this.browser}`; }
-
-    pluginDir(subdir = '') {
-        return dest(`${this.pluginDirPath()}/${subdir}`);
-    }
+    intermediatesDir() { return `gen/intermediates-${this.version}-${this.browser}` }
+    pluginDir() { return `gen/plugin-${this.version}-${this.browser}`; }
 
     // ===== Tasks =====
 
@@ -50,29 +51,29 @@ class BuildContext {
             'src/**/*.css',
             'src/**/*.html',
         ])
-        .pipe(newer(`${this.pluginDirPath()}/src`))
-        .pipe(this.pluginDir('src'));
+        .pipe(newer(`${this.pluginDir()}/src`))
+        .pipe(dest(`${this.pluginDir()}/src`));
     }
 
     copyImages() {
         return src(['images/**/*.png'])
-            .pipe(newer(`${this.pluginDirPath()}/images`))
-            .pipe(this.pluginDir('images'))
+            .pipe(newer(`${this.pluginDir()}/images`))
+            .pipe(dest(`${this.pluginDir()}/images`))
     }
 
     processManifest() {
         return src('manifest_template.json')
-            .pipe(newer({ dest: `${this.pluginDirPath()}/manifest.json`, extra: __filename }))
+            .pipe(newer({ dest: `${this.pluginDir()}/manifest.json`, extra: __filename }))
             .pipe(contentTransform(this._processManifestTemplate))
             .pipe(rename('manifest.json'))
-            .pipe(this.pluginDir());
+            .pipe(dest(this.pluginDir()));
     }
 
     async generateDomainDotJs() {
         const urls = this._getGoogleMapUrls();
-        await fs.mkdir(`${this.pluginDirPath()}/src`, { recursive: true });
+        await fs.mkdir(`${this.pluginDir()}/src`, { recursive: true });
         await fs.writeFile(
-            `${this.pluginDirPath()}/src/domains.js`,
+            `${this.pluginDir()}/src/domains.js`,
             'const SCROLLMAPS_DOMAINS = ' + JSON.stringify(urls));
     }
 
@@ -160,7 +161,7 @@ class BuildContext {
     }
 
     zipExtension() {
-        return src([this.pluginDirPath() + '/**'])
+        return src([this.pluginDir() + '/**'])
             .pipe(newer(`gen/scrollmaps-${this.version}-${this.browser}.zip`))
             .pipe(zip(`scrollmaps-${this.version}-${this.browser}.zip`))
             .pipe(dest('gen'));
@@ -170,11 +171,10 @@ class BuildContext {
         const minifyTasks = Object.entries(this.MINIFY_FILES).map(([output, sourceFiles]) => {
             const minifyTask = () =>
                 src(sourceFiles)
-                    .pipe(newer(`${this.pluginDirPath()}/${output}.min.js`))
+                    .pipe(newer({ dest: `${this.pluginDir()}/${output}.min.js`, extra: __filename }))
                     .pipe(concat(`${output}.min.js`))
-                    .pipe(uglify())
                     .pipe(doubleInclusionGuard())
-                    .pipe(this.pluginDir());
+                    .pipe(dest(this.pluginDir()));
             minifyTask.displayName = `[${this.browser}] minify_${output}`
             return minifyTask;
         });
@@ -200,9 +200,9 @@ class BuildContext {
         // have a way to set process env variables per process, and
         // setting it globally in the current process breaks parallel
         // test runs.
-        await fs.mkdir('gen/intermediates', { recursive: true });
+        await fs.mkdir(this.intermediatesDir(), { recursive: true });
         await fs.writeFile(
-            `gen/intermediates/mocha-require-${this.browser}.mjs`,
+            `${this.intermediatesDir()}/mocha-require-${this.browser}.mjs`,
             `export const mochaHooks = () => { process.env.BROWSER = "${this.browser}" }`)
     }
 
@@ -211,7 +211,7 @@ class BuildContext {
         await makePromise(
             () => src('test/auto/*.js')
                 .pipe(mocha({
-                    require: [`gen/intermediates/mocha-require-${this.browser}.mjs`],
+                    require: [`${this.intermediatesDir()}/mocha-require-${this.browser}.mjs`],
                     reporter: 'spec',
                     timeout: 100000
                 }))
@@ -223,7 +223,7 @@ class BuildContext {
         await makePromise(
             () => src('test/manual/*.js')
                 .pipe(mocha({
-                    require: [`gen/mocha-require-${this.browser}.mjs`],
+                    require: [`${this.intermediatesDir()}/mocha-require-${this.browser}.mjs`],
                     reporter: 'spec',
                     timeout: 100000
                 }))
@@ -253,15 +253,20 @@ async function testall() {
     });
     return runParallel(...tasks);
 }
+testall.description = 'Run tests for all browsers';
 
 async function test() {
-    const bc = new BuildContext(process.env.BROWSER, 10000);
+    const bc = new BuildContext(getBrowser(), 10000);
     return runSeries(bc.build, bc.runAutoTest);
 }
+test.description = 'Run tests for a particular browser';
+test.flags = BROWSER_FLAGS;
 
 async function devBuild() {
-    return new BuildContext(process.env.BROWSER, 10000).build();
+    return new BuildContext(getBrowser(), 10000).build();
 }
+devBuild.description = 'Build the development version of the browser';
+devBuild.flags = BROWSER_FLAGS;
 
 async function releaseBuild() {
     const packageJsonString = await fs.readFile('package.json');
@@ -274,6 +279,7 @@ async function releaseBuild() {
         .map((bc) => series(bc.build, bc.zipExtension));
     await runParallel(...tasks);
 }
+releaseBuild.description = 'Build for all releases';
 
 
 // Task to be run after running `npm version [major/minor]`
@@ -295,6 +301,7 @@ async function postVersion() {
         async () => open(`https://github.com/mauricelam/ScrollMaps/releases/new?tag=v${packageJson.version}`),
     );
 }
+postVersion.description = 'Do not call directly. Use `npm version <major/minor>` instead.'
 
 function watchDevBuild() {
     watch(
@@ -304,14 +311,31 @@ function watchDevBuild() {
             'gulputils.esm.js',
             'manifest_template.json',
             'images/*',
+            __filename,
         ],
         { events: 'all', ignoreInitial: false },
         devBuild
     )
 }
+watchDevBuild.description = 'Watch for changes in source files and build development builds';
 
 function clean() {
     return del(['gen/*']);
+}
+clean.description = 'Remove all build outputs';
+
+// Allow --chrome, --firefox, --edge as command line args
+function getBrowser() {
+    const args = minimist(process.argv.slice(1));
+    for (const browser of BROWSERS) {
+        if (args[browser]) {
+            process.env.BROWSER = browser;
+        }
+    }
+    if (!process.env.BROWSER) {
+        throw new Error('Browser must be specified with --chrome, --firefox, or --edge');
+    }
+    return process.env.BROWSER;
 }
 
 module.exports = {
