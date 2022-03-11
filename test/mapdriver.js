@@ -1,5 +1,6 @@
 const webdriver = require('selenium-webdriver');
 const process = require('process');
+const child_process = require('child_process');
 
 const By = webdriver.By;
 
@@ -7,7 +8,15 @@ const By = webdriver.By;
 class MapDriver {
     static async create() {
         let driver;
+        let resolvePid;
+        let pid = new Promise((resolve, reject) => { resolvePid = resolve; });
         if (process.env.BROWSER === 'chrome') {
+            const _spawn = child_process.spawn;
+            child_process.spawn = (...args) => {
+                const proc = _spawn(...args);
+                resolvePid(proc.pid);
+                return proc;
+            };
             const chrome = require('selenium-webdriver/chrome');
             require('chromedriver');
             driver = new webdriver.Builder()
@@ -39,11 +48,12 @@ class MapDriver {
         } else {
             throw new Error('Environment variable $BROWSER not defined');
         }
-        return new MapDriver(driver);
+        return new MapDriver(driver, await pid);
     }
 
-    constructor(driver) {
+    constructor(driver, pid) {
         this.driver = driver;
+        this.pid = pid;
     }
 
     async quit() {
@@ -102,15 +112,23 @@ class MapDriver {
         return await this.scroll(elem, 0, deltaY, {ctrlKey: true, ...opts})
     }
 
+    async scrollIntoView(elem) {
+        await this.driver.executeScript((elem) => elem.scrollIntoView(), elem);
+    }
+
     async scroll(elem, dx, dy, opts = {}) {
         const r = await elem.getRect();
-        console.log('scrolling dy', dy);
-        await this.driver.executeAsyncScript(async (r, dx, dy, opts, done) => {
+        console.log('scrolling', dx, dy);
+        await this.driver.executeAsyncScript(async (elem, r, dx, dy, opts, done) => {
             try {
                 console.log('dy', dy);
-                const clientX = r.x + r.width / 2;
-                const clientY = r.y + r.height / 2;
+                const clientX = r.x + r.width / 2 - document.documentElement.scrollLeft;
+                const clientY = r.y + r.height / 2 - document.documentElement.scrollTop;
                 const pointElem = document.elementFromPoint(clientX, clientY);
+                if (pointElem === null) {
+                    done(new Error('pointElem is null'));
+                }
+                console.log('pointElem', elem, pointElem);
                 const sleep = (t) => new Promise((resolve, reject) => setTimeout(resolve, t));
                 const wheel = (dx, dy) => {
                     console.log('Dispatching wheel event', dx, dy);
@@ -132,7 +150,21 @@ class MapDriver {
             } finally {
                 done();
             }
-        }, r, dx, dy, opts);
+        }, elem, r, dx, dy, opts);
+    }
+
+    clickBrowserAction() {
+        return new Promise((resolve, reject) => {
+            console.log(`Clicking browser action on process ${this.pid}`);
+            child_process.exec(
+                'test/chrome_browser_action.js',
+                {env: {'TEST_PROCESS': this.pid}},
+                (err, stdout, stderr) => {
+                    if (stdout) console.log(`browseraction: ${stdout.trim()}`);
+                    if (stderr) console.warn(`browseraction: ${stderr.trim()}`);
+                    err ? reject(err) : resolve(stdout);
+                });
+        });
     }
 }
 
