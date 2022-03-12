@@ -1,6 +1,19 @@
 const webdriver = require('selenium-webdriver');
 const process = require('process');
 const child_process = require('child_process');
+const assert = require('assert');
+
+let chrome, firefox, edge;
+if (process.env.BROWSER === 'chrome') {
+    chrome = require('selenium-webdriver/chrome');
+    require('chromedriver');
+} else if (process.env.BROWSER === 'firefox') {
+    firefox = require('selenium-webdriver/firefox');
+    require('geckodriver');
+} else if (process.env.BROWSER === 'edge') {
+    edge = require('selenium-webdriver/edge');
+    edge.driverModule = require('ms-chromium-edge-driver');
+}
 
 const By = webdriver.By;
 
@@ -9,7 +22,7 @@ class MapDriver {
     static async create() {
         let driver;
         let resolvePid;
-        let pid = new Promise((resolve, reject) => { resolvePid = resolve; });
+        let pidPromise = new Promise((resolve, reject) => { resolvePid = resolve; });
         if (process.env.BROWSER === 'chrome') {
             const _spawn = child_process.spawn;
             child_process.spawn = (...args) => {
@@ -17,58 +30,57 @@ class MapDriver {
                 resolvePid(proc.pid);
                 return proc;
             };
-            const chrome = require('selenium-webdriver/chrome');
-            require('chromedriver');
             driver = new webdriver.Builder()
                 .forBrowser('chrome')
                 .setChromeOptions(
                     new chrome.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`, 'window-size=800,600')
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`, 'window-size=800,724')
                 )
                 .build();
         } else if (process.env.BROWSER === 'edge') {
-            const edge = require('selenium-webdriver/edge');
-            const edgePaths = await require('ms-chromium-edge-driver').installDriver();
+            const edgePaths = await edge.driverModule.installDriver();
             driver = new webdriver.Builder()
                 .forBrowser('MicrosoftEdge')
                 .setEdgeOptions(
                     new edge.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-edge`, 'window-size=800,600')
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-edge`, 'window-size=800,720')
                 )
                 .setEdgeService(new edge.ServiceBuilder(edgePaths.driverPath))
                 .build();
         } else if (process.env.BROWSER === 'firefox') {
-            const firefox = require('selenium-webdriver/firefox');
-            require('geckodriver');
             driver = new webdriver.Builder()
                 .forBrowser('firefox')
-                .setFirefoxOptions(new firefox.Options().windowSize({width: 800, height: 600}))
+                .setFirefoxOptions(
+                    new firefox.Options()
+                        .windowSize({width: 800, height: 657})
+                )
                 .build();
             await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000-firefox.zip`, true)
         } else {
             throw new Error('Environment variable $BROWSER not defined');
         }
-        return new MapDriver(driver, await pid);
+        const mapDriver = new MapDriver(driver, pidPromise);
+        try {
+            // Make sure the browser height is normalized
+            await driver.wait(async () => {
+                const innerSize = await driver.executeScript(() => [window.innerWidth, window.innerHeight]);
+                console.log('inner size=', innerSize);
+                return innerSize[0] === 800 && innerSize[1] === 600;
+            });
+        } catch (e) {
+            await mapDriver.quit();
+            throw e;
+        }
+        return mapDriver;
     }
 
-    constructor(driver, pid) {
+    constructor(driver, pidPromise) {
         this.driver = driver;
-        this.pid = pid;
+        this.pidPromise = pidPromise;
     }
 
     async quit() {
         await this.driver.quit();
-    }
-
-    async assertUrlParams(rangeConfig) {
-        const rangeContains = (range, val) => val >= range[0] && val <= range[1];
-        await this.driver.wait(async () => {
-            const [lat, lng, zoom] = await this.getUrlLatLngZoom();
-            console.log('lat, lng, zoom =', lat, lng, zoom);
-            return rangeContains(rangeConfig.lat, lat) &&
-                rangeContains(rangeConfig.lng, lng) &&
-                rangeContains(rangeConfig.zoom, zoom);
-        }, 10000);
     }
 
     async waitForScrollMapsLoaded() {
@@ -76,7 +88,7 @@ class MapDriver {
         const elem = await this.driver.wait(async () => {
             return (await this.driver.findElements(By.css('[data-scrollmaps]')))[0];
         }, 10000);
-        console.log('elem', elem)
+        // console.log('elem', elem)
         await this.driver.wait(async () => await elem.getAttribute('data-scrollmaps') === 'enabled', 10000);
         return elem;
     }
@@ -97,28 +109,24 @@ class MapDriver {
         return elem;
     }
 
-    async getUrlLatLngZoom() {
-        const url = await this.driver.getCurrentUrl();
-            const pattern = new RegExp('https://.*/@(-?[\\d\\.]+),(-?[\\d\\.]+),([\\d\\.]+)z');
-            const match = pattern.exec(url);
-            if (!match) return [undefined, undefined, undefined];
-            const lat = Number(match[1]);
-            const lng = Number(match[2]);
-            const zoom = Number(match[3]);
-            return [lat, lng, zoom];
-    }
-
     async pinchGesture(elem, deltaY, opts = {}) {
-        return await this.scroll(elem, 0, deltaY, {ctrlKey: true, ...opts})
+        // Firefox tends to have lower deltaY than Chromium browsers for pinch gestures
+        // const browserScale = firefox ? 0.5 : 1;
+        return await this.scroll(elem, 0, deltaY, {
+            ctrlKey: true,
+            logTag: 'zooming',
+            // browserScale: browserScale,
+            ...opts
+        })
     }
 
     async scrollIntoView(elem) {
         await this.driver.executeScript((elem) => elem.scrollIntoView(), elem);
     }
 
-    async scroll(elem, dx, dy, opts = {}) {
+    async scroll(elem, dx, dy, {logTag = 'scrolling', ...opts} = {}) {
         const r = await elem.getRect();
-        console.log('scrolling', dx, dy);
+        console.log(logTag, dx, dy);
         await this.driver.executeAsyncScript(async (elem, r, dx, dy, opts, done) => {
             try {
                 console.log('dy', dy);
@@ -131,7 +139,7 @@ class MapDriver {
                 console.log('pointElem', elem, pointElem);
                 const sleep = (t) => new Promise((resolve, reject) => setTimeout(resolve, t));
                 const wheel = (dx, dy) => {
-                    console.log('Dispatching wheel event', dx, dy);
+                    console.log('Dispatching wheel event', dx, dy, opts.ctrlKey);
                     pointElem.dispatchEvent(new WheelEvent('wheel', {
                         view: window,
                         bubbles: true,
@@ -143,8 +151,10 @@ class MapDriver {
                         ...opts
                     }));
                 };
-                for (let i = 0; i < 30; i++) {
-                    wheel(dx / 30, dy / 30);
+                const chunks = Math.round(Math.max(Math.abs(dx) / 9, Math.abs(dy) / 9));
+                const browserScale = opts.browserScale || 1;
+                for (let i = 0; i < chunks; i++) {
+                    wheel(dx / chunks * browserScale, dy / chunks * browserScale);
                     await sleep(50);
                 }
             } finally {
@@ -153,19 +163,37 @@ class MapDriver {
         }, elem, r, dx, dy, opts);
     }
 
-    clickBrowserAction() {
-        return new Promise((resolve, reject) => {
-            console.log(`Clicking browser action on process ${this.pid}`);
-            child_process.exec(
-                'test/chrome_browser_action.js',
-                {env: {'TEST_PROCESS': this.pid}},
-                (err, stdout, stderr) => {
-                    if (stdout) console.log(`browseraction: ${stdout.trim()}`);
-                    if (stderr) console.warn(`browseraction: ${stderr.trim()}`);
-                    err ? reject(err) : resolve(stdout);
-                });
-        });
+    async clickBrowserAction() {
+        if (process.env.BROWSER === 'firefox') {
+            this.driver.setContext(firefox.Context.CHROME);
+            const elem = await this.driver.wait(async () => {
+                const firefoxAddonId = 'c0dd22ca-492e-4bcf-ab68-53c6633892fe';
+                return (await this.driver.findElements(By.id(`_${firefoxAddonId}_-browser-action`)))[0];
+            }, 10000);
+            await elem.click();
+            this.driver.setContext(firefox.Context.CONTENT);
+        } else {
+            // Run the applescript for Chromium based browsers
+            const pid = await this.pidPromise;
+            await new Promise((resolve, reject) => {
+                console.log(`Clicking browser action on process ${pid}`);
+                child_process.exec(
+                    'test/chrome_browser_action.js',
+                    {env: {'TEST_PROCESS': pid}},
+                    (err, stdout, stderr) => {
+                        if (stdout) console.log(`browseraction: ${stdout.trim()}`);
+                        if (stderr) console.warn(`browseraction: ${stderr.trim()}`);
+                        err ? reject(err) : resolve(stdout);
+                    });
+            });
+        }
     }
 }
 
+function sleep(timeout) {
+    return new Promise((resolve, reject) => setTimeout(resolve, timeout));
+}
+MapDriver.sleep = sleep;
+
 exports.MapDriver = MapDriver;
+exports.sleep = sleep;

@@ -2,6 +2,7 @@ const assert = require('assert');
 const webdriver = require('selenium-webdriver');
 const By = webdriver.By;
 const MapDriver = require('../mapdriver.js').MapDriver;
+const sleep = MapDriver.sleep;
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 
@@ -45,10 +46,6 @@ describe('google.com/travel test suite', function() {
             await findCities(['Chicago', 'London', 'Paris', 'Beijing']),
             ['London', 'Paris']);
     });
-
-    function sleep(timeout) {
-        return new Promise((resolve, reject) => setTimeout(resolve, timeout));
-    }
 
     async function findCities(cities) {
         const xpath = cities.map(city => `//*[text()='${city}']`).join('|');

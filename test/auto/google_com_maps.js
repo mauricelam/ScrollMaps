@@ -25,7 +25,7 @@ describe('google.com/maps test suite', function() {
         const elem = await mapDriver.waitForScrollMapsLoaded();
         // Execute scroll action
         await mapDriver.scroll(elem, 300, 500);
-        await mapDriver.assertUrlParams({
+        await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
             zoom: [14, 14]
@@ -33,14 +33,14 @@ describe('google.com/maps test suite', function() {
 
         // Execute zoom action
         await mapDriver.pinchGesture(elem, 64);
-        await mapDriver.assertUrlParams({
+        await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
             zoom: [5, 11]
         });
 
         await mapDriver.pinchGesture(elem, -64);
-        await mapDriver.assertUrlParams({
+        await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
             zoom: [13, 15]
@@ -52,21 +52,21 @@ describe('google.com/maps test suite', function() {
         const elem = await mapDriver.waitForCanvasMapsLoaded('webgl');
         // Execute scroll action
         await mapDriver.scroll(elem, 300, 500);
-        await mapDriver.assertUrlParams({
+        await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
             zoom: [14, 14]
         });
         // Execute zoom action
         await mapDriver.pinchGesture(elem, 64);
-        await mapDriver.assertUrlParams({
+        await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
             zoom: [5, 11]
         });
 
         await mapDriver.pinchGesture(elem, -64);
-        await mapDriver.assertUrlParams({
+        await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
             zoom: [13, 15]
@@ -78,24 +78,44 @@ describe('google.com/maps test suite', function() {
         const elem = await mapDriver.waitForCanvasMapsLoaded('2d');
         // Execute scroll action
         await mapDriver.scroll(elem, 300, 500);
-        await mapDriver.assertUrlParams({
+        await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
             zoom: [14, 14]
         });
         // Execute zoom action
         await mapDriver.pinchGesture(elem, 64);
-        await mapDriver.assertUrlParams({
+        await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
             zoom: [5, 11]
         });
 
         await mapDriver.pinchGesture(elem, -64);
-        await mapDriver.assertUrlParams({
+        await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
             zoom: [13, 15]
         });
     });
+
+    async function getUrlLatLngZoom() {
+        const url = await driver.getCurrentUrl();
+        const pattern = new RegExp('https://.*/@(-?[\\d\\.]+),(-?[\\d\\.]+),([\\d\\.]+)z');
+        const match = pattern.exec(url);
+        if (!match) return [undefined, undefined, undefined];
+        const [_, lat, lng, zoom] = match.map(Number);
+        return { lat: lat, lng: lng, zoom: zoom};
+    }
+
+    async function assertUrlParams({lat, lng, zoom}) {
+        const rangeContains = ([min, max], val) => min <= val && val <= max;
+        await driver.wait(async () => {
+            const urlParams = await getUrlLatLngZoom();
+            console.log('URL params=', urlParams);
+            return rangeContains(lat, urlParams.lat) &&
+                rangeContains(lng, urlParams.lng) &&
+                rangeContains(zoom, urlParams.zoom);
+        }, 10000);
+    }
 });

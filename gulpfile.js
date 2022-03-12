@@ -251,7 +251,9 @@ async function testall() {
         const bc = new BuildContext(browser, 10000);
         return series(bc.build, bc.runAutoTest);
     });
-    return runParallel(...tasks);
+    // Cannot run in parallel because Applescript (used to trigger browser
+    // action) requires window focus
+    return runSeries(...tasks);
 }
 testall.description = 'Run tests for all browsers';
 
