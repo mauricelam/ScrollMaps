@@ -71,14 +71,7 @@ function pref(label){
                 for (const tab of window.tabs) {
                     chrome.tabs.sendMessage(
                         tab.id,
-                        { 'action': 'preferenceChanged', 'data': {key: key, value: value} },
-                        (result) => {
-                            let error = chrome.runtime.lastError;
-                            let errorMessage = error ? error.message : undefined;
-                            if (errorMessage && errorMessage.indexOf('Receiving end does not exist') === -1) {
-                                console.warn(errorMessage);
-                            }
-                        }
+                        { 'action': 'preferenceChanged', 'data': {key: key, value: value} }
                     );
                 }
             }

@@ -112,10 +112,10 @@ class PrefMaker {
 
         slider.addEventListener('change', () => {
             prefChange = true;
-            Pref.setOption(key, slider.val());
-            preview.text(pref(key));
+            Pref.setOption(key, slider.value);
+            preview.innerText = pref(key);
         }, false);
-        slider.addEventListener('input', () => preview.text(slider.val()), false)
+        slider.addEventListener('input', () => { preview.innerText = slider.value; }, false)
         updateView();
 
         Pref.onPreferenceChanged(key, (key, value) => {
