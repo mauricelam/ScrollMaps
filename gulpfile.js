@@ -50,6 +50,9 @@ class BuildContext {
             'src/**/*.js',
             'src/**/*.css',
             'src/**/*.html',
+            '!src/inject_content.js',
+            '!src/inject_frame.js',
+            '!src/mapapi_inject.js',
         ])
         .pipe(newer(`${this.pluginDir()}/src`))
         .pipe(dest(`${this.pluginDir()}/src`));
