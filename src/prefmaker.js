@@ -4,11 +4,11 @@ class PrefMaker {
 
     static makePermissionCheckbox(key, origin, label, secondLine) {
         if (typeof secondLine === 'string') {
-            label = this.#createTwoLineBox(label, secondLine);
+            label = this._createTwoLineBox(label, secondLine);
         } else if (typeof secondLine === 'object') {
             // secondLine can also be in the form
             // { true: 'string when enabled', false: 'string when disabled' }
-            label = this.#createTwoLineBox(label, secondLine[false]);
+            label = this._createTwoLineBox(label, secondLine[false]);
         }
         const div = document.createElement('div');
         div.classList.add('PMcheckbox');
@@ -46,11 +46,11 @@ class PrefMaker {
 
     static makeBooleanCheckbox(key, label, secondLine) {
         if (typeof secondLine === 'string') {
-            label = this.#createTwoLineBox(label, secondLine);
+            label = this._createTwoLineBox(label, secondLine);
         } else if (typeof secondLine === 'object') {
             // secondLine can also be in the form
             // { true: 'string when enabled', false: 'string when disabled' }
-            label = this.#createTwoLineBox(label, secondLine[false]);
+            label = this._createTwoLineBox(label, secondLine[false]);
         }
         const div = document.createElement('div');
         div.classList.add('PMcheckbox');
@@ -131,7 +131,7 @@ class PrefMaker {
         return div;
     }
 
-    static #createTwoLineBox(label, secondLine) {
+    static _createTwoLineBox(label, secondLine) {
         const wrap = document.createElement('div');
         wrap.classList.add('PMcheckbox_labelwrap');
         const line1 = document.createElement('div');
