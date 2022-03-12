@@ -1,6 +1,9 @@
 const webdriver = require('selenium-webdriver');
 const process = require('process');
 const child_process = require('child_process');
+const util = require('util');
+const exec = util.promisify(child_process.exec);
+const portprober = require('selenium-webdriver/net/portprober');
 const assert = require('assert');
 
 let chrome, firefox, edge;
@@ -21,17 +24,11 @@ const By = webdriver.By;
 class MapDriver {
     static async create() {
         let driver;
-        let resolvePid;
-        let pidPromise = new Promise((resolve, reject) => { resolvePid = resolve; });
+        let port = await portprober.findFreePort();
         if (process.env.BROWSER === 'chrome') {
-            const _spawn = child_process.spawn;
-            child_process.spawn = (...args) => {
-                const proc = _spawn(...args);
-                resolvePid(proc.pid);
-                return proc;
-            };
             driver = new webdriver.Builder()
                 .forBrowser('chrome')
+                .setChromeService(new chrome.ServiceBuilder().setPort(port))
                 .setChromeOptions(
                     new chrome.Options()
                         .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`, 'window-size=800,724')
@@ -45,11 +42,15 @@ class MapDriver {
                     new edge.Options()
                         .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-edge`, 'window-size=800,720')
                 )
-                .setEdgeService(new edge.ServiceBuilder(edgePaths.driverPath))
+                .setEdgeService(
+                    new edge.ServiceBuilder(edgePaths.driverPath)
+                        .setPort(port)
+                )
                 .build();
         } else if (process.env.BROWSER === 'firefox') {
             driver = new webdriver.Builder()
                 .forBrowser('firefox')
+                .setFirefoxService(new firefox.ServiceBuilder().setPort(port))
                 .setFirefoxOptions(
                     new firefox.Options()
                         .windowSize({width: 800, height: 657})
@@ -59,7 +60,7 @@ class MapDriver {
         } else {
             throw new Error('Environment variable $BROWSER not defined');
         }
-        const mapDriver = new MapDriver(driver, pidPromise);
+        const mapDriver = new MapDriver(driver, port);
         try {
             // Make sure the browser height is normalized
             await driver.wait(async () => {
@@ -74,9 +75,9 @@ class MapDriver {
         return mapDriver;
     }
 
-    constructor(driver, pidPromise) {
+    constructor(driver, port) {
         this.driver = driver;
-        this.pidPromise = pidPromise;
+        this.port = port;
     }
 
     async quit() {
@@ -114,7 +115,7 @@ class MapDriver {
         // const browserScale = firefox ? 0.5 : 1;
         return await this.scroll(elem, 0, deltaY, {
             ctrlKey: true,
-            logTag: 'zooming',
+            logTag: 'Zooming',
             // browserScale: browserScale,
             ...opts
         })
@@ -124,9 +125,9 @@ class MapDriver {
         await this.driver.executeScript((elem) => elem.scrollIntoView(), elem);
     }
 
-    async scroll(elem, dx, dy, {logTag = 'scrolling', ...opts} = {}) {
+    async scroll(elem, dx, dy, {logTag = 'Scrolling', ...opts} = {}) {
         const r = await elem.getRect();
-        console.log(logTag, dx, dy);
+        console.log(`${logTag} map by (${dx}, ${dy})`);
         await this.driver.executeAsyncScript(async (elem, r, dx, dy, opts, done) => {
             try {
                 console.log('dy', dy);
@@ -163,6 +164,26 @@ class MapDriver {
         }, elem, r, dx, dy, opts);
     }
 
+    async click({x = 100, y = 100} = {}) {
+        const elem = await this.waitForScrollMapsLoaded();
+        console.log(`Click map at (${x}, ${y})`);
+        await this.driver.actions({ bridge: true })
+            .move({ origin: elem, x: x, y: y, duration: 0 })
+            .click()
+            .perform();
+    }
+
+    /**
+     * Check against the ruler at the bottom to see if the zoom level is roughly as expected.
+     */
+    async assertRuler(expectedKm) {
+        const elem = await this.waitForScrollMapsLoaded();
+        const km = await this.driver.wait(async () =>
+            elem.findElement(By.xpath('//*[@class="gm-style-cc"]//*[contains(text(), "km")]')), 10000);
+        const kmText = await km.getText();
+        assert.equal(kmText.trim(), expectedKm);
+    }
+
     async clickBrowserAction() {
         if (process.env.BROWSER === 'firefox') {
             this.driver.setContext(firefox.Context.CHROME);
@@ -174,18 +195,19 @@ class MapDriver {
             this.driver.setContext(firefox.Context.CONTENT);
         } else {
             // Run the applescript for Chromium based browsers
-            const pid = await this.pidPromise;
-            await new Promise((resolve, reject) => {
-                console.log(`Clicking browser action on process ${pid}`);
-                child_process.exec(
-                    'test/chrome_browser_action.js',
-                    {env: {'TEST_PROCESS': pid}},
-                    (err, stdout, stderr) => {
-                        if (stdout) console.log(`browseraction: ${stdout.trim()}`);
-                        if (stderr) console.warn(`browseraction: ${stderr.trim()}`);
-                        err ? reject(err) : resolve(stdout);
-                    });
-            });
+            // First, find out who is using the driver port (which should be this node process, and the driver)
+            const psresult = await exec(`lsof -t -i tcp:${this.port}`);
+            const driverPid = psresult.stdout.trim().split('\n')
+                    .map(Number).filter(pid => pid && pid != process.pid);
+            // console.log('Driver PID:', driverPid);
+            const pgrepResult = await exec(`pgrep -P "${driverPid}"`);
+            const childPid = parseInt(pgrepResult.stdout.trim());
+            console.log(`Clicking browser action on process ${childPid}`);
+            await exec('test/chrome_browser_action.js',
+                {
+                    env: {'TEST_PROCESS': childPid},
+                    stdio: [process.stdin, process.stdout, process.stderr],
+                });
         }
     }
 }

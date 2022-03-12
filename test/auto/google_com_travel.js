@@ -8,7 +8,7 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
 describe('google.com/travel test suite', function() {
-    this.retries(5);
+    this.retries(3);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;
@@ -61,11 +61,16 @@ describe('google.com/travel test suite', function() {
     }
 
     async function waitForCities(cities) {
+        process.stdout.write('Waiting for cities ');
         return await driver.wait(async () => {
             const elems = await findCities(cities);
-            console.log('elems', elems)
-            if (elems.length > 0) return elems;
-            return null;
+            if (elems.length) {
+                console.log(elems);
+                return elems;
+            } else {
+                process.stdout.write('.');
+                return null;
+            }
         }, 10000, `Cannot find cities ${cities}`);
     }
 });
