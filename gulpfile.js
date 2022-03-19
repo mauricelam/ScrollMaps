@@ -9,6 +9,7 @@ const open = require('open');
 const { makePromise, runParallel, runSeries, contentTransform, execTask } = require('./gulputils.js');
 const newer = require('gulp-newer');
 const minimist = require('minimist');
+const karma = require('karma');
 
 const BROWSERS = ['chrome', 'firefox', 'edge'];
 const BROWSER_FLAGS = {};
@@ -233,6 +234,21 @@ class BuildContext {
         );
     }
 
+    runUnitTest(watch = false) {
+        return (done) => {
+            new karma.Server({
+                frameworks: ['mocha', 'chai'],
+                files: [
+                    `${this.pluginDir()}/src/domains.js`,
+                    `${this.pluginDir()}/src/permission.js`,
+                    'test/unit/permission_test.js'
+                ],
+                singleRun: !watch,
+                browsers: ['ChromeHeadless'],
+            }, done).start();
+        };
+    }
+
     // ===== Release tasks =====
 
     async openStoreLink() {
@@ -312,8 +328,7 @@ function watchDevBuild() {
     watch(
         [
             'src/**',
-            'gulpfile.esm.js',
-            'gulputils.esm.js',
+            'gulputils.js',
             'manifest_template.json',
             'images/*',
             __filename,
@@ -323,6 +338,33 @@ function watchDevBuild() {
     )
 }
 watchDevBuild.description = 'Watch for changes in source files and build development builds';
+
+async function runUnitTest() {
+    const bc = new BuildContext('chrome', 10000);
+    await runSeries(
+        bc.build,
+        bc.runUnitTest(),
+    );
+}
+
+async function watchUnitTest() {
+    const bc = new BuildContext('chrome', 10000);
+    watch(
+        [
+            'src/**',
+            'gulputils.js',
+            'manifest_template.json',
+            'images/*',
+            __filename,
+        ],
+        { events: 'all' },
+        bc.build
+    );
+    await runSeries(
+        bc.build,
+        bc.runUnitTest(true),
+    );
+}
 
 function clean() {
     return del(['gen/*']);
@@ -349,6 +391,8 @@ module.exports = {
     release: releaseBuild,
     clean: clean,
     test: test,
+    unit: runUnitTest,
+    watchunit: watchUnitTest,
     testall: testall,
     postVersion: postVersion,
     watch: watchDevBuild,
