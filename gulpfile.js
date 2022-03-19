@@ -235,7 +235,7 @@ class BuildContext {
     }
 
     runUnitTest(watch = false) {
-        return (done) => {
+        const task = (done) => {
             new karma.Server({
                 frameworks: ['mocha', 'chai'],
                 files: [
@@ -247,6 +247,8 @@ class BuildContext {
                 browsers: ['ChromeHeadless'],
             }, done).start();
         };
+        task.displayName = `[${this.browser}] runUnitTest`;
+        return task;
     }
 
     // ===== Release tasks =====
@@ -346,6 +348,7 @@ async function runUnitTest() {
         bc.runUnitTest(),
     );
 }
+runUnitTest.description = 'Run unit tests in a headless chrome instance';
 
 async function watchUnitTest() {
     const bc = new BuildContext('chrome', 10000);
@@ -365,6 +368,7 @@ async function watchUnitTest() {
         bc.runUnitTest(true),
     );
 }
+watchUnitTest.description = 'Watch for file changes and automatically run unit tests';
 
 function clean() {
     return del(['gen/*']);
