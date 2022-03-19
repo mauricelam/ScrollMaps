@@ -15,12 +15,16 @@ You can also use `gulp watch --<chrome/firefox/edge>` to watch for changes and b
 
 To build the current release version for all browsers, use `gulp release`.
 
-## Testing
+## Unit testing
+
+Unit tests can be run using `gulp unit` or `gulp watchunit`.
+
+## Integration Testing
 
 Tests can be run using `gulp test --<chrome/firefox/edge>`.
 
 Individual test fails can be run using `mocha` directly:
 
 ```sh
-BROWSER=chrome ./node_modules/mocha/bin/mocha test/auto/google_com_travel.js
+BROWSER=chrome npx mocha test/auto/google_com_travel.js
 ```
