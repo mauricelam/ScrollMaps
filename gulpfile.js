@@ -239,9 +239,12 @@ class BuildContext {
             new karma.Server({
                 frameworks: ['mocha', 'chai'],
                 files: [
+                    'test/unit/fakes.js',
                     `${this.pluginDir()}/src/domains.js`,
                     `${this.pluginDir()}/src/permission.js`,
-                    'test/unit/permission_test.js'
+                    `${this.pluginDir()}/src/Scrollability.js`,
+                    'test/unit/permission_test.js',
+                    'test/unit/Scrollability_test.js'
                 ],
                 singleRun: !watch,
                 browsers: ['ChromeHeadless'],
@@ -257,10 +260,13 @@ class BuildContext {
         switch (this.browser) {
             case 'chrome':
                 await open('https://chrome.google.com/webstore/developer/edit/jifommjndpnefcfplgnbhabocomgdjjg');
+                break;
             case 'edge':
                 await open('https://partner.microsoft.com/en-us/dashboard/microsoftedge/27ae3b1c-3f31-477b-b8e3-bddb29477f74/packages');
+                break;
             case 'firefox':
                 await open('https://addons.mozilla.org/en-US/developers/addon/scrollmaps/ownership');
+                break;
             default:
                 throw new Error(`Unsupported browser ${this.browser}`)
         }
@@ -370,6 +376,11 @@ async function watchUnitTest() {
 }
 watchUnitTest.description = 'Watch for file changes and automatically run unit tests';
 
+async function publish() {
+    const bc = new BuildContext(getBrowser(), 10000);
+    await bc.openStoreLink();
+}
+
 function clean() {
     return del(['gen/*']);
 }
@@ -400,4 +411,5 @@ module.exports = {
     testall: testall,
     postVersion: postVersion,
     watch: watchDevBuild,
+    publish: publish,
 }

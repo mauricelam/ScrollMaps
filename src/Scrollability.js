@@ -17,13 +17,15 @@ if (window.Scrollability === undefined) {
         // hasScrollableParent(elem)  ==>  whether anything, including window scrolls
         // hasScrollableParent(elem, until) ==> whether any parent up to "until" scrolls
         hasScrollableParent(element, until) {
-            if (until === undefined && Scrollability.isWindowScrollable()) return true;
+            // This short-circuiting fails if there is an element in between that has position:fixed
+            // if (until === undefined && Scrollability.isWindowScrollable()) return true;
             return Scrollability._hasScrollableParentInner(element, until);
         },
 
         _hasScrollableParentInner(element, until) {
             if (this.isScrollable(element)) return true;
             if (!element || !element.parentNode) return false;
+            if (getComputedStyle(element).position === 'fixed') return false;
             if (until && (element === until || element.isSameNode(until))) return false;
             return this._hasScrollableParentInner(element.parentNode, until);
         },
