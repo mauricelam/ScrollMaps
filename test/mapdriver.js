@@ -84,14 +84,23 @@ class MapDriver {
         await this.driver.quit();
     }
 
-    async waitForScrollMapsLoaded() {
+    async waitForScrollMapsLoaded(timeout = 10000) {
         // ScrollMaps should be activated automatically
         const elem = await this.driver.wait(async () => {
             return (await this.driver.findElements(By.css('[data-scrollmaps]')))[0];
-        }, 10000);
+        }, timeout);
         // console.log('elem', elem)
-        await this.driver.wait(async () => await elem.getAttribute('data-scrollmaps') === 'enabled', 10000);
+        await this.driver.wait(async () => await elem.getAttribute('data-scrollmaps') === 'enabled', timeout);
         return elem;
+    }
+
+    async activateAndWaitForScrollMapsLoaded() {
+        try {
+            return await this.waitForScrollMapsLoaded(1000);
+        } catch (e) {
+            await this.clickBrowserAction();
+            return await this.waitForScrollMapsLoaded();
+        }
     }
 
     async waitForCanvasMapsLoaded(contextType) {

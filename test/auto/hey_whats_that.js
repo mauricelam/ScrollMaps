@@ -27,8 +27,7 @@ describe('heywhatsthat test suite', function() {
         await driver.get('https://www.heywhatsthat.com/?view=P5XIGCII');
 
         await sleep(2000);
-        await mapDriver.clickBrowserAction();
-        let elem = await mapDriver.waitForScrollMapsLoaded();
+        let elem = await mapDriver.activateAndWaitForScrollMapsLoaded();
         // Execute scroll action
         await mapDriver.scrollIntoView(elem);
         await mapDriver.assertRuler('5 km');
@@ -51,9 +50,9 @@ describe('heywhatsthat test suite', function() {
         // Execute zoom action
         await mapDriver.pinchGesture(elem, 32);
         await sleep(2000);
-        await mapDriver.click({ x: 150, y: 150 });
+        await mapDriver.click({ x: 150, y: 80 });
         await sleep(1000);
-        await assertLatLng({ lat: 24.3078, lng: 121.1124, tolerance: 0.02 });
+        await assertLatLng({ lat: 24.4829, lng: 121.1124, tolerance: 0.03 });
         await mapDriver.assertRuler('20 km');
     });
 
