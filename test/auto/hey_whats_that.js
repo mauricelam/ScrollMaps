@@ -3,7 +3,6 @@ const webdriver = require('selenium-webdriver');
 const By = webdriver.By;
 const MapDriver = require('../mapdriver.js').MapDriver;
 const sleep = MapDriver.sleep;
-const process = require('process');
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 

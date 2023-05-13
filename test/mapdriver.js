@@ -40,7 +40,7 @@ class MapDriver {
                 .forBrowser('MicrosoftEdge')
                 .setEdgeOptions(
                     new edge.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-edge`, 'window-size=800,720')
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-edge`, 'window-size=855,720')
                 )
                 .setEdgeService(
                     new edge.ServiceBuilder(edgePaths.driverPath)
@@ -212,9 +212,9 @@ class MapDriver {
             const pgrepResult = await exec(`pgrep -P "${driverPid}"`);
             const childPid = parseInt(pgrepResult.stdout.trim());
             console.log(`Clicking browser action on process ${childPid}`);
-            await exec('test/chrome_browser_action.js',
+            await exec(`test/chrome_browser_action.js`,
                 {
-                    env: {'TEST_PROCESS': childPid},
+                    env: {'TEST_PROCESS': childPid, 'BROWSER': process.env.BROWSER},
                     stdio: [process.stdin, process.stdout, process.stderr],
                 });
         }

@@ -11,14 +11,26 @@ clickBrowserAction("ScrollMaps");
 function clickBrowserAction(extensionName) {
     const systemEvents = Application("System Events");
     const pid = app.systemAttribute("TEST_PROCESS");
+    const browser = app.systemAttribute("BROWSER");
     const chromeProcess = systemEvents.processes.where({ unixId: pid })[0];
     chromeProcess.frontmost = true;
-    const toolbar = chromeProcess.windows[0].groups[0].groups[0].groups[0].groups[0].toolbars[0];
-    // Uncomment this line to find the extensions button (finding from the entire browser window is slow)
-    // dump(findElement(chromeProcess.windows[0], "Extensions")[0]);
-    const extensionButton = findInArray(toolbar.popUpButtons, x => x.accessibilityDescription() == "Extensions");
+    let extensionButton;
+    if (browser === 'chrome') {
+        const toolbar = chromeProcess.windows[0].groups[0].groups[0].groups[0].groups[0].toolbars[0];
+        // Uncomment this line to find the extensions button (finding from the entire browser window is slow)
+        // dump(findElement(chromeProcess.windows[0], "Extensions")[0]);
+        extensionButton = findInArray(toolbar.popUpButtons, x => x.accessibilityDescription() == "Extensions");
+    } else if (browser === 'edge') {
+        const toolbar = chromeProcess.windows[0].groups[0].groups[0].groups[0].groups[0].toolbars[0];
+        // Uncomment this line to find the extensions button (finding from the entire browser window is slow)
+        // dump(findElement(chromeProcess.windows, "Extensions")[0]);
+        extensionButton = findInArray(toolbar.groups[1].popUpButtons, x => x.accessibilityDescription() == "Extensions");
+    }
+    if (typeof extensionButton !== 'function') {
+        console.log('Cannot find extension button');
+    }
     extensionButton.actions['AXPress'].perform();
-    let browserAction = findRecursive(chromeProcess.windows[0], e => e.description() == extensionName);
+    let browserAction = findRecursive(chromeProcess.windows[0], e => e.description() == extensionName, "button");
     browserAction.actions['AXPress'].perform();
 }
 
@@ -30,11 +42,15 @@ function findInArray(arr, filter) {
     }
 }
 
-function findRecursive(e, predicate) {
-    if (predicate(e)) {
-        return e;
+function findRecursive(e, predicate, predicateclass, eclass) {
+    try {
+        if (predicateclass && eclass && eclass === predicateclass && predicate(e)) {
+            return e;
+        }
+    } catch (e) {
+        console.log('Failed to run predicate', e);
+        return undefined;
     }
-    const children = e.uiElements();
     // A normal iteration through e.uiElements doesn't work because
     // the selector returned filters the process by name "Google Chrome"
     // not by the UID.
@@ -43,8 +59,8 @@ function findRecursive(e, predicate) {
         if (cls) {
             const i = counts[cls] || 0;
             counts[cls] = i + 1;
-            const child = e[cls + 's'][i];
-            const result = findRecursive(child, predicate);
+            const child = e[pluralize(cls)][i];
+            const result = findRecursive(child, predicate, predicateclass, cls);
             if (result) {
                 return result;
             }
@@ -52,9 +68,14 @@ function findRecursive(e, predicate) {
     }
 }
 
+function pluralize(cls) {
+    if (cls === 'checkbox') return 'checkboxes';
+    return cls + 's';
+}
+
 function findElement(windows, description) {
     for (let i = 0; i < windows.length; i++) {
-        const win = windows[0];
+        const win = windows[i];
         const entireContents = win.entireContents();
         for (const content of entireContents) {
             try {
