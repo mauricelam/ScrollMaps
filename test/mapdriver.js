@@ -53,7 +53,7 @@ class MapDriver {
                 .setFirefoxService(new firefox.ServiceBuilder().setPort(port))
                 .setFirefoxOptions(
                     new firefox.Options()
-                        .windowSize({width: 800, height: 657})
+                        .windowSize({width: 800, height: 685})
                 )
                 .build();
             await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000-firefox.zip`, true)
@@ -193,14 +193,27 @@ class MapDriver {
         assert.equal(kmText.trim(), expectedKm);
     }
 
+    async printAllElements(root) {
+        root = root || this.driver;
+        for (const elem of await root.findElements(By.xpath("//*"))) {
+            const id = await elem.getAttribute("id");
+            if (id) console.log("Element ID=", id);
+        }
+    }
+
     async clickBrowserAction() {
         if (process.env.BROWSER === 'firefox') {
             this.driver.setContext(firefox.Context.CHROME);
-            const elem = await this.driver.wait(async () => {
-                const firefoxAddonId = 'c0dd22ca-492e-4bcf-ab68-53c6633892fe';
-                return (await this.driver.findElements(By.id(`_${firefoxAddonId}_-browser-action`)))[0];
+            const extensionsButton = await this.driver.wait(async () => {
+                return await this.driver.findElement(By.id("unified-extensions-button"));
             }, 10000);
-            await elem.click();
+            await extensionsButton.click();
+            const browserAction = await this.driver.wait(async () => {
+                // await this.printAllElements();
+                const firefoxAddonId = 'c0dd22ca-492e-4bcf-ab68-53c6633892fe';
+                return (await this.driver.findElement(By.id(`_${firefoxAddonId}_-BAP`)));
+            }, 10000);
+            await browserAction.click();
             this.driver.setContext(firefox.Context.CONTENT);
         } else {
             // Run the applescript for Chromium based browsers
