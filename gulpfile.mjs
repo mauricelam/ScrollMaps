@@ -1,15 +1,19 @@
-const { src, dest, series, parallel, watch } = require('gulp');
-const concat = require('gulp-concat');
-const del = require('del');
-const rename = require('gulp-rename');
-const zip = require('gulp-zip');
-const mocha = require('gulp-mocha');
-const fs = require('fs').promises;
-const open = require('open');
-const { makePromise, runParallel, runSeries, contentTransform, execTask } = require('./gulputils.js');
-const newer = require('gulp-newer');
-const minimist = require('minimist');
-const karma = require('karma');
+import gulp from 'gulp';
+const { src, dest, series, parallel } = gulp;
+import concat from 'gulp-concat';
+import * as del from 'del';
+import rename from 'gulp-rename';
+import zip from 'gulp-zip';
+import mocha from 'gulp-mocha';
+import { promises as fs } from 'fs';
+import open from 'open';
+import { makePromise, runParallel, runSeries, contentTransform, execTask } from './gulputils.mjs';
+import newer from 'gulp-newer';
+import minimist from 'minimist';
+import karma from 'karma';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+
 
 const BROWSERS = ['chrome', 'firefox', 'edge'];
 const BROWSER_FLAGS = {};
@@ -20,7 +24,7 @@ for (const browser of BROWSERS) {
 function doubleInclusionGuard() {
     return contentTransform((contents, file, enc) =>
         `if (!window["..SMLoaded:${file.basename}"]) {` +
-            `${contents}window["..SMLoaded:${file.basename}"]=true;` +
+        `${contents}window["..SMLoaded:${file.basename}"]=true;` +
         `}`);
 }
 
@@ -55,8 +59,8 @@ class BuildContext {
             '!src/inject_frame.js',
             '!src/mapapi_inject.js',
         ])
-        .pipe(newer(`${this.pluginDir()}/src`))
-        .pipe(dest(`${this.pluginDir()}/src`));
+            .pipe(newer(`${this.pluginDir()}/src`))
+            .pipe(dest(`${this.pluginDir()}/src`));
     }
 
     copyImages() {
@@ -235,8 +239,8 @@ class BuildContext {
     }
 
     runUnitTest(watch = false) {
-        const task = (done) => {
-            new karma.Server({
+        const task = async (done) => {
+            let config = await karma.config.parseConfig(null, {
                 frameworks: ['mocha', 'chai'],
                 files: [
                     'test/unit/fakes.js',
@@ -248,7 +252,8 @@ class BuildContext {
                 ],
                 singleRun: !watch,
                 browsers: ['ChromeHeadless'],
-            }, done).start();
+            });
+            new karma.Server(config, done).start();
         };
         task.displayName = `[${this.browser}] runUnitTest`;
         return task;
@@ -273,7 +278,7 @@ class BuildContext {
     }
 }
 
-async function testall() {
+export async function testall() {
     const tasks = BROWSERS.map((browser) => {
         const bc = new BuildContext(browser, 10000);
         return series(bc.build, bc.runAutoTest);
@@ -284,7 +289,7 @@ async function testall() {
 }
 testall.description = 'Run tests for all browsers';
 
-async function test() {
+export async function test() {
     const bc = new BuildContext(getBrowser(), 10000);
     return runSeries(bc.build, bc.runAutoTest);
 }
@@ -312,7 +317,7 @@ releaseBuild.description = 'Build for all releases';
 
 
 // Task to be run after running `npm version [major/minor]`
-async function postVersion() {
+export async function postVersion() {
     const packageJsonString = await fs.readFile('package.json');
     const packageJson = JSON.parse(packageJsonString);
     if (!packageJson.version) {
@@ -333,7 +338,7 @@ async function postVersion() {
 postVersion.description = 'Do not call directly. Use `npm version <major/minor>` instead.'
 
 function watchDevBuild() {
-    watch(
+    gulp.watch(
         [
             'src/**',
             'gulputils.js',
@@ -358,7 +363,7 @@ runUnitTest.description = 'Run unit tests in a headless chrome instance';
 
 async function watchUnitTest() {
     const bc = new BuildContext('chrome', 10000);
-    watch(
+    gulp.watch(
         [
             'src/**',
             'gulputils.js',
@@ -376,12 +381,12 @@ async function watchUnitTest() {
 }
 watchUnitTest.description = 'Watch for file changes and automatically run unit tests';
 
-async function publish() {
+export async function publish() {
     const bc = new BuildContext(getBrowser(), 10000);
     await bc.openStoreLink();
 }
 
-function clean() {
+export function clean() {
     return del(['gen/*']);
 }
 clean.description = 'Remove all build outputs';
@@ -400,16 +405,9 @@ function getBrowser() {
     return process.env.BROWSER;
 }
 
-module.exports = {
-    default: devBuild,
-    dev: devBuild,
-    release: releaseBuild,
-    clean: clean,
-    test: test,
-    unit: runUnitTest,
-    watchunit: watchUnitTest,
-    testall: testall,
-    postVersion: postVersion,
-    watch: watchDevBuild,
-    publish: publish,
-}
+export default devBuild;
+export const dev = devBuild;
+export const release = releaseBuild;
+export const unit = runUnitTest;
+export const watchunit = watchUnitTest;
+export const watch = watchDevBuild;

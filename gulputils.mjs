@@ -1,9 +1,10 @@
-const {series, parallel} = require('gulp');
-const Transform = require('stream').Transform;
-const asyncDone = require('async-done');
-const child_process = require('child_process');
+import gulp from 'gulp';
+const { series, parallel } = gulp;
+import { Transform } from 'stream';
+import asyncDone from 'async-done';
+import child_process from 'child_process';
 
-function makePromise(obj) {
+export function makePromise(obj) {
     if (obj.then instanceof Function) {
         return obj; // Already a then-able, just return
     }
@@ -14,15 +15,15 @@ function makePromise(obj) {
     });
 }
 
-function runParallel(...tasks) {
+export function runParallel(...tasks) {
     return makePromise(parallel(...tasks));
 }
 
-function runSeries(...tasks) {
+export function runSeries(...tasks) {
     return makePromise(series(...tasks));
 }
 
-function execTask(command, options = {}) {
+export function execTask(command, options = {}) {
     const task = async () =>
         new Promise((resolve, reject) => {
             child_process.exec(command, options, (err, stdout, stderr) => {
@@ -35,7 +36,7 @@ function execTask(command, options = {}) {
     return task;
 }
 
-function contentTransform(fn) {
+export function contentTransform(fn) {
     return new Transform({
         objectMode: true,
         transform(file, enc, cb) {
@@ -44,11 +45,3 @@ function contentTransform(fn) {
         }
     });
 }
-
-module.exports = {
-    makePromise: makePromise,
-    runParallel: runParallel,
-    runSeries: runSeries,
-    contentTransform: contentTransform,
-    execTask: execTask,
-};
