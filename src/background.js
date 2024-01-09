@@ -88,7 +88,7 @@ async function handleBrowserActionClicked(tab) {
     refreshScrollMapsStatus(tab.id);
     setTimeout(async () => {
         // Remove the loading badge if no maps responded in 10s
-        if (await chrome.action.getBadgeText(tab.id) === BADGE_LOADING) {
+        if (await chrome.action.getBadgeText({tabId: tab.id}) === BADGE_LOADING) {
             setBrowserActionBadge(tab.id, '');
         }
     }, 10000);
@@ -99,13 +99,14 @@ chrome.action.onClicked.addListener(handleBrowserActionClicked);
 
 async function refreshScrollMapsStatus(tabId) {
     // Check if the map already has a scrollmaps injected (e.g. after extension reloading)
-    const responses = await chrome.scripting.executeScript({
+    let responses = await chrome.scripting.executeScript({
         target: {
             tabId: tabId,
             allFrames: true
         },
         func: () => !!document.querySelector("[data-scrollmaps='enabled']"),
     });
+    responses = responses.map((r) => r.result);
     if (DEBUG) {
         console.log('Map probe responses', tabId, responses);
     }
@@ -118,7 +119,7 @@ async function refreshScrollMapsStatus(tabId) {
     if (any(responses)) {
         setBrowserActionBadge(tabId, BADGE_ACTIVE);
     } else {
-        if (await chrome.action.getBadgeText(tabId) === BADGE_ACTIVE) {
+        if (await chrome.action.getBadgeText({tabId: tabId}) === BADGE_ACTIVE) {
             setBrowserActionBadge(tabId, '');
         }
     }
