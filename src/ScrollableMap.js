@@ -305,7 +305,6 @@ if (window.ScrollableMap === undefined) {
                         setTimer('flushAverage', function () { averageX.flush(); averageY.flush(); }, 200);
                         averageX.push(e.deltaX); averageY.push(e.deltaY);
 
-                        console.log('invertscroll', prefs['invertScroll']);
                         const speedFactor = ( prefs['scrollSpeed'] / 100 ) * ( prefs['invertScroll'] ? 1 : -1 );
                         const dx = averageX.getAverage() * speedFactor;
                         const dy = averageY.getAverage() * speedFactor;
