@@ -11,7 +11,7 @@
     "url": "git+https://github.com/mauricelam/ScrollMaps.git"
   },
   "author": "Maurice Lam",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/mauricelam/ScrollMaps/issues"
   },
@@ -19,7 +19,7 @@
   "devDependencies": {
     "async-done": "^2.0.0",
     "chai": "^4.3.7",
-    "chromedriver": "^119.0.1",
+    "chromedriver": "^120.0.1",
     "del": "^7.0.0",
     "geckodriver": "^3.2.0",
     "gulp": "^4.0.2",

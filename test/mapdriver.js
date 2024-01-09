@@ -31,7 +31,7 @@ class MapDriver {
                 .setChromeService(new chrome.ServiceBuilder().setPort(port))
                 .setChromeOptions(
                     new chrome.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`, 'window-size=800,724')
+                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`, 'window-size=800,729')
                 )
                 .build();
         } else if (process.env.BROWSER === 'edge') {
@@ -65,7 +65,9 @@ class MapDriver {
             // Make sure the browser height is normalized
             await driver.wait(async () => {
                 const innerSize = await driver.executeScript(() => [window.innerWidth, window.innerHeight]);
-                console.log('inner size=', innerSize);
+                // Make sure the inner size is the same as expected so our assertions work.
+                // If this hangs in a loop, try changing the `window-size=` above.
+                console.log('Window inner size=', innerSize);
                 return innerSize[0] === 800 && innerSize[1] === 600;
             });
         } catch (e) {
