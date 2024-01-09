@@ -155,7 +155,7 @@ class BuildContext {
     MINIFY_FILES() {
         return {
             'mapapi_inject': [
-                "src/prefreader.js",
+                "src/pref.js",
                 "src/Scrollability.js",
                 "src/ScrollableMap.js",
                 "src/mapapi_inject.js"
@@ -163,7 +163,7 @@ class BuildContext {
             'inject_content': ['src/inject_content.js'],
             'scrollability_inject': ["src/Scrollability.js"],
             'inject_frame': [
-                "src/prefreader.js",
+                "src/pref.js",
                 "src/Scrollability.js",
                 "src/ScrollableMap.js",
                 "src/inject_frame.js"
