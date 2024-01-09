@@ -136,6 +136,8 @@ function updateAllTabs() {
 
 updateAllTabs();
 
+Pref.initBackgroundPage();
+
 if (chrome.contentScripts) {
     // chrome.contentScripts API is currently Firefox only. It allows us to
     // inject the script into frames that loads after the original page load

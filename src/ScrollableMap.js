@@ -1,5 +1,4 @@
 if (window.ScrollableMap === undefined) {
-
     const DEBUG = chrome.runtime.getManifest().version === '10000';
     window.ScrollableMap = function (div, type, id, prefs) {
 
@@ -8,7 +7,7 @@ if (window.ScrollableMap === undefined) {
         function enable() {
             if (enabled) return;
             enabled = true;
-            chrome.runtime.sendMessage({'action': 'mapLoaded'});
+            chrome.runtime.sendMessage({ 'action': 'mapLoaded' });
             refreshActivationAffordance();
             div.setAttribute('data-scrollmaps', 'enabled');
         }
@@ -56,8 +55,8 @@ if (window.ScrollableMap === undefined) {
         div.setAttribute('data-scrollmaps', 'false');
 
         const style = document.createElement('style');
-        style.innerHTML =   '.gmnoprint, .gm-style .place-card, .gm-style .login-control { transition: opacity 0.3s !important; }' +
-                            '.scrollMapsHideControls .gmnoprint, .scrollMapsHideControls .gm-style .place-card, .scrollMapsHideControls .gm-style .login-control { opacity: 0.5 !important; }';
+        style.innerHTML = '.gmnoprint, .gm-style .place-card, .gm-style .login-control { transition: opacity 0.3s !important; }' +
+            '.scrollMapsHideControls .gmnoprint, .scrollMapsHideControls .gm-style .place-card, .scrollMapsHideControls .gm-style .login-control { opacity: 0.5 !important; }';
         document.head.appendChild(style);
 
         Scrollability.monitorScrollabilitySuper(div, (scrolls) => {
@@ -79,18 +78,23 @@ if (window.ScrollableMap === undefined) {
 
             window.addEventListener('mousemove', function (e) {
                 if (e.detail !== 88) {
-                    var event = new CustomEvent('realmousemove', {'detail': [e.pageX, e.pageY]});
+                    var event = new CustomEvent('realmousemove', { 'detail': [e.pageX, e.pageY] });
                     e.target.dispatchEvent(event);
                 }
             }, true);
 
             mapClicked = false;
-            Pref.onPreferenceChanged('frameRequireFocus', (key, value) => {
-                refreshActivationAffordance();
-            });
 
-            Pref.onPreferenceChanged('enabled', (key, value) => {
-                if (value) enable();
+            Pref.onPreferenceChanged(null, (key, value) => {
+                switch (key) {
+                    case 'frameRequireFocus':
+                        refreshActivationAffordance();
+                        break;
+                    case 'enabled':
+                        if (value) enable();
+                        break;
+                }
+                prefs[key] = value;
             });
 
             chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -130,14 +134,14 @@ if (window.ScrollableMap === undefined) {
             const mutationObserver = new MutationObserver((mutationList, observer) => {
                 const hasRemovedNodes = mutationList.some(m => m.removedNodes.length > 0);
                 if (hasRemovedNodes && !document.contains(div)) {
-                    chrome.runtime.sendMessage({action: 'mapUnloaded'});
+                    chrome.runtime.sendMessage({ action: 'mapUnloaded' });
                 }
             });
             mutationObserver.observe(document.documentElement, { childList: true, subtree: true });
 
             window.addEventListener('unload', () => {
                 // For the case where ScrollMap is loaded in an iframe, and that iframe is removed.
-                chrome.runtime.sendMessage({action: 'mapUnloaded'});
+                chrome.runtime.sendMessage({ action: 'mapUnloaded' });
             });
         }
 
@@ -295,9 +299,9 @@ if (window.ScrollableMap === undefined) {
                         if (window.safari && e.webkitDirectionInvertedFromDevice) {
                             factor *= -1;
                         }
-                        if (e.deltaY * factor < 0){
+                        if (e.deltaY * factor < 0) {
                             self.zoomIn(mousePos, target, e);
-                        } else if (e.deltaY * factor > 0){
+                        } else if (e.deltaY * factor > 0) {
                             self.zoomOut(mousePos, target, e);
                         }
                         break;
@@ -305,7 +309,7 @@ if (window.ScrollableMap === undefined) {
                         setTimer('flushAverage', function () { averageX.flush(); averageY.flush(); }, 200);
                         averageX.push(e.deltaX); averageY.push(e.deltaY);
 
-                        const speedFactor = ( prefs['scrollSpeed'] / 100 ) * ( prefs['invertScroll'] ? 1 : -1 );
+                        const speedFactor = (prefs['scrollSpeed'] / 100) * (prefs['invertScroll'] ? 1 : -1);
                         const dx = averageX.getAverage() * speedFactor;
                         const dy = averageY.getAverage() * speedFactor;
 
@@ -326,7 +330,7 @@ if (window.ScrollableMap === undefined) {
 
     };
 
-    function setTimer (timerID, newFunction, newDelay) {
+    function setTimer(timerID, newFunction, newDelay) {
         window._timers = window._timers || {};
         clearTimeout(window._timers[timerID]);
         window._timers[timerID] = setTimeout(newFunction, newDelay);
@@ -406,17 +410,17 @@ if (window.ScrollableMap === undefined) {
 
             var output = false;
 
-            if (Math.abs(delta) > Math.abs(this.max)){
+            if (Math.abs(delta) > Math.abs(this.max)) {
                 this.max = delta;
                 this.maxTime = time;
                 output = true;
             }
             var t = time - this.maxTime;
-            var prediction = this.max * Math.exp(-0.0038*t);
+            var prediction = this.max * Math.exp(-0.0038 * t);
 
             var difference = (Math.abs(delta) - Math.abs(prediction));
 
-            if (difference / Math.abs(prediction) > 1.2 && difference > 0.5){
+            if (difference / Math.abs(prediction) > 1.2 && difference > 0.5) {
                 this.newScrollAction();
                 output = true;
             }
