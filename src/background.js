@@ -147,18 +147,7 @@ updateAllTabs();
 
 Pref.initBackgroundPage();
 
-if (chrome.contentScripts) {
-    // chrome.contentScripts API is currently Firefox only. It allows us to
-    // inject the script into frames that loads after the original page load
-    // (and therefore not caught by chrome.tabs.onUpdated).
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=1054624 tracks
-    // adding a similar feature to Chrome.
-    chrome.contentScripts.register({
-        allFrames: true,
-        js: [{file: 'mapapi_inject.min.js'}],
-        matches: ['<all_urls>']
-    });
-} else if (chrome.scripting) {
+if (chrome.scripting) {
     (async () => {
         try {
             await chrome.scripting.registerContentScripts([
