@@ -89,7 +89,7 @@ if (window.SM_INJECT === undefined) {
 
     async function scrollifyExistingMaps() {
         const maps = GoogleMapFinder.findMaps();
-        if (DEBUG) console.log('Found Google maps in page', maps);
+        if (DEBUG) console.log('Found Google maps in page?', maps);
         if (maps.length <= 0) {
             return false;
         }

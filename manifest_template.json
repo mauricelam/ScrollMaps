@@ -1,17 +1,9 @@
 {
   "name": "ScrollMaps",
   "version": null,
-  "manifest_version": 2,
-  "minimum_chrome_version": "35",
+  "manifest_version": 3,
+  "minimum_chrome_version": "93",
   "description": "Allow you to use two finger scroll on your Mac trackpad in Google Maps.",
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "{c0dd22ca-492e-4bcf-ab68-53c6633892fe}"
-    },
-    "chrome": {
-      "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3XeoaqQRtfyt5UOKmdyeGm6ynNFixgxA6+L49HQCm9SffiesKkWh14JrhDpydJco8rN8Eaa/mVhYctZzjQK8LlUjceUrPY3pWAIooQFC94ELrTh5JfwaUd5g/2LOSpH22nUdpEEQ/ffiQOhGSwPaAwavXjNpK3QYRDEz8+RG7EQIDAQAB"
-    }
-  },
   "content_scripts": [
     {
       "matches": ["<%= all_google_maps_urls %>"],
@@ -21,18 +13,15 @@
     }
   ],
   "background": {
-    "scripts": [
-      "src/pref.js",
-      "src/domains.js",
-      "src/permission.js",
-      "src/background.js"
-    ],
-    "persistent": true
+    "scripts": ["background.min.js"]
   },
-  "web_accessible_resources": [
-    "inject_content.min.js"
-  ],
-  "content_security_policy": "script-src 'self'; object-src 'self'",
+  "web_accessible_resources": [{
+    "resources": ["inject_content.min.js"],
+    "matches": ["<all_urls>"]
+  }],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
   "options_ui": {
     "page": "src/options/options.html",
     "open_in_tab": true
@@ -42,9 +31,13 @@
     "48": "images/maps_48.png",
     "128": "images/maps_128.png"
   },
-  "browser_action": {},
+  "action": {},
   "permissions": [
-    "activeTab",
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
     "*://maps.google.com/",
     "*://www.google.com/maps/",
     "<%= all_google_maps_urls %>"
