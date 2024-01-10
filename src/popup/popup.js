@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.runtime.sendMessage({action: 'popupLoaded'});
 
     const status = await siteStatus;
-    if (Permission.isOwnExtensionPage(status.tabUrl) || Permission.isMapsSite(status.tabUrl)) {
+    if (Permission.isOwnExtensionPage(status.tabUrl) || Permission.isRequiredPermission(status.tabUrl)) {
         document.body.classList.add('disable-options');
         document.getElementById('permissionExplanation').innerText =
             'ScrollMaps is enabled on this Google Maps page.';

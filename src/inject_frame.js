@@ -29,6 +29,10 @@ if (window.SM_FRAME === undefined) {
         }
     }
 
+    if (document.readyState === "complete"
+        || document.readyState === "loaded"
+        || document.readyState === "interactive") {
+        injectFrame();
+    }
     window.addEventListener('DOMContentLoaded', injectFrame, false);
-
 }

@@ -13,7 +13,7 @@ const Permission = {
         isAllGranted = isAllGrantedResult.status === 'fulfilled' && isAllGrantedResult.value;
         return {
             'tabUrl': url,
-            'isSiteGranted': isSiteGranted || Permission.isMapsSite(url),
+            'isSiteGranted': isSiteGranted || Permission.isRequiredPermission(url),
             'isAllGranted': isAllGranted
         };
     },
@@ -43,14 +43,10 @@ const Permission = {
 
     /**
      * Whether permission to the given URL is required (i.e. not user revokable)
-     * TODO: This is obsolete with new Chrome / Manifest V3?
      */
     isRequiredPermission(url) {
-        for (const domain of SCROLLMAPS_DOMAINS) {
-            if (_matchDomainPattern(domain, url)) {
-                return true;
-            }
-        }
+        // Always false since in Manifest V3 all host permissions are optional.
+        // TODO: Refactor this away.
         return false;
     }
 };

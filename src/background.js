@@ -62,7 +62,6 @@ function injectScript(tabId, frameId) {
 
 
 async function handleBrowserActionClicked(tab) {
-    // BUG: The checkmark seems to be shown on all pages
     if (!Permission.canInjectIntoPage(tab.url)) {
         // This extension can't inject into chrome:// pages. Just show the popup
         // directly
@@ -73,6 +72,16 @@ async function handleBrowserActionClicked(tab) {
         // If the permission is required (e.g. if it is on the domain
         // google.com), we cannot allow users to toggle the permission.
         setBrowserActionBadge(tab.id, '');
+    }
+    if (Permission.isMapsSite(tab.url)) {
+        if (DEBUG) console.log("Click from maps site. Injecting inject_frame.js");
+        chrome.scripting.executeScript({
+            files: ['inject_frame.min.js'],
+            target: {
+                tabId: tab.id,
+                allFrames: true,
+            }
+        })
     }
 
     chrome.scripting.executeScript({
@@ -152,7 +161,7 @@ if (chrome.contentScripts) {
 } else if (chrome.scripting) {
     (async () => {
         try {
-            chrome.scripting.registerContentScripts([
+            await chrome.scripting.registerContentScripts([
                 {
                     id: 'global_mapapi_inject',
                     allFrames: true,
