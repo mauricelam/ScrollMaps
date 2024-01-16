@@ -23,15 +23,29 @@ function clickBrowserAction(extensionName) {
     } else if (browser === 'edge') {
         const toolbar = chromeProcess.windows[0].groups[0].groups[0].groups[0].groups[0].toolbars[0];
         // Uncomment this line to find the extensions button (finding from the entire browser window is slow)
-        // dump(findElement(chromeProcess.windows, "Extensions")[0]);
-        extensionButton = findInArray(toolbar.groups[1].popUpButtons, x => x.accessibilityDescription() == "Extensions");
+        // dump(findElement(chromeProcess.windows[0], "Extensions")[0]);
+        extensionButton = findInArray(flatMap(toolbar.groups, (g) => g.buttons), x => x.accessibilityDescription() == "Extensions");
     }
     if (typeof extensionButton !== 'function') {
         console.log('Cannot find extension button');
     }
     extensionButton.actions['AXPress'].perform();
     let browserAction = findRecursive(chromeProcess.windows[0], e => e.description() == extensionName, "button");
+    if (typeof browserAction !== 'function') {
+        console.log('Cannot find browser action button');
+    }
     browserAction.actions['AXPress'].perform();
+}
+
+function flatMap(arr, mapFn) {
+    const result = [];
+    for (let i = 0; i < arr.length; i++) {
+        let mapResult = mapFn(arr[i]) || [];
+        for (let j = 0; j < mapResult.length; j++) {
+            result.push(mapResult[j]);
+        }
+    }
+    return result;
 }
 
 function findInArray(arr, filter) {
@@ -79,10 +93,10 @@ function findElement(windows, description) {
         const entireContents = win.entireContents();
         for (const content of entireContents) {
             try {
-                if (content.name() == description) {
+                if (content.name() === description) {
                     return content;
                 }
-                if (content.accessibilityDescription() == description) {
+                if (content.accessibilityDescription() === description) {
                     return content;
                 }
             } catch (e) {
@@ -96,6 +110,7 @@ function dumpcontents(obj) {
     for (const x of obj.entireContents()) {
         console.log("================");
         dumpprops(x)
+        console.log(">>>>>>>>>>>>>>>>");
     }
 }
 

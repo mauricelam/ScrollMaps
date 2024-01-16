@@ -26,6 +26,7 @@ describe('google.com/travel test suite', function() {
         // While loading, Google Maps shows a version that's not fully 3D, which
         // sometimes causes subtle bugs in ScrollMaps.
         await driver.get('https://www.google.com/travel/explore');
+        await mapDriver.activateForGoogleDomain();
         const elem = await mapDriver.waitForScrollMapsLoaded();
         // Execute scroll action
         await waitForCities(['Chicago']);
