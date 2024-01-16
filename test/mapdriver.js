@@ -25,6 +25,7 @@ class MapDriver {
     static async create() {
         let driver;
         let port = await portprober.findFreePort();
+        const extras = {};
         if (process.env.BROWSER === 'chrome') {
             driver = new webdriver.Builder()
                 .forBrowser('chrome')
@@ -40,7 +41,13 @@ class MapDriver {
                 .forBrowser('MicrosoftEdge')
                 .setEdgeOptions(
                     new edge.Options()
-                        .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-edge`, 'window-size=800,600')
+                        .addArguments(
+                            `load-extension=${process.cwd()}/gen/plugin-10000-edge`,
+                            'window-size=800,600',
+                        )
+                        // Avoid "Personalize your web experience" prompt
+                        // https://stackoverflow.com/a/77626549/2921519
+                        .setUserPreferences({"user_experience_metrics.personalization_data_consent_enabled": true})
                 )
                 .setEdgeService(
                     new edge.ServiceBuilder(edgePaths.driverPath)
@@ -56,11 +63,13 @@ class MapDriver {
                         .windowSize({width: 800, height: 600})
                 )
                 .build();
-            await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000-firefox.zip`, true)
+            extras.extensionId = await driver.installAddon(`${process.cwd()}/gen/scrollmaps-10000-firefox.zip`, true);
+            console.log("Installed extension ", extras.extensionId);
         } else {
             throw new Error('Environment variable $BROWSER not defined');
         }
         const mapDriver = new MapDriver(driver, port);
+        mapDriver.extras = extras;
         try {
             let currentSize = [800, 600];
             // Make sure the browser height is normalized
@@ -75,6 +84,7 @@ class MapDriver {
                 await driver.manage().window().setRect({width: currentSize[0], height: currentSize[1]});
                 return false;
             });
+            console.log("Size tweak complete")
         } catch (e) {
             await mapDriver.quit();
             throw e;
@@ -92,6 +102,7 @@ class MapDriver {
     }
 
     async waitForScrollMapsLoaded(timeout = 10000) {
+        console.log("Waiting for scrollmaps to load");
         // ScrollMaps should be activated automatically
         const elem = await this.driver.wait(async () => {
             return (await this.driver.findElements(By.css('[data-scrollmaps]')))[0];
@@ -108,6 +119,14 @@ class MapDriver {
             await this.clickBrowserAction();
             return await this.waitForScrollMapsLoaded();
         }
+    }
+
+    async activateForGoogleDomain() {
+        if (process.env.BROWSER === 'firefox') {
+            await this.clickBrowserAction();
+        }
+        // For Chrome and Edge, Google domains are part of the required permissions and granted
+        // during installation.
     }
 
     async waitForCanvasMapsLoaded(contextType) {
@@ -217,8 +236,8 @@ class MapDriver {
             await extensionsButton.click();
             const browserAction = await this.driver.wait(async () => {
                 // await this.printAllElements();
-                const firefoxAddonId = 'c0dd22ca-492e-4bcf-ab68-53c6633892fe';
-                return (await this.driver.findElement(By.id(`_${firefoxAddonId}_-BAP`)));
+                const extensionButtonId = this.extras.extensionId.replace('@', '_') + '-BAP';
+                return (await this.driver.findElement(By.id(extensionButtonId)));
             }, 10000);
             await browserAction.click();
             this.driver.setContext(firefox.Context.CONTENT);

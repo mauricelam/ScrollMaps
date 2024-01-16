@@ -22,6 +22,7 @@ describe('google.com/maps test suite', function() {
         // While loading, Google Maps shows a version that's not fully 3D, which
         // sometimes causes subtle bugs in ScrollMaps.
         await driver.get('https://www.google.com/maps/@37,-122,14z?force=webgl');
+        await mapDriver.activateForGoogleDomain();
         const elem = await mapDriver.waitForScrollMapsLoaded();
         // Execute scroll action
         await mapDriver.scroll(elem, 300, 500);
@@ -49,6 +50,7 @@ describe('google.com/maps test suite', function() {
 
     it('google.com/maps', async () => {
         await driver.get('https://www.google.com/maps/@37,-122,14z?force=webgl');
+        await mapDriver.activateForGoogleDomain();
         const elem = await mapDriver.waitForCanvasMapsLoaded('webgl');
         // Execute scroll action
         await mapDriver.scroll(elem, 300, 500);
@@ -75,6 +77,7 @@ describe('google.com/maps test suite', function() {
 
     it('google.com/maps (canvas)', async () => {
         await driver.get('https://www.google.com/maps/@37,-122,14z?force=canvas');
+        await mapDriver.activateForGoogleDomain();
         const elem = await mapDriver.waitForCanvasMapsLoaded('2d');
         // Execute scroll action
         await mapDriver.scroll(elem, 300, 500);
