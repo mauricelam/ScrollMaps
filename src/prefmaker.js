@@ -25,9 +25,9 @@ class PrefMaker {
 
         function updateOption(){
             if (box.checked) {
-                chrome.permissions.request({origins: [origin]});
+                chrome.permissions.request({origins: [origin]}, () => updateView());
             } else {
-                chrome.permissions.remove({origins: [origin]});
+                chrome.permissions.remove({origins: [origin]}, () => updateView());
             }
         }
         async function updateView() {

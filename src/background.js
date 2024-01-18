@@ -32,8 +32,8 @@ const INJECT_EXPECTED_ERRORS = [
     'The extensions gallery cannot be scripted'
 ];
 
-function injectScript(tabId, frameId) {
-    return Promise.allSettled([
+async function injectScript(tabId, frameId) {
+    const injectPromises = [
         checkErrors(
             chrome.scripting.executeScript({
                 target: {
@@ -41,10 +41,24 @@ function injectScript(tabId, frameId) {
                     frameIds: frameId === 'all' ? null : [frameId],
                     allFrames: frameId === 'all',
                 },
-                files: ['mapapi_inject.min.js'],
+                files: [
+                    'inject_everywhere.min.js',
+                    'inject_frame.min.js',
+                ],
             }),
-            'inject mapapi',
+            'inject scripts',
             INJECT_EXPECTED_ERRORS
+        ),
+        checkErrors(
+            chrome.scripting.insertCSS({
+                files: ['src/inject_everywhere.css'],
+                target: {
+                    tabId: tabId,
+                    frameIds: frameId === 'all' ? null : [frameId],
+                    allFrames: frameId === 'all',
+                },
+            }),
+            'inject everywhere CSS'
         ),
         checkErrors(
             chrome.scripting.executeScript({
@@ -56,8 +70,10 @@ function injectScript(tabId, frameId) {
             }),
             'inject scrollability',
             INJECT_EXPECTED_ERRORS
-        )
-    ]);
+        ),
+    ];
+
+    return Promise.allSettled(injectPromises);
 }
 
 
@@ -73,16 +89,6 @@ async function handleBrowserActionClicked(tab) {
         // google.com), we cannot allow users to toggle the permission.
         setBrowserActionBadge(tab.id, '');
     }
-    if (Permission.isMapsSite(tab.url)) {
-        if (DEBUG) console.log("Click from maps site. Injecting inject_frame.js");
-        chrome.scripting.executeScript({
-            files: ['inject_frame.min.js'],
-            target: {
-                tabId: tab.id,
-                allFrames: true,
-            }
-        })
-    }
 
     chrome.scripting.executeScript({
         func: () => { window.SCROLLMAPS_enabled = true },
@@ -92,12 +98,28 @@ async function handleBrowserActionClicked(tab) {
         }
     });
     await injectScript(tab.id, 'all');
-    chrome.tabs.sendMessage(tab.id, {'action': 'browserActionClicked'});
+    await registerApiInjection(false);
+
+    if (!await chrome.permissions.contains({ origins: ["*://www.google.com/"] })) {
+        await checkErrors(
+            chrome.scripting.executeScript({
+                target: {
+                    tabId: tab.id,
+                    allFrames: true,
+                },
+                files: ['inject_frame_permission.min.js'],
+            }),
+            'inject frame permission',
+            INJECT_EXPECTED_ERRORS
+        );
+    }
+
+    chrome.tabs.sendMessage(tab.id, { 'action': 'browserActionClicked' });
     setBrowserActionBadge(tab.id, BADGE_LOADING);
     refreshScrollMapsStatus(tab.id);
     setTimeout(async () => {
         // Remove the loading badge if no maps responded in 10s
-        if (await chrome.action.getBadgeText({tabId: tab.id}) === BADGE_LOADING) {
+        if (await chrome.action.getBadgeText({ tabId: tab.id }) === BADGE_LOADING) {
             setBrowserActionBadge(tab.id, '');
         }
     }, 10000);
@@ -128,7 +150,7 @@ async function refreshScrollMapsStatus(tabId) {
     if (any(responses)) {
         setBrowserActionBadge(tabId, BADGE_ACTIVE);
     } else {
-        if (await chrome.action.getBadgeText({tabId: tabId}) === BADGE_ACTIVE) {
+        if (await chrome.action.getBadgeText({ tabId: tabId }) === BADGE_ACTIVE) {
             setBrowserActionBadge(tabId, '');
         }
     }
@@ -147,22 +169,24 @@ updateAllTabs();
 
 Pref.initBackgroundPage();
 
-if (chrome.scripting) {
-    (async () => {
-        try {
-            await chrome.scripting.registerContentScripts([
-                {
-                    id: 'global_mapapi_inject',
-                    allFrames: true,
-                    matches: ['<all_urls>'],
-                    js: ['mapapi_inject.min.js']
-                }
-            ]);
-        } catch (e) {
-            console.error(e);
-        }
-    })();
+async function registerApiInjection(init) {
+    try {
+        let func = init ? chrome.scripting.registerContentScripts : chrome.scripting.updateContentScripts;
+        await func([
+            {
+                id: 'inject_everywhere',
+                allFrames: true,
+                matches: ['<all_urls>'],
+                js: ['inject_everywhere.min.js'],
+                css: ['src/inject_everywhere.css']
+            }
+        ]);
+    } catch (e) {
+        console.error(e);
+    }
 }
+
+registerApiInjection(true);
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
     if (changeInfo.status === 'loading' || changeInfo.status === 'complete') {
         injectScript(tabId, 'all');
@@ -205,9 +229,15 @@ chrome.runtime.onMessage.addListener(
                 console.warn('mapUnloaded sent without tab', sender);
             }
         } else if (request.action === 'popupLoaded') {
-            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 for (const tab of tabs) {
                     handleBrowserActionClicked(tab);
+                }
+            });
+        } else if (request.action === 'requestIframePermission') {
+            chrome.permissions.request({ origins: ['*://www.google.com/maps/embed'] }, (granted) => {
+                if (granted) {
+                    injectScript(sender.tab.id, 'all');
                 }
             });
         }
