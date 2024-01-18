@@ -48,7 +48,7 @@ if (window.SM_FRAME_INJECT === undefined) {
                 btn.onclick = () => {
                     chrome.runtime.sendMessage(
                         { action: 'requestIframePermission' },
-                        () => btn.remove()
+                        granted => { if (granted) btn.remove() }
                     );
                 };
                 frame.setAttribute('data-scrollmaps-frame', '1');
