@@ -239,6 +239,8 @@ chrome.runtime.onMessage.addListener(
                 if (granted) {
                     injectScript(sender.tab.id, 'all');
                 }
+                sendResponse(granted);
             });
+            return true;
         }
     });
