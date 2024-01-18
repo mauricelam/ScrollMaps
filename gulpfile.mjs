@@ -58,7 +58,7 @@ class BuildContext {
             'src/**/*.html',
             '!src/inject_content.js',
             '!src/inject_frame.js',
-            '!src/mapapi_inject.js',
+            '!src/inject_everywhere.js',
         ])
             .pipe(newer(`${this.pluginDir()}/src`))
             .pipe(dest(`${this.pluginDir()}/src`));
@@ -154,11 +154,14 @@ class BuildContext {
 
     MINIFY_FILES() {
         return {
-            'mapapi_inject': [
+            'inject_everywhere': [
                 "src/pref.js",
                 "src/Scrollability.js",
                 "src/ScrollableMap.js",
-                "src/mapapi_inject.js"
+                "src/inject_everywhere.js"
+            ],
+            'inject_frame_permission': [
+                "src/inject_frame_permission.js",
             ],
             'inject_content': ['src/inject_content.js'],
             'scrollability_inject': ["src/Scrollability.js"],
@@ -377,6 +380,7 @@ async function watchUnitTest() {
             'src/**',
             'gulputils.js',
             'manifest_template.json',
+            'manifest_chrome_template.json',
             'images/*',
             __filename,
         ],

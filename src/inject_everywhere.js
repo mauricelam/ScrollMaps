@@ -1,8 +1,10 @@
+console.log('map API injected');
+
 if (window.SM_INJECT === undefined) {
     const DEBUG = chrome.runtime.getManifest().version === '10000';
     window.SM_INJECT = { count: 0 };
 
-    SM_INJECT.injectScript = function(host, src) {
+    SM_INJECT.injectScript = function (host, src) {
         var script = document.createElement('script');
         script.setAttribute('id', '..scrollmaps_inject');
         script.src = chrome.runtime.getURL(path);
@@ -35,7 +37,7 @@ if (window.SM_INJECT === undefined) {
                             '//www.google.com/maps/',
                             '//maps.google.com/maps/'
                         ])
-                        || container.querySelector('canvas'))
+                    || container.querySelector('canvas'))
                 .map(container => container.parentNode);
         }
 
