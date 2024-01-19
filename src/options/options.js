@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
     box.appendChild(invertScrollCheckbox);
 
-    const invertZoomDescription = 'Invert the direction for zooming';
+    const invertZoomDescription = 'Invert the direction when zooming with \u2318-scroll';
     const invertZoomCheckbox = PrefMaker.makeBooleanCheckbox(
         'invertZoom',
         'Invert Zoom',
@@ -53,4 +53,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     zoomHint.id = "zoomhint";
     zoomHint.innerText = "Pinch to zoom in or out";
     box.appendChild(zoomHint);
+
+    const framePermissionMessage = document.getElementById('frame-permission-message');
+    const framePermButton = document.getElementById('frame-perm-btn');
+    framePermButton.onclick = () => {
+        chrome.runtime.sendMessage({ 'action': 'requestIframePermission' }, updateFramePermissionMessage)
+    };
+
+    let lastFramePermissionGranted = true;
+
+    async function updateFramePermissionMessage() {
+        const framePermissionGranted = await chrome.permissions.contains({ origins: ["*://www.google.com/"] });
+        if (framePermissionGranted != lastFramePermissionGranted) {
+            if (!framePermissionGranted) {
+                framePermissionMessage.style.display = 'flex';
+            } else {
+                framePermissionMessage.style.display = 'none';
+                const mapsDemo = document.getElementById('mapsdemo');
+                mapsDemo.src = 'https://www.google.com/maps/embed/v1/view?key=AIzaSyCs4QGENEbwHZlRhMfpu4Xq2pTlwaQvb9w&zoom=12&center=37.3861%2C-122.0839';
+            }
+            lastFramePermissionGranted = framePermissionGranted;
+        }
+    }
+
+    chrome.permissions.onAdded.addListener(updateFramePermissionMessage);
+    chrome.permissions.onRemoved.addListener(updateFramePermissionMessage);
+    await updateFramePermissionMessage();
 }, false);
