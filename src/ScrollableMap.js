@@ -7,6 +7,7 @@ if (window.ScrollableMap === undefined) {
         function enable() {
             if (enabled) return;
             enabled = true;
+            console.log('map loaded');
             chrome.runtime.sendMessage({ 'action': 'mapLoaded' });
             refreshActivationAffordance();
             div.setAttribute('data-scrollmaps', 'enabled');
