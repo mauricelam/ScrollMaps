@@ -45,7 +45,7 @@ async function injectScript(tabId, frameId) {
                     'inject_everywhere.min.js',
                     'inject_frame.min.js',
                 ],
-            }, (result) => console.log('injection result', result)),
+            }),
             'inject scripts',
             INJECT_EXPECTED_ERRORS
         ),
@@ -130,14 +130,14 @@ chrome.action.onClicked.addListener(handleBrowserActionClicked);
 
 async function refreshScrollMapsStatus(tabId) {
     // Check if the map already has a scrollmaps injected (e.g. after extension reloading)
-    let responses = await chrome.scripting.executeScript({
+    let responses = await checkErrors(chrome.scripting.executeScript({
         target: {
             tabId: tabId,
             allFrames: true
         },
         func: () => !!document.querySelector("[data-scrollmaps='enabled']"),
-    });
-    responses = responses.map((r) => r.result);
+    }), 'map probe', INJECT_EXPECTED_ERRORS);
+    responses = responses ? responses.map((r) => r.result) : [];
     if (DEBUG) {
         console.log('Map probe responses', tabId, responses);
     }
@@ -147,14 +147,17 @@ async function refreshScrollMapsStatus(tabId) {
         }
         return false;
     };
-    if (any(responses)) {
+    await updateMapStatus(tabId, any(responses));
+}
+
+async function updateMapStatus(tabId, mapEnabled) {
+    if (mapEnabled) {
         setBrowserActionBadge(tabId, BADGE_ACTIVE);
     } else {
         if (await chrome.action.getBadgeText({ tabId: tabId }) === BADGE_ACTIVE) {
             setBrowserActionBadge(tabId, '');
         }
     }
-    checkErrors('map probe', ['Cannot access']);
 }
 
 function updateAllTabs() {
@@ -216,15 +219,28 @@ chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
         if (request.action === 'mapLoaded') {
             if (DEBUG) console.log('mapLoaded', sender.tab);
+            console.log(sender.tab.url, chrome.runtime.getURL('src/options/options.html'))
             if (sender.tab) {
-                refreshScrollMapsStatus(sender.tab.id);
+                if (sender.tab.url == chrome.runtime.getURL('src/options/options.html')) {
+                    // Cannot inject script into extension page. Just trust the result from our
+                    // options page
+                    updateMapStatus(sender.tab.id, true);
+                } else {
+                    refreshScrollMapsStatus(sender.tab.id);
+                }
             } else {
                 console.warn('mapLoaded sent without tab', sender);
             }
         } else if (request.action === 'mapUnloaded') {
             if (DEBUG) console.log('mapUnloaded', sender.tab);
             if (sender.tab) {
-                refreshScrollMapsStatus(sender.tab.id);
+                if (sender.tab.url == chrome.runtime.getURL('src/options/options.html')) {
+                    // Cannot inject script into extension page. Just trust the result from our
+                    // options page
+                    updateMapStatus(sender.tab.id, false);
+                } else {
+                    refreshScrollMapsStatus(sender.tab.id);
+                }
             } else {
                 console.warn('mapUnloaded sent without tab', sender);
             }
