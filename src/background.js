@@ -10,9 +10,9 @@ const BADGE_COLORS = {
     [BADGE_DISABLED]: '#BDBDBD'
 }
 
-async function checkErrors(promise, name, expectedErrors) {
+async function checkErrors(promise, name, expectedErrors = []) {
     try {
-        await promise;
+        return await promise;
     } catch (e) {
         let errorMessage = e ? e.message : undefined;
         if (DEBUG && errorMessage) {
@@ -45,7 +45,7 @@ async function injectScript(tabId, frameId) {
                     'inject_everywhere.min.js',
                     'inject_frame.min.js',
                 ],
-            }),
+            }, (result) => console.log('injection result', result)),
             'inject scripts',
             INJECT_EXPECTED_ERRORS
         ),
@@ -237,7 +237,7 @@ chrome.runtime.onMessage.addListener(
         } else if (request.action === 'requestIframePermission') {
             chrome.permissions.request({ origins: ['*://www.google.com/maps/embed'] }, (granted) => {
                 if (granted) {
-                    injectScript(sender.tab.id, 'all');
+                    injectScript(sender.tab.id, 'all').then((r) => console.log(r));
                 }
                 sendResponse(granted);
             });

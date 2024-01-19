@@ -20,7 +20,19 @@ body { background-color: whiteSmoke; font-family: Helvetica, Trebuchet MS, Arial
 .clear { clear: both; }
 
 #checkboxes { display: inline-block; width: 350px; height: 480px; float: left; position: relative; }
-#mapsdemo { width: 300px; height: 470px; border: 1px solid #BBB; float: right; }
+#mapsdemo { width: 100%; height: 100%; }
+
+#mapsdemo-container {
+    width: 300px; height: 470px; border: 1px solid #BBB; float: right;
+    position: relative;
+}
+
+#frame-permission-message {
+    position: absolute; top: 0px; right: 0px; bottom: 0px; left: 0px;
+    text-align: center;
+    background-color: rgba(200, 200, 200, 0.9);
+    display: none; align-items: center; justify-content: center; flex-direction: column;
+}
 
 #zoomhint { position: absolute; bottom: 3px; right: 5px; font-size: 12px; text-shadow: 0 1px 1px white; color: #888; user-select: none; cursor: default; }
 
