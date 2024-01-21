@@ -29,7 +29,7 @@
     "scripting",
     "activeTab"
   ],
-  "__host_permissions": [
+  "host_permissions": [
     "*://maps.google.com/",
     "*://www.google.com/maps/",
     "<%= all_google_maps_urls %>"
