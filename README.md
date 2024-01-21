@@ -28,6 +28,3 @@ Individual test fails can be run using `mocha` directly:
 ```sh
 BROWSER=chrome npx mocha test/auto/google_com_travel.js
 ```
-
-# TODO:
-- Update injectScript to use chrome.scripting.executeScript with MAIN world

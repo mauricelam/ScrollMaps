@@ -8,7 +8,7 @@
     "scripts": ["background.min.js"]
   },
   "web_accessible_resources": [{
-    "resources": ["inject_content.min.js", "images/permission_icon.png"],
+    "resources": ["images/permission_icon.png"],
     "matches": ["<all_urls>"]
   }],
   "content_security_policy": {

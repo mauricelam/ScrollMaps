@@ -1,20 +1,6 @@
-console.log('map API injected');
-
 if (window.SM_INJECT === undefined) {
     const DEBUG = chrome.runtime.getManifest().version === '10000';
     window.SM_INJECT = { count: 0 };
-
-    SM_INJECT.injectScript = function (host, src) {
-        var script = document.createElement('script');
-        script.setAttribute('id', '..scrollmaps_inject');
-        script.src = chrome.runtime.getURL(path);
-        host.insertBefore(script, host.firstChild);
-        if (host.contains(script)) {
-            host.removeChild(script);
-        } else {
-            console.warn('Unable to remove injected script element');
-        }
-    };
 
     class GoogleMapFinder {
 
@@ -105,15 +91,16 @@ if (window.SM_INJECT === undefined) {
         return true;
     }
 
-    function poll(func, timeout, count) {
-        if (count <= 0) {
-            return;
+    function sleep(timeout) {
+        return new Promise((accept, _) => { setTimeout(accept, timeout); });
+    }
+
+    async function poll(func, timeout, count) {
+        for (let i = 0; i < count; i++) {
+            console.log('poll scrollify maps', i);
+            func();
+            await sleep(timeout * Math.pow(2, i));
         }
-        window.setTimeout(() => {
-            if (!func()) {
-                poll(func, timeout, count - 1);
-            }
-        }, timeout);
     }
 
     // Init
