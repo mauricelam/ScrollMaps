@@ -4,16 +4,18 @@ const Permission = {
             chrome.permissions.contains({'origins': urls}, resolve);
         });
     },
-    async loadSiteStatus(url) {
+    async loadSiteStatus(urlString) {
+        const url = new URL(urlString);
         let [isSiteGrantedResult, isAllGrantedResult] = await Promise.allSettled([
-            Permission.getPermissions([url]),
+            Permission.getPermissions([`${url.protocol}//${url.host}/`]),
             Permission.getPermissions(['<all_urls>'])
         ]);
+        console.log('Site status: ', url, isSiteGrantedResult, isAllGrantedResult)
         isSiteGranted = isSiteGrantedResult.status === 'fulfilled' && isSiteGrantedResult.value;
         isAllGranted = isAllGrantedResult.status === 'fulfilled' && isAllGrantedResult.value;
         return {
-            'tabUrl': url,
-            'isSiteGranted': isSiteGranted || Permission.isRequiredPermission(url),
+            'tabUrl': urlString,
+            'isSiteGranted': isSiteGranted,
             'isAllGranted': isAllGranted
         };
     },
@@ -40,15 +42,6 @@ const Permission = {
         }
         return false;
     },
-
-    /**
-     * Whether permission to the given URL is required (i.e. not user revokable)
-     */
-    isRequiredPermission(url) {
-        // Always false since in Manifest V3 all host permissions are optional.
-        // TODO: Refactor this away.
-        return false;
-    }
 };
 
 const MATCH_PATTERN = /^(\*|http|https|file|ftp):\/\/(\*|(?:\*\.)?[^*/]*)(?:\/(.*))?$/;

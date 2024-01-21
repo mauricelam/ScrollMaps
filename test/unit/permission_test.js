@@ -45,31 +45,4 @@ describe('Permission tests', function() {
             assert.isFalse(Permission.isOwnExtensionPage(site));
         });
     }
-
-    const isRequiredPermission_trueTests = [
-        'https://www.google.com/maps',
-        'https://www.google.com/maps/place/1600+Amphitheatre+Pkwy,+Mountain+View,+CA+94043/',
-        'http://www.google.com/maps',
-        'https://www.google.com.hk/maps',
-        'https://www.google.co.uk/maps',
-        'https://maps.google.com/',
-        // /travel is not a maps site, but we get the permission because it's under google.com domain
-        'https://www.google.com/travel',
-    ];
-    for (const site of isRequiredPermission_trueTests) {
-        it(`isRequiredPermission ${site}`, () => {
-            assert.isTrue(Permission.isRequiredPermission(site));
-        })
-    }
-
-    const isRequiredPermission_falseTests = [
-        'https://www.apple.com/',
-        'https://www.google.com.example.com/',
-        'https://maps.google.com.example.com/',
-    ];
-    for (const site of isRequiredPermission_falseTests) {
-        it(`isRequiredPermission ${site}`, () => {
-            assert.isFalse(Permission.isRequiredPermission(site));
-        });
-    }
 });

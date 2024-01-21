@@ -33,9 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('site_granted').addEventListener('change', async function() {
         const status = await siteStatus;
-        if (Permission.isRequiredPermission(status.tabUrl)) {
-            return;
-        }
         if (this.checked) {
             chrome.permissions.request({origins: [status.tabUrl]});
         } else {
@@ -61,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     chrome.runtime.sendMessage({action: 'popupLoaded'});
 
     const status = await siteStatus;
-    if (Permission.isOwnExtensionPage(status.tabUrl) || Permission.isRequiredPermission(status.tabUrl)) {
+    if (Permission.isOwnExtensionPage(status.tabUrl)) {
         document.body.classList.add('disable-options');
         document.getElementById('permissionExplanation').innerText =
             'ScrollMaps is enabled on this Google Maps page.';
@@ -75,13 +72,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     const host = new URL(status.tabUrl).host;
-    if (Permission.isRequiredPermission(status.tabUrl)) {
-        document.body.classList.add('disable-options');
-        document.getElementById('permissionExplanation').innerText =
-            `ScrollMaps is enabled on ${host}`;
-        return;
-    }
-
     document.querySelector('label[for=site_granted] .PMcheckbox_smalltext')
         .innerText = `Enable ScrollMaps on ${host} without having to click on the extension icon`;
 
