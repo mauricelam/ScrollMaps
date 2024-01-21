@@ -56,8 +56,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const framePermissionMessage = document.getElementById('frame-permission-message');
     const framePermButton = document.getElementById('frame-perm-btn');
-    framePermButton.onclick = () => {
-        chrome.runtime.sendMessage({ 'action': 'requestIframePermission' }, updateFramePermissionMessage)
+    framePermButton.onclick = async () => {
+        let granted = await Permission.requestFramePermission();
+        if (granted) {
+            chrome.runtime.sendMessage({ 'action': 'framePermissionGranted' });
+            await updateFramePermissionMessage();
+        }
     };
 
     let lastFramePermissionGranted = true;

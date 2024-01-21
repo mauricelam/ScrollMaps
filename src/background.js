@@ -137,7 +137,7 @@ async function refreshScrollMapsStatus(tabId) {
         },
         func: () => !!document.querySelector("[data-scrollmaps='enabled']"),
     }), 'map probe', INJECT_EXPECTED_ERRORS);
-    responses = responses ? responses.map((r) => r.result) : [];
+    responses = responses ? responses.map((r) => r && r.result) : [];
     if (DEBUG) {
         console.log('Map probe responses', tabId, responses);
     }
@@ -214,6 +214,43 @@ function setBrowserActionBadge(tabId, badge) {
     });
 }
 
+function sleep(time) {
+    return new Promise((accept, _) => { setTimeout(accept, time); });
+}
+
+async function requestFramePermission(tabId) {
+    let granted = await requestFramePermissionImpl(tabId);
+    if (granted) {
+        framePermissionGranted(tabId);
+    }
+    return granted;
+}
+
+async function requestFramePermissionImpl(tabId) {
+    try {
+        return await Permission.requestFramePermission();
+    } catch (e) {
+        // On Firefox background scripts cannot request permissions because the "user gesture" is not propagated through
+        // chrome.runtime.sendMessage: https://bugzilla.mozilla.org/show_bug.cgi?id=1392624
+        // Create a page to ask the user about it instead.
+        console.log('error requesting permission', e);
+        let tab = await chrome.tabs.create({ openerTabId: tabId, url: chrome.runtime.getURL(`src/options/framepermission.html?id=${tabId}`) });
+        for (let i = 0; i < 5; i++) {
+            try {
+                return await chrome.tabs.sendMessage(tab.id, {'action': 'waitForPermission'});
+            } catch (e) {
+                console.log('waitForPermission error', e, 'retrying...')
+                await sleep(1000);
+            }
+        }
+        return false;
+    }
+}
+
+function framePermissionGranted(tabId) {
+    injectScript(tabId, 'all').then((r) => console.log(r));
+}
+
 
 chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
@@ -251,12 +288,9 @@ chrome.runtime.onMessage.addListener(
                 }
             });
         } else if (request.action === 'requestIframePermission') {
-            chrome.permissions.request({ origins: ['*://www.google.com/maps/embed'] }, (granted) => {
-                if (granted) {
-                    injectScript(sender.tab.id, 'all').then((r) => console.log(r));
-                }
-                sendResponse(granted);
-            });
+            requestFramePermission(sender.tab.id).then(sendResponse);
             return true;
+        } else if (request.action === 'framePermissionGranted') {
+            framePermissionGranted(request.tabId || sender.tab.id);
         }
     });
