@@ -31,5 +31,3 @@ BROWSER=chrome npx mocha test/auto/google_com_travel.js
 
 # TODO:
 - Update injectScript to use chrome.scripting.executeScript with MAIN world
-- Browser action icon status is wrong again after clicking on extensions page
-- Make browser action icon work correctly when not activating automatically on options page

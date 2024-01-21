@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (Permission.isOwnExtensionPage(status.tabUrl)) {
         document.body.classList.add('disable-options');
         document.getElementById('permissionExplanation').innerText =
-            'ScrollMaps is enabled on this Google Maps page.';
+            'ScrollMaps is enabled on this ScrollMaps page.';
         return;
     }
     if (!Permission.canInjectIntoPage(status.tabUrl)) {

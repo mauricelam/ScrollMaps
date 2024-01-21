@@ -87,7 +87,8 @@ async function handleBrowserActionClicked(tab) {
     if (Permission.isOwnExtensionPage(tab.url)) {
         // If the permission is required (e.g. if it is on the domain
         // google.com), we cannot allow users to toggle the permission.
-        setBrowserActionBadge(tab.id, '');
+        chrome.tabs.sendMessage(tab.id, { 'action': 'browserActionClicked' });
+        return;
     }
 
     chrome.scripting.executeScript({
@@ -237,7 +238,7 @@ async function requestFramePermissionImpl(tabId) {
         let tab = await chrome.tabs.create({ openerTabId: tabId, url: chrome.runtime.getURL(`src/options/framepermission.html?id=${tabId}`) });
         for (let i = 0; i < 5; i++) {
             try {
-                return await chrome.tabs.sendMessage(tab.id, {'action': 'waitForPermission'});
+                return await chrome.tabs.sendMessage(tab.id, { 'action': 'waitForPermission' });
             } catch (e) {
                 console.log('waitForPermission error', e, 'retrying...')
                 await sleep(1000);
