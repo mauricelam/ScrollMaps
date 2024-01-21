@@ -84,7 +84,7 @@ async function handleBrowserActionClicked(tab) {
         setBrowserActionBadge(tab.id, BADGE_DISABLED)
         return;
     }
-    if (Permission.isOwnExtensionPage(tab.url) || Permission.isRequiredPermission(tab.url)) {
+    if (Permission.isOwnExtensionPage(tab.url)) {
         // If the permission is required (e.g. if it is on the domain
         // google.com), we cannot allow users to toggle the permission.
         setBrowserActionBadge(tab.id, '');
