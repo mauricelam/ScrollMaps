@@ -56,7 +56,6 @@ class BuildContext {
             'src/**/*.js',
             'src/**/*.css',
             'src/**/*.html',
-            '!src/inject_content.js',
             '!src/inject_frame.js',
             '!src/inject_everywhere.js',
         ])
@@ -163,7 +162,6 @@ class BuildContext {
             'inject_frame_permission': [
                 "src/inject_frame_permission.js",
             ],
-            'inject_content': ['src/inject_content.js'],
             'scrollability_inject': ["src/Scrollability.js"],
             'inject_frame': [
                 "src/pref.js",
