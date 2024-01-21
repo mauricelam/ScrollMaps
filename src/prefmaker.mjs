@@ -1,6 +1,6 @@
 /** Create views or widgets to toggle certain preference values. */
 
-class PrefMaker {
+export class PrefMaker {
 
     static makePermissionCheckbox(key, origin, label, secondLine) {
         if (typeof secondLine === 'string') {

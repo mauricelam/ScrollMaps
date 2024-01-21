@@ -1,4 +1,10 @@
+import { PrefMaker } from '../prefmaker.mjs';
+import { SCROLLMAPS_IFRAME_URL } from './maps_embed.mjs';  // File not checked into version control
+
 document.addEventListener('DOMContentLoaded', async () => {
+    const mapsDemo = document.getElementById('mapsdemo');
+    mapsDemo.src = SCROLLMAPS_IFRAME_URL;
+
     const box = document.getElementById('checkboxes');
 
     const enabledCheckbox = PrefMaker.makeBooleanCheckbox(
@@ -74,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 framePermissionMessage.style.display = 'none';
                 const mapsDemo = document.getElementById('mapsdemo');
-                mapsDemo.src = 'https://www.google.com/maps/embed/v1/view?key=AIzaSyCs4QGENEbwHZlRhMfpu4Xq2pTlwaQvb9w&zoom=12&center=37.3861%2C-122.0839';
+                mapsDemo.src = SCROLLMAPS_IFRAME_URL;
             }
             lastFramePermissionGranted = framePermissionGranted;
         }

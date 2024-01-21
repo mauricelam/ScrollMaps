@@ -54,6 +54,7 @@ class BuildContext {
     copySourceFiles() {
         return src([
             'src/**/*.js',
+            'src/**/*.mjs',
             'src/**/*.css',
             'src/**/*.html',
             '!src/inject_frame.js',
