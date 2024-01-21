@@ -2,3 +2,4 @@
 gen/
 node_modules/
 scrollmaps.sublime-workspace
+src/options/maps_embed.js
