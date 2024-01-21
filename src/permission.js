@@ -1,7 +1,7 @@
 const Permission = {
     getPermissions(urls) {
         return new Promise((resolve, reject) => {
-            chrome.permissions.contains({'origins': urls}, resolve);
+            chrome.permissions.contains({ 'origins': urls }, resolve);
         });
     },
     async loadSiteStatus(urlString) {
@@ -24,14 +24,14 @@ const Permission = {
         let protocol = new URL(url).protocol;
         return Permission.isOwnExtensionPage(url) ||
             (protocol !== 'chrome:'
-            && protocol !== 'chrome-extension:'
-            && protocol !== 'about:'
-            && protocol !== 'moz-extension:');
+                && protocol !== 'chrome-extension:'
+                && protocol !== 'about:'
+                && protocol !== 'moz-extension:');
     },
 
     isOwnExtensionPage(url) {
         return url.indexOf(`chrome-extension://${chrome.runtime.id}`) === 0
-        || url.indexOf(`moz-extension://${chrome.runtime.id}`) === 0;
+            || url.indexOf(`moz-extension://${chrome.runtime.id}`) === 0;
     },
 
     isMapsSite(url) {
@@ -41,6 +41,10 @@ const Permission = {
             }
         }
         return false;
+    },
+
+    async requestFramePermission() {
+        return await chrome.permissions.request({ origins: ['*://www.google.com/maps/embed'] });
     },
 };
 

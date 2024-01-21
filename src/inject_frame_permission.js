@@ -22,8 +22,8 @@ if (window.SM_FRAME_INJECT === undefined) {
                 shadow.appendChild(btn);
                 frame.insertAdjacentElement('beforebegin', container);
 
-                const styleSheet = new CSSStyleSheet();
-                styleSheet.replaceSync(`
+                const styleSheet = document.createElement('style');
+                styleSheet.innerHTML = `
                 .sm-perm-btn {
                     position: absolute; top: 0px; right: 0px;
                     width: 24px; height: 24px;
@@ -42,14 +42,15 @@ if (window.SM_FRAME_INJECT === undefined) {
                     border: 1px solid #ccc;
                     border-radius: 5px;
                 }
-                `);
-                shadow.adoptedStyleSheets = [styleSheet];
+                `;
+                shadow.appendChild(styleSheet);
 
-                btn.onclick = () => {
-                    chrome.runtime.sendMessage(
-                        { action: 'requestIframePermission' },
-                        granted => { if (granted) btn.remove() }
-                    );
+                btn.onclick = async () => {
+                    let granted = await chrome.runtime.sendMessage( { action: 'requestIframePermission' });
+                    console.log('request iframe perm', granted)
+                    if (granted) {
+                        btn.remove();
+                    }
                 };
                 frame.setAttribute('data-scrollmaps-frame', '1');
             }

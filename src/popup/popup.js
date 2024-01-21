@@ -34,19 +34,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('site_granted').addEventListener('change', async function() {
         const status = await siteStatus;
         if (this.checked) {
-            chrome.permissions.request({origins: [status.tabUrl]});
+            let granted = await chrome.permissions.request({origins: [status.tabUrl]});
+            if (!granted) {
+                this.checked = false;
+            }
         } else {
             chrome.permissions.remove({origins: [status.tabUrl]});
         }
     }, false);
-    document.getElementById('all_granted').addEventListener('change', function() {
+    document.getElementById('all_granted').addEventListener('change', async function() {
         let allGranted = this.checked;
-        document.getElementById('site_granted').checked = allGranted;
         if (allGranted) {
-            chrome.permissions.request({origins: ['<all_urls>']});
+            let granted = await chrome.permissions.request({origins: ['<all_urls>']});
+            if (!granted) {
+                allGranted = false;
+                this.checked = false;
+            }
         } else {
             chrome.permissions.remove({origins: ['<all_urls>']})
         }
+        document.getElementById('site_granted').checked = allGranted;
         refreshCheckboxEnabledStates(allGranted);
     }, false);
 
