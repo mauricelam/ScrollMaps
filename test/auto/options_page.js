@@ -114,10 +114,28 @@ describe('Extension options page', function () {
                 console.log(windows);
                 await sleep(1000);
                 firefoxExtensionUrl = driver.getCurrentUrl();
+
+                // Allow frame permission
+                await driver.findElement(By.id('frame-perm-btn')).click();
+                await firefoxAllowPermission();
             }
         } else {
             throw Error("Unsupported browser");
         }
+    }
+
+    async function firefoxAllowPermission() {
+        const firefox = require('selenium-webdriver/firefox');
+        driver.setContext(firefox.Context.CHROME);
+        const allowPermBtn = await driver.wait(async () => {
+            // await mapDriver.printAllElements();
+            // Reference:
+            //      https://searchfox.org/mozilla-central/source/toolkit/modules/PopupNotifications.sys.mjs
+            //      https://searchfox.org/mozilla-central/source/toolkit/content/widgets/popupnotification.js
+            return (await driver.findElement(By.css('#addon-webext-permissions-notification .popup-notification-primary-button')));
+        }, 10000);
+        await allowPermBtn.click();
+        driver.setContext(firefox.Context.CONTENT);
     }
 
     async function getIframeCoords() {
