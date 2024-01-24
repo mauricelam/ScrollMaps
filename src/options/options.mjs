@@ -1,5 +1,5 @@
 import { PrefMaker } from '../prefmaker.mjs';
-import { SCROLLMAPS_IFRAME_URL } from './maps_embed.mjs';  // File not checked into version control
+import { SCROLLMAPS_IFRAME_URL } from './maps_embed.mjs';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const mapsDemo = document.getElementById('mapsdemo');

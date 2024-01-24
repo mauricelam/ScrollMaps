@@ -23,7 +23,7 @@ for (const browser of BROWSERS) {
 
 function doubleInclusionGuard() {
     return contentTransform((contents, file, enc) =>
-`if (!self["..SMLoaded:${file.basename}"]) {
+        `if (!self["..SMLoaded:${file.basename}"]) {
 ${contents};
 self["..SMLoaded:${file.basename}"]=true;
 }`);
@@ -58,8 +58,25 @@ class BuildContext {
             'src/**/*.css',
             'src/**/*.html',
             '!src/inject_frame.js',
+            '!src/inject_frame_permission.js',
             '!src/inject_everywhere.js',
+            '!src/options/maps_embed.mjs',
+            '!src/options/maps_embed_with_key.mjs',
         ])
+            .pipe(newer(`${this.pluginDir()}/src`))
+            .pipe(dest(`${this.pluginDir()}/src`));
+    }
+
+    async copyMapsEmbedFile() {
+        let mapsEmbedFile;
+        try {
+            await fs.access('src/options/maps_embed_with_key.mjs');
+            mapsEmbedFile = 'src/options/maps_embed_with_key.mjs';
+        } catch (e) {
+            mapsEmbedFile = 'src/options/maps_embed.mjs';
+        }
+        return src([mapsEmbedFile])
+            .pipe(rename('options/maps_embed.mjs'))
             .pipe(newer(`${this.pluginDir()}/src`))
             .pipe(dest(`${this.pluginDir()}/src`));
     }
@@ -200,6 +217,7 @@ class BuildContext {
         const buildUnpacked = parallel(
             ...minifyTasks,
             this.copySourceFiles,
+            this.copyMapsEmbedFile,
             this.copyImages,
             this.processManifest,
         );
