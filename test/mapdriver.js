@@ -224,6 +224,8 @@ class MapDriver {
         for (const elem of await root.findElements(By.xpath("//*"))) {
             const id = await elem.getAttribute("id");
             if (id) console.log("Element ID=", id);
+            const classes = await elem.getAttribute("class");
+            if (classes) console.log("Element classes=", classes);
         }
     }
 
