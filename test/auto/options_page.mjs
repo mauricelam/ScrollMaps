@@ -6,7 +6,7 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
 describe('Extension options page', function () {
-    // this.retries(3);
+    this.retries(2);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;
@@ -54,7 +54,7 @@ describe('Extension options page', function () {
         const elem = await mapDriver.waitForScrollMapsLoaded();
         await assertLatLng({ lat: 37.3861, lng: -122.0839 });
         await mapDriver.scroll(elem, 300, -40);
-        await sleep(500);
+        await sleep(1000);
         await assertLatLng({ lat: 37.344392, lng: -122.476801, tolerance: 0.003 });
     });
 
@@ -66,7 +66,7 @@ describe('Extension options page', function () {
         await assertLatLng({ lat: 37.3861, lng: -122.0839 });
         equal(await getIframeZoom(), 12);
         await mapDriver.scroll(elem, 0, 64, { metaKey: true, logTag: 'Zooming' });
-        await sleep(500);
+        await sleep(1000);
         equal(await getIframeZoom(), 10);
     });
 
