@@ -1,8 +1,6 @@
-const assert = require('assert');
-const webdriver = require('selenium-webdriver');
-const { By, until } = webdriver;
-const MapDriver = require('../mapdriver.js').MapDriver;
-const sleep = MapDriver.sleep;
+import assert, { equal } from 'assert';
+import { By, until } from 'selenium-webdriver';
+import { MapDriver, sleep } from '../mapdriver.js';
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 
@@ -66,10 +64,10 @@ describe('Extension options page', function () {
         await driver.switchTo().frame(driver.findElement(By.id("mapsdemo")));
         const elem = await mapDriver.waitForScrollMapsLoaded();
         await assertLatLng({ lat: 37.3861, lng: -122.0839 });
-        assert.equal(await getIframeZoom(), 12);
+        equal(await getIframeZoom(), 12);
         await mapDriver.scroll(elem, 0, 64, { metaKey: true, logTag: 'Zooming' });
         await sleep(500);
-        assert.equal(await getIframeZoom(), 10);
+        equal(await getIframeZoom(), 10);
     });
 
     it('invert zoom', async () => {
@@ -81,10 +79,10 @@ describe('Extension options page', function () {
         await driver.switchTo().frame(driver.findElement(By.id("mapsdemo")));
         const elem = await mapDriver.waitForScrollMapsLoaded();
         await assertLatLng({ lat: 37.3861, lng: -122.0839 });
-        assert.equal(await getIframeZoom(), 12);
+        equal(await getIframeZoom(), 12);
         await mapDriver.scroll(elem, 0, 64, { metaKey: true, logTag: 'Zooming' });
         await sleep(500);
-        assert.equal(await getIframeZoom(), 14);
+        equal(await getIframeZoom(), 14);
     });
 
     let firefoxExtensionUrl;

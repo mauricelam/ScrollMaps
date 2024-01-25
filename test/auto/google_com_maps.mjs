@@ -1,4 +1,4 @@
-const MapDriver = require('../mapdriver.js').MapDriver;
+import { MapDriver } from '../mapdriver.js';
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 
