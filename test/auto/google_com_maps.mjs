@@ -4,7 +4,7 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
 describe('google.com/maps test suite', function() {
-    this.retries(5);
+    this.retries(2);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;

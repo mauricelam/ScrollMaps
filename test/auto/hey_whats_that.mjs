@@ -6,7 +6,7 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
 describe('heywhatsthat test suite', function() {
-    this.retries(3);
+    this.retries(2);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;

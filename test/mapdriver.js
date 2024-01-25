@@ -191,7 +191,7 @@ class MapDriver {
                 const browserScale = opts.browserScale || 1;
                 for (let i = 0; i < chunks; i++) {
                     wheel(dx / chunks * browserScale, dy / chunks * browserScale);
-                    await sleep(50);
+                    await sleep(30);
                 }
             } finally {
                 done();
