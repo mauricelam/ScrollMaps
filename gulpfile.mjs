@@ -245,7 +245,7 @@ class BuildContext {
     async runAutoTest() {
         await this._generateTestJson();
         await makePromise(
-            () => src('test/auto/*.js')
+            () => src('test/auto/*.mjs')
                 .pipe(mocha({
                     require: [`${this.intermediatesDir()}/mocha-require-${this.browser}.mjs`],
                     reporter: 'spec',

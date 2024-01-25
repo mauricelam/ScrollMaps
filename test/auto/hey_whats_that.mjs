@@ -1,8 +1,6 @@
-const assert = require('assert');
-const webdriver = require('selenium-webdriver');
-const By = webdriver.By;
-const MapDriver = require('../mapdriver.js').MapDriver;
-const sleep = MapDriver.sleep;
+import assert from 'assert';
+import { By } from 'selenium-webdriver';
+import { MapDriver, sleep } from '../mapdriver.js';
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 

@@ -1,8 +1,6 @@
-const assert = require('assert');
-const webdriver = require('selenium-webdriver');
-const By = webdriver.By;
-const MapDriver = require('../mapdriver.js').MapDriver;
-const sleep = MapDriver.sleep;
+import { deepStrictEqual } from 'assert';
+import { By } from 'selenium-webdriver';
+import { MapDriver, sleep } from '../mapdriver.js';
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 
@@ -33,7 +31,7 @@ describe('google.com/travel test suite', function() {
         await sleep(2000);
         await mapDriver.scroll(elem, 300, -40);
         await waitForCities(['London']);
-        assert.deepStrictEqual(
+        deepStrictEqual(
             await findCities(['Chicago', 'London', 'Paris', 'Beijing']),
             ['London', 'Paris']);
 
@@ -43,7 +41,7 @@ describe('google.com/travel test suite', function() {
 
         await mapDriver.pinchGesture(elem, -32);
         await sleep(2000);
-        assert.deepStrictEqual(
+        deepStrictEqual(
             await findCities(['Chicago', 'London', 'Paris', 'Beijing']),
             ['London', 'Paris']);
     });

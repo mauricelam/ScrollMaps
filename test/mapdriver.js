@@ -265,7 +265,6 @@ class MapDriver {
 function sleep(timeout) {
     return new Promise((resolve, reject) => setTimeout(resolve, timeout));
 }
-MapDriver.sleep = sleep;
 
 exports.MapDriver = MapDriver;
 exports.sleep = sleep;
