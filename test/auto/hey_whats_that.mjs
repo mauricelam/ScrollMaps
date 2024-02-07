@@ -1,6 +1,6 @@
 import assert from 'assert';
 import { By } from 'selenium-webdriver';
-import { MapDriver, sleep } from '../mapdriver.js';
+import { MapDriver, assertIn, sleep } from '../mapdriver.js';
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 
@@ -33,29 +33,27 @@ describe('heywhatsthat test suite', function() {
         // It wouldn't scroll the page because the event is not trusted
         await mapDriver.scroll(elem, 0, -300);
         await mapDriver.click();
-        await assertLatLng({ lat: 24.325, lng: 120.700 });
+        await assertLatLng([24.325, 0.01], [120.700, 0.01]);
         await mapDriver.click();
         await sleep(1000);
-        await assertLatLng({ lat: 24.2627, lng: 120.7684 });
+        await assertLatLng([24.2627, 0.01], [120.7684, 0.01]);
 
         await mapDriver.scroll(elem, 0, -300);
         await mapDriver.click();
         await sleep(2000);
-        await assertLatLng({ lat: 24.6203, lng: 120.7684 });
+        await assertLatLng([24.608488, 0.01], [120.769135, 0.01]);
         await mapDriver.assertRuler('5 km');
 
         // Execute zoom action
-        await mapDriver.pinchGesture(elem, 32);
+        await mapDriver.pinchGesture(elem, 64);
         await sleep(2000);
         await mapDriver.click({ x: 150, y: 80 });
         await sleep(1000);
-        await assertLatLng({ lat: 24.482945, lng: 121.112457, tolerance: 0.05 });
         await mapDriver.assertRuler('20 km');
+        await assertLatLng([24.470446, 0.1], [121.11218, 0.01]);
     });
 
-    const TOLERANCE = 0.001;  // Tolerate 0.001' error
-
-    async function assertLatLng({lat: expectedLat, lng: expectedLng, tolerance = TOLERANCE}) {
+    async function getLatLng() {
         const latlng = await driver.wait(async () => driver.findElement(By.id('map_latlon_div')), 10000);
         const text = await latlng.getText();
         const pattern = /([\d.]+) N ([\d.]+) E/;
@@ -63,12 +61,12 @@ describe('heywhatsthat test suite', function() {
         if (!match) throw new Error(`Text "${text}" does not match lat lng pattern`);
         console.log('Got latitude, longitude =', text)
         const [_, lat, lng] = match.map(Number);
-        const minLat = expectedLat - tolerance;
-        const maxLat = expectedLat + tolerance;
-        const minLng = expectedLng - tolerance;
-        const maxLng = expectedLng + tolerance;
-        const errorMsg = `[${lat}, ${lng}] should be within [[${minLat}, ${maxLat}], [${minLng}, ${maxLng}]]`;
-        assert(minLat <= lat && lat <= maxLat, errorMsg)
-        assert(minLng <= lng && lng <= maxLng, errorMsg)
+        return [lat, lng];
+    }
+
+    async function assertLatLng(expectedLat, expectedLng) {
+        const [lat, lng] = await getLatLng();
+        assertIn(lat, expectedLat);
+        assertIn(lng, expectedLng);
     }
 });

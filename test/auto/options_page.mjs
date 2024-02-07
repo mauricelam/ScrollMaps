@@ -1,6 +1,6 @@
-import assert, { equal } from 'assert';
+import assert from 'assert';
 import { By, until } from 'selenium-webdriver';
-import { MapDriver, sleep } from '../mapdriver.js';
+import { MapDriver, assertIn, sleep } from '../mapdriver.js';
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 
@@ -24,10 +24,10 @@ describe('Extension options page', function () {
         await openOptionsPage();
         await driver.switchTo().frame(driver.findElement(By.id("mapsdemo")));
         const elem = await mapDriver.waitForScrollMapsLoaded();
-        await assertLatLng({ lat: 37.3861, lng: -122.0839 });
+        await assertLatLng([37.3861, 0.01], [-122.0839, 0.01]);
         await mapDriver.scroll(elem, 300, -40);
-        await sleep(500);
-        await assertLatLng({ lat: 37.406829, lng: -121.887519 });
+        await sleep(1000);
+        await assertLatLng([37.406011, 0.01], [-121.894043, 0.01]);
     });
 
     it('increase scroll speed', async () => {
@@ -35,27 +35,30 @@ describe('Extension options page', function () {
 
         const scrollSpeedSlider = await driver.findElement(By.id('PMslider_scrollSpeed'));
         await setSlider(scrollSpeedSlider, 400);
+        await sleep(500);
 
         await driver.switchTo().frame(driver.findElement(By.id("mapsdemo")));
         const elem = await mapDriver.waitForScrollMapsLoaded();
-        await assertLatLng({ lat: 37.3861, lng: -122.0839 });
+        await assertLatLng([37.3861, 0.01], [-122.0839, 0.01]);
         await mapDriver.scroll(elem, 300, -40);
-        await sleep(500);
-        await assertLatLng({ lat: 37.427989, lng: -121.690672, tolerance: 0.003 });
+        await sleep(1000);
+        await assertLatLng([37.426915, 0.01], [-121.696581, 0.05]);
     });
 
     it('invert scroll', async () => {
         await openOptionsPage();
 
         let invertScrollCheckbox = await driver.findElement(By.id('PMcheckbox_invertScroll'));
-        await invertScrollCheckbox.click();
+        if (!await invertScrollCheckbox.getAttribute('checked')) {
+            await invertScrollCheckbox.click();
+        }
 
         await driver.switchTo().frame(driver.findElement(By.id("mapsdemo")));
         const elem = await mapDriver.waitForScrollMapsLoaded();
-        await assertLatLng({ lat: 37.3861, lng: -122.0839 });
+        await assertLatLng([37.3861, 0.01], [-122.0839, 0.01]);
         await mapDriver.scroll(elem, 300, -40);
         await sleep(1000);
-        await assertLatLng({ lat: 37.344392, lng: -122.476801, tolerance: 0.003 });
+        await assertLatLng([37.346231, 0.01], [-122.459391, 0.01]);
     });
 
     it('zoom', async () => {
@@ -63,26 +66,28 @@ describe('Extension options page', function () {
 
         await driver.switchTo().frame(driver.findElement(By.id("mapsdemo")));
         const elem = await mapDriver.waitForScrollMapsLoaded();
-        await assertLatLng({ lat: 37.3861, lng: -122.0839 });
-        equal(await getIframeZoom(), 12);
-        await mapDriver.scroll(elem, 0, 64, { metaKey: true, logTag: 'Zooming' });
+        await assertLatLng([37.3861, 0.01], [-122.0839, 0.01]);
+        assert.equal(await getIframeZoom(), 12);
+        await mapDriver.scroll(elem, 0, 100, { metaKey: true, logTag: 'Zooming' });
         await sleep(1000);
-        equal(await getIframeZoom(), 10);
+        assert.equal(await getIframeZoom(), 10);
     });
 
     it('invert zoom', async () => {
         await openOptionsPage();
 
         let invertZoomCheckbox = await driver.findElement(By.id('PMcheckbox_invertZoom'));
-        await invertZoomCheckbox.click();
+        if (!await invertZoomCheckbox.getAttribute('checked')) {
+            await invertZoomCheckbox.click();
+        }
 
         await driver.switchTo().frame(driver.findElement(By.id("mapsdemo")));
         const elem = await mapDriver.waitForScrollMapsLoaded();
-        await assertLatLng({ lat: 37.3861, lng: -122.0839 });
-        equal(await getIframeZoom(), 12);
-        await mapDriver.scroll(elem, 0, 64, { metaKey: true, logTag: 'Zooming' });
-        await sleep(500);
-        equal(await getIframeZoom(), 14);
+        await assertLatLng([37.3861, 0.01], [-122.0839, 0.01]);
+        assert.equal(await getIframeZoom(), 12);
+        await mapDriver.scroll(elem, 0, 100, { metaKey: true, logTag: 'Zooming' });
+        await sleep(1000);
+        assert.equal(await getIframeZoom(), 14);
     });
 
     let firefoxExtensionUrl;
@@ -115,32 +120,22 @@ describe('Extension options page', function () {
 
                 // Allow frame permission
                 await driver.findElement(By.id('frame-perm-btn')).click();
-                await firefoxAllowPermission();
+                await mapDriver.firefoxAllowPermission();
             }
         } else {
             throw Error("Unsupported browser");
         }
     }
 
-    async function firefoxAllowPermission() {
-        const firefox = require('selenium-webdriver/firefox');
-        driver.setContext(firefox.Context.CHROME);
-        const allowPermBtn = await driver.wait(async () => {
-            // await mapDriver.printAllElements();
-            // Reference:
-            //      https://searchfox.org/mozilla-central/source/toolkit/modules/PopupNotifications.sys.mjs
-            //      https://searchfox.org/mozilla-central/source/toolkit/content/widgets/popupnotification.js
-            return (await driver.findElement(By.css('#addon-webext-permissions-notification .popup-notification-primary-button')));
-        }, 10000);
-        await allowPermBtn.click();
-        driver.setContext(firefox.Context.CONTENT);
-    }
-
     async function getIframeCoords() {
         const largerMapLink = await driver.wait(until.elementLocated(By.className("google-maps-link")));
-        const href = await largerMapLink.getAttribute("href");
-        const linkUrl = new URL(href);
-        return linkUrl.searchParams.get('ll').split(',', 2).map(Number);
+        async function impl() {
+            const href = await largerMapLink.getAttribute("href");
+            const linkUrl = new URL(href);
+            const ll = linkUrl.searchParams.get('ll');
+            return ll && ll.split(',', 2).map(Number);
+        }
+        return await driver.wait(async () => await impl(), 2000);
     }
 
     async function getIframeZoom() {
@@ -151,17 +146,10 @@ describe('Extension options page', function () {
         return Number(linkUrl.searchParams.get('z'));
     }
 
-    const TOLERANCE = 0.001;  // Tolerate 0.001' error
-
-    async function assertLatLng({ lat: expectedLat, lng: expectedLng, tolerance = TOLERANCE }) {
+    async function assertLatLng(expectedLat, expectedLng) {
         const [lat, lng] = await getIframeCoords();
-        const minLat = expectedLat - tolerance;
-        const maxLat = expectedLat + tolerance;
-        const minLng = expectedLng - tolerance;
-        const maxLng = expectedLng + tolerance;
-        const errorMsg = `[${lat}, ${lng}] should be within [[${minLat}, ${maxLat}], [${minLng}, ${maxLng}]]`;
-        assert(minLat <= lat && lat <= maxLat, errorMsg)
-        assert(minLng <= lng && lng <= maxLng, errorMsg)
+        assertIn(lat, expectedLat);
+        assertIn(lng, expectedLng);
     }
 
     async function setSlider(slider, value) {

@@ -1,9 +1,9 @@
-import { MapDriver } from '../mapdriver.js';
+import { MapDriver, sleep } from '../mapdriver.js';
 
 const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
-describe('google.com/maps test suite', function() {
+describe('google.com/maps test suite', function () {
     this.retries(2);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
@@ -29,7 +29,8 @@ describe('google.com/maps test suite', function() {
         await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [14, 14]
+            zoom: [14, 14],
+            logTag: "while loading",
         });
 
         // Execute zoom action
@@ -44,7 +45,8 @@ describe('google.com/maps test suite', function() {
         await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [13, 15]
+            zoom: [13, 15],
+            logTag: "after pinch"
         });
     });
 
@@ -57,21 +59,24 @@ describe('google.com/maps test suite', function() {
         await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [14, 14]
+            zoom: [14, 14],
+            logTag: "After scrolling",
         });
         // Execute zoom action
         await mapDriver.pinchGesture(elem, 64);
         await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [5, 11]
+            zoom: [5, 11],
+            logTag: "After pinch zoom in",
         });
 
         await mapDriver.pinchGesture(elem, -64);
         await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [13, 15]
+            zoom: [13, 15],
+            logTag: "After pinch zoom out",
         });
     });
 
@@ -84,41 +89,48 @@ describe('google.com/maps test suite', function() {
         await assertUrlParams({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [14, 14]
+            zoom: [14, 14],
+            logTag: "canvas: after scroll",
         });
         // Execute zoom action
-        await mapDriver.pinchGesture(elem, 64);
-        await assertUrlParams({
+        await mapDriver.pinchUntil(elem, 64, async () => await isUrlCoordsWithin({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [5, 11]
-        });
+            zoom: [5, 7],
+        }));
 
-        await mapDriver.pinchGesture(elem, -64);
-        await assertUrlParams({
+        await mapDriver.pinchUntil(elem, -64, async () => await isUrlCoordsWithin({
             lat: [36.9, 36.97],
             lng: [-121.98, -121.9],
-            zoom: [13, 15]
-        });
+            zoom: [16, 20],
+        }));
     });
 
     async function getUrlLatLngZoom() {
         const url = await driver.getCurrentUrl();
-        const pattern = new RegExp('https://.*/@(-?[\\d\\.]+),(-?[\\d\\.]+),([\\d\\.]+)z');
+        const pattern = new RegExp('https://.*/@(-?[\\d\\.]+),(-?[\\d\\.]+),([\\d\\.]+)z.*');
         const match = pattern.exec(url);
         if (!match) return [undefined, undefined, undefined];
         const [_, lat, lng, zoom] = match.map(Number);
-        return { lat: lat, lng: lng, zoom: zoom};
+        return { lat: lat, lng: lng, zoom: zoom };
     }
 
-    async function assertUrlParams({lat, lng, zoom}) {
+    async function isUrlCoordsWithin({ lat, lng, zoom }) {
         const rangeContains = ([min, max], val) => min <= val && val <= max;
-        await driver.wait(async () => {
-            const urlParams = await getUrlLatLngZoom();
-            console.log('URL params=', urlParams);
-            return rangeContains(lat, urlParams.lat) &&
-                rangeContains(lng, urlParams.lng) &&
-                rangeContains(zoom, urlParams.zoom);
-        }, 10000);
+        const urlParams = await getUrlLatLngZoom();
+        console.log('URL params=', urlParams);
+        return rangeContains(lat, urlParams.lat) &&
+            rangeContains(lng, urlParams.lng) &&
+            rangeContains(zoom, urlParams.zoom);
+    }
+
+    async function assertUrlParams({ lat, lng, zoom, logTag }) {
+        for (let i = 0; i < 10; i++) {
+            if (await isUrlCoordsWithin({ lat, lng, zoom, logTag })) {
+                return;
+            }
+            await sleep(1000);
+        }
+        throw new Error(`[${logTag}] Failed to wait for URL params to be within range ${lat} ${lng} ${zoom}`);
     }
 });

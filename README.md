@@ -28,6 +28,3 @@ Individual test fails can be run using `mocha` directly:
 ```sh
 BROWSER=chrome npx mocha test/auto/google_com_travel.js
 ```
-
-# TODO:
-- Firefox tests are still failing for options page

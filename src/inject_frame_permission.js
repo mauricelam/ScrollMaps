@@ -14,6 +14,7 @@ if (window.SM_FRAME_INJECT === undefined) {
         for (const frame of iframes) {
             if (!frame.hasAttribute('data-scrollmaps-frame')) {
                 const container = document.createElement('div');
+                container.setAttribute('data-scrollmaps-perm-button', '1');
                 container.style.position = 'relative';
                 const shadow = container.attachShadow({ mode: "open" });
                 const btn = document.createElement('div');
