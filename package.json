@@ -21,7 +21,7 @@
     "chai": "^4.3.7",
     "chromedriver": "^120.0.1",
     "del": "^7.0.0",
-    "geckodriver": "^3.2.0",
+    "geckodriver": "^4.3.1",
     "gulp": "^4.0.2",
     "gulp-concat": "^2.6.1",
     "gulp-mocha": "^8.0.0",

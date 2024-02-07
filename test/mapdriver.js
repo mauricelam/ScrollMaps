@@ -108,7 +108,11 @@ class MapDriver {
             return (await this.driver.findElements(By.css('[data-scrollmaps]')))[0];
         }, timeout);
         // console.log('elem', elem)
-        await this.driver.wait(async () => await elem.getAttribute('data-scrollmaps') === 'enabled', timeout);
+        await this.driver.wait(
+            async () => await elem.getAttribute('data-scrollmaps') === 'enabled',
+            timeout,
+            "Unable to wait for [data-scrollmaps] element"
+        );
         return elem;
     }
 
@@ -141,7 +145,7 @@ class MapDriver {
                 console.log('pointElem', pointElem);
                 return pointElem instanceof HTMLCanvasElement && !!pointElem.getContext(contextType);
             }, r, contextType);
-        }, 10000);
+        }, 10000, "Unable to wait for canvas map");
         return elem;
     }
 
@@ -154,6 +158,22 @@ class MapDriver {
             // browserScale: browserScale,
             ...opts
         })
+    }
+
+    async pinchUntil(elem, deltaY, until, opts = {maxTries: 10}) {
+        for (let i = 0; i < opts.maxTries; i++) {
+            await this.scroll(elem, 0, deltaY, {
+                ctrlKey: true,
+                logTag: 'Zooming',
+                // browserScale: browserScale,
+                ...opts
+            });
+            if (await until()) {
+                return i;
+            }
+            await sleep(500);
+        }
+        throw Error("Unable to meet pinch until criteria");
     }
 
     async scrollIntoView(elem) {
@@ -187,7 +207,7 @@ class MapDriver {
                         ...opts
                     }));
                 };
-                const chunks = Math.round(Math.max(Math.abs(dx) / 9, Math.abs(dy) / 9));
+                const chunks = Math.round(Math.max(Math.abs(dx) / 16, Math.abs(dy) / 16));
                 const browserScale = opts.browserScale || 1;
                 for (let i = 0; i < chunks; i++) {
                     wheel(dx / chunks * browserScale, dy / chunks * browserScale);
@@ -208,13 +228,28 @@ class MapDriver {
             .perform();
     }
 
+    async firefoxAllowPermission() {
+        const firefox = await import('selenium-webdriver/firefox.js');
+        this.driver.setContext(firefox.Context.CHROME);
+        const allowPermBtn = await this.driver.wait(async () => {
+            // await mapDriver.printAllElements();
+            // Reference:
+            //      https://searchfox.org/mozilla-central/source/toolkit/modules/PopupNotifications.sys.mjs
+            //      https://searchfox.org/mozilla-central/source/toolkit/content/widgets/popupnotification.js
+            return (await this.driver.findElement(By.css('#addon-webext-permissions-notification .popup-notification-primary-button')));
+        }, 5000, "Unable to find allow permission button in the Firefox browser chrome");
+        await allowPermBtn.click();
+        this.driver.setContext(firefox.Context.CONTENT);
+    }
+
     /**
      * Check against the ruler at the bottom to see if the zoom level is roughly as expected.
      */
     async assertRuler(expectedKm) {
         const elem = await this.waitForScrollMapsLoaded();
         const km = await this.driver.wait(async () =>
-            elem.findElement(By.xpath('//*[@class="gm-style-cc"]//*[contains(text(), "km")]')), 10000);
+            elem.findElement(By.xpath('//*[@class="gm-style-cc"]//*[contains(text(), "km")]')), 10000,
+            "Unable to find Google Maps ruler");
         const kmText = await km.getText();
         assert.equal(kmText.trim(), expectedKm);
     }
@@ -234,13 +269,13 @@ class MapDriver {
             this.driver.setContext(firefox.Context.CHROME);
             const extensionsButton = await this.driver.wait(async () => {
                 return await this.driver.findElement(By.id("unified-extensions-button"));
-            }, 10000);
+            }, 10000, "Unable to find firefox unified extension button");
             await extensionsButton.click();
             const browserAction = await this.driver.wait(async () => {
                 // await this.printAllElements();
                 const extensionButtonId = this.extras.extensionId.replace('@', '_') + '-BAP';
                 return (await this.driver.findElement(By.id(extensionButtonId)));
-            }, 10000);
+            }, 10000, "Unable to find ScrollMaps browser action button");
             await browserAction.click();
             this.driver.setContext(firefox.Context.CONTENT);
         } else {
@@ -266,5 +301,10 @@ function sleep(timeout) {
     return new Promise((resolve, reject) => setTimeout(resolve, timeout));
 }
 
+function assertIn(value, [expected, tolerance], opts = { message: `${value} not within ${expected} +- ${tolerance}` }) {
+    assert(expected - tolerance < value && value < expected + tolerance, opts.message)
+}
+
 exports.MapDriver = MapDriver;
 exports.sleep = sleep;
+exports.assertIn = assertIn;
