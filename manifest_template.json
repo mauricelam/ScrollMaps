@@ -4,6 +4,12 @@
   "manifest_version": 3,
   "minimum_chrome_version": "93",
   "description": "Allow you to use two finger scroll on your Mac trackpad in Google Maps.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{c0dd22ca-492e-4bcf-ab68-53c6633892fe}",
+      "strict_min_version": "109.0"
+    }
+  },
   "background": {
     "scripts": ["background.min.js"]
   },
