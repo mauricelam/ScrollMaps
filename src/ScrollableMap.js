@@ -77,13 +77,6 @@ if (window.ScrollableMap === undefined) {
             self.type = type;
             div.addEventListener('wheel', self.handleWheelEvent, true);
 
-            window.addEventListener('mousemove', function (e) {
-                if (e.detail !== 88) {
-                    var event = new CustomEvent('realmousemove', { 'detail': [e.pageX, e.pageY] });
-                    e.target.dispatchEvent(event);
-                }
-            }, true);
-
             mapClicked = false;
 
             Pref.onPreferenceChanged(null, (key, value) => {
@@ -144,6 +137,22 @@ if (window.ScrollableMap === undefined) {
                 // For the case where ScrollMap is loaded in an iframe, and that iframe is removed.
                 chrome.runtime.sendMessage({ action: 'mapUnloaded' });
             });
+
+            window.addEventListener('mousemove', function (e) {
+                if (e.detail !== 88) {
+                    if (lastTarget) {
+                        dragger.simulateMouseUp(lastTarget);
+                    }
+                }
+            }, true);
+
+            window.addEventListener('mousemove', function (e) {
+                if (e.detail !== 88) {
+                    if (e.target.parentNode.style.cursor === 'auto') {
+                        dragger.lastAutoCursorPos = [e.clientX, e.clientY];
+                    }
+                }
+            }, false);
         }
 
         // A map is activatable when
@@ -166,13 +175,6 @@ if (window.ScrollableMap === undefined) {
         }
 
         var dragger = new DragSimulator({});
-
-        self.realMouseMoved = function (e) {
-            if (lastTarget) {
-                dragger.simulateMouseUp(lastTarget);
-            }
-        };
-        window.addEventListener('realmousemove', self.realMouseMoved, true);
 
         self.move = function (point, dx, dy, target) {
             dragger.simulateDrag(target, point, dx, dy);
@@ -282,10 +284,11 @@ if (window.ScrollableMap === undefined) {
                 return;
             }
 
-            if (lastTarget && div.contains(lastTarget))
+            if (lastTarget && div.contains(lastTarget)) {
                 target = lastTarget;
-            else
+            } else {
                 lastTarget = target;
+            }
 
             var destinationState = (e.metaKey || e.ctrlKey || e.altKey) ? States.zooming : States.scrolling;
             if (isAccelerating || state == destinationState) {
@@ -311,8 +314,10 @@ if (window.ScrollableMap === undefined) {
                         averageX.push(e.deltaX); averageY.push(e.deltaY);
 
                         const speedFactor = (prefs['scrollSpeed'] / 100) * (prefs['invertScroll'] ? 1 : -1);
-                        const dx = averageX.getAverage() * speedFactor;
-                        const dy = averageY.getAverage() * speedFactor;
+                        let dx = averageX.getAverage() * speedFactor;
+                        let dy = averageY.getAverage() * speedFactor;
+                        dx = dx * Math.pow(Math.abs(dx), 0.20) * 0.80;
+                        dy = dy * Math.pow(Math.abs(dy), 0.20) * 0.80;
 
                         if (dx !== 0 || dy !== 0) {
                             self.move(mousePos, dx, dy, target);
@@ -387,7 +392,7 @@ if (window.ScrollableMap === undefined) {
         getAverage(time) {
             time = time || Date.now();
             if (this.lastDataTime === 0) {
-                return 0;
+                return this.data;
             }
             return this.data * Math.pow(SM_LOW_PASS_FILTER_SMOOTHING, (time - this.lastDataTime) / 20);
         }
@@ -496,6 +501,18 @@ if (window.ScrollableMap === undefined) {
 
         simulateMouseUp(target) {
             if (!this.mouseDownPoint) return;
+
+            // If the minimum drag distance is not reached, dispatch an extra move event
+            let dx = this.simulatedMousePoint[0] - this.mouseDownPoint[0];
+            let dy = this.simulatedMousePoint[1] - this.mouseDownPoint[1];
+            const minDragDistance = this.opts.minDragDistance;
+            if (Math.abs(dx) < minDragDistance && Math.abs(dy) < minDragDistance) {
+                // scale to make sure at least one of them is > minDragDistance
+                // this ensures it's treated as a drag, not a click
+                const scale = (minDragDistance * 1.05) / Math.max(Math.abs(dx), Math.abs(dy), 1);
+                this.simulateMouseMove(target, dx * scale, dy * scale);
+            }
+
             var upEvent = new MouseEvent('mouseup', {
                 'bubbles': true,
                 'cancelable': true,
@@ -506,6 +523,20 @@ if (window.ScrollableMap === undefined) {
                 'buttons': 0
             });
             target.dispatchEvent(upEvent);
+
+            // Trigger a move event so that map updates the cursor based on the current cursor position.
+            const moveEvent = new MouseEvent('mousemove', {
+                'bubbles': true,
+                'cancelable': false,
+                'detail': 88,
+                'clientX': this.mouseDownPoint[0],
+                'clientY': this.mouseDownPoint[1],
+                'button': 0,
+                'buttons': 0
+            })
+            target.dispatchEvent(moveEvent);
+
+            this.lastAutoCursorPos = [this.simulatedMousePoint[0], this.simulatedMousePoint[1]];
             this.mouseDownPoint = null;
         }
 
@@ -525,18 +556,15 @@ if (window.ScrollableMap === undefined) {
         }
 
         simulateDrag(target, point, dx, dy) {
-            var minDragDistance = this.opts.minDragDistance;
-            var diffX = Math.abs(dx), diffY = Math.abs(dy);
-            if (diffX < minDragDistance && diffY < minDragDistance) {
-                // scale to make sure at least one of them is > minDragDistance
-                // this ensures it's treated as a drag, not a click
-                var scale = (minDragDistance * 1.05) / Math.max(diffX, diffY);
-                dx *= scale;
-                dy *= scale;
-            }
-
             if (!this.mouseDownPoint) {
-                this.simulateMouseDown(target, point);
+                if (target.parentNode.style.cursor === 'pointer' && this.lastAutoCursorPos) {
+                    // If the cursor style is pointer, we might be hovering on a route. Dragging
+                    // will alter the route, which we don't want, so use the last mouse down point
+                    // instead.
+                    this.simulateMouseDown(target, this.lastAutoCursorPos);
+                } else {
+                    this.simulateMouseDown(target, point);
+                }
             }
 
             this.simulateMouseMove(target, dx, dy);
