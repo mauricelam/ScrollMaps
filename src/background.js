@@ -50,6 +50,21 @@ async function injectScript(tabId, frameId) {
             INJECT_EXPECTED_ERRORS
         ),
         checkErrors(
+            chrome.scripting.executeScript({
+                target: {
+                    tabId: tabId,
+                    frameIds: frameId === 'all' ? null : [frameId],
+                    allFrames: frameId === 'all',
+                },
+                files: [
+                    'inject_main.min.js',
+                ],
+                world: "MAIN",
+            }),
+            'inject main script',
+            INJECT_EXPECTED_ERRORS
+        ),
+        checkErrors(
             chrome.scripting.insertCSS({
                 files: ['src/inject_everywhere.css'],
                 target: {

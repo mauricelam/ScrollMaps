@@ -148,7 +148,7 @@ if (window.ScrollableMap === undefined) {
 
             window.addEventListener('mousemove', function (e) {
                 if (e.detail !== 88) {
-                    if (e.target.parentNode.style.cursor === 'auto') {
+                    if (e.target.parentNode.style.cursor !== 'pointer') {
                         dragger.lastAutoCursorPos = [e.clientX, e.clientY];
                     }
                 }
@@ -204,6 +204,7 @@ if (window.ScrollableMap === undefined) {
                 }
                 let e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
                 target.dispatchEvent(e);
+                target.dispatchEvent(new WheelEvent('mousewheel', e))
                 return;
             } else {
                 console.warn('ScrollMaps unexpected event', originalEvent);
@@ -232,6 +233,7 @@ if (window.ScrollableMap === undefined) {
                 }
                 let e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
                 target.dispatchEvent(e);
+                target.dispatchEvent(new WheelEvent('mousewheel', e))
                 return;
             } else {
                 console.warn('ScrollMaps unexpected event', originalEvent);
@@ -240,12 +242,11 @@ if (window.ScrollableMap === undefined) {
 
         function createBackdoorWheelEvent(originalEvent, zoomIn, scale) {
             if (originalEvent instanceof WheelEvent) {
-                var init = {};
-                for (var i in originalEvent) {
+                const init = {};
+                for (const i in originalEvent) {
                     init[i] = originalEvent[i];
                 }
-                init.screenX = -88;
-                init.screenY = -88;
+                init.detail = 10888;
 
                 if (zoomIn && init.deltaY > 0) {
                     init.deltaY *= -1;
@@ -272,7 +273,7 @@ if (window.ScrollableMap === undefined) {
                 e.stopPropagation(); return;
             }
 
-            if (e.screenX == -88 && e.screenY == -88) {
+            if (e.detail == 10888) {
                 return; // backdoor for zooming
             }
 
@@ -347,6 +348,7 @@ if (window.ScrollableMap === undefined) {
     ScrollableMap.TYPE_API = 2;
     ScrollableMap.TYPE_NEWWEB = 3;
     ScrollableMap.TYPE_STREETVIEW_API = 4;
+    ScrollableMap.TYPE_ARCGIS = 4;
 
 
     const DELTA_PER_ZOOM_LEVEL = 50;
@@ -484,10 +486,18 @@ if (window.ScrollableMap === undefined) {
             }
         }
 
+        // Dispatch mouse and pointer events
+        _dispatchPointerEvent(target, type, opts) {
+            const mouseEvent = new MouseEvent('mouse' + type, opts);
+            const pointerEvent = new PointerEvent('pointer' + type, { pointerId: 10088, ...opts });
+            target.dispatchEvent(mouseEvent);
+            target.dispatchEvent(pointerEvent);
+        }
+
         simulateMouseDown(target, point) {
             this.mouseDownPoint = [point[0], point[1]];  // Deep copy
             this.simulatedMousePoint = point;
-            var downEvent = new MouseEvent('mousedown', {
+            const eventOpts = {
                 'bubbles': true,
                 'cancelable': true,
                 'detail': 1,
@@ -495,8 +505,8 @@ if (window.ScrollableMap === undefined) {
                 'clientY': point[1],
                 'button': 0,
                 'buttons': 1
-            });
-            target.dispatchEvent(downEvent);
+            };
+            this._dispatchPointerEvent(target, 'down', eventOpts);
         }
 
         simulateMouseUp(target) {
@@ -513,7 +523,7 @@ if (window.ScrollableMap === undefined) {
                 this.simulateMouseMove(target, dx * scale, dy * scale);
             }
 
-            var upEvent = new MouseEvent('mouseup', {
+            this._dispatchPointerEvent(target, 'up', {
                 'bubbles': true,
                 'cancelable': true,
                 'detail': 1,
@@ -521,11 +531,10 @@ if (window.ScrollableMap === undefined) {
                 'clientY': this.simulatedMousePoint[1],
                 'button': 0,
                 'buttons': 0
-            });
-            target.dispatchEvent(upEvent);
+            })
 
             // Trigger a move event so that map updates the cursor based on the current cursor position.
-            const moveEvent = new MouseEvent('mousemove', {
+            this._dispatchPointerEvent(target, 'move', {
                 'bubbles': true,
                 'cancelable': false,
                 'detail': 88,
@@ -534,7 +543,6 @@ if (window.ScrollableMap === undefined) {
                 'button': 0,
                 'buttons': 0
             })
-            target.dispatchEvent(moveEvent);
 
             this.lastAutoCursorPos = [this.simulatedMousePoint[0], this.simulatedMousePoint[1]];
             this.mouseDownPoint = null;
@@ -543,7 +551,7 @@ if (window.ScrollableMap === undefined) {
         simulateMouseMove(target, dx, dy) {
             this.simulatedMousePoint[0] += dx;
             this.simulatedMousePoint[1] += dy;
-            var moveEvent = new MouseEvent('mousemove', {
+            const eventOpts = {
                 'bubbles': true,
                 'cancelable': false,
                 'detail': 88,
@@ -551,8 +559,8 @@ if (window.ScrollableMap === undefined) {
                 'clientY': this.simulatedMousePoint[1],
                 'button': 0,
                 'buttons': 1  // Left mouse button should be down when simulating drag-move
-            })
-            target.dispatchEvent(moveEvent);
+            };
+            this._dispatchPointerEvent(target, 'move', eventOpts);
         }
 
         simulateDrag(target, point, dx, dy) {

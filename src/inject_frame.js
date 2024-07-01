@@ -29,10 +29,12 @@ if (window.SM_FRAME === undefined) {
         }
     }
 
-    if (document.readyState === "complete"
-        || document.readyState === "loaded"
-        || document.readyState === "interactive") {
-        injectFrame();
+    if (Permission.isMapsSite(document.URL)) {
+        if (document.readyState === "complete"
+            || document.readyState === "loaded"
+            || document.readyState === "interactive") {
+            injectFrame();
+        }
+        window.addEventListener('DOMContentLoaded', injectFrame, false);
     }
-    window.addEventListener('DOMContentLoaded', injectFrame, false);
 }

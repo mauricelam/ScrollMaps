@@ -185,7 +185,12 @@ class BuildContext {
                 "src/pref.js",
                 "src/Scrollability.js",
                 "src/ScrollableMap.js",
+                "src/permission.js",
+                `${this.pluginDir()}/src/domains.js`,
                 "src/inject_frame.js"
+            ],
+            'inject_main': [
+                "src/inject_main.js",
             ],
             'background': [
                 "src/pref.js",
