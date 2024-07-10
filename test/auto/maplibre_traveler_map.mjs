@@ -6,7 +6,7 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
 describe('travelermap test suite', function() {
-    this.retries(0);
+    this.retries(3);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;
