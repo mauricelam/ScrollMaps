@@ -33,6 +33,7 @@ class MapDriver {
                 .setChromeOptions(
                     new chrome.Options()
                         .addArguments(`load-extension=${process.cwd()}/gen/plugin-10000-chrome`, 'window-size=800,600')
+                        .addArguments(`disable-features=SidePanelPinning`)
                 )
                 .build();
         } else if (process.env.BROWSER === 'edge') {
@@ -302,7 +303,7 @@ function sleep(timeout) {
 }
 
 function assertIn(value, [expected, tolerance], opts = { message: `${value} not within ${expected} +- ${tolerance}` }) {
-    assert(expected - tolerance < value && value < expected + tolerance, opts.message)
+    assert(expected - tolerance <= value && value <= expected + tolerance, opts.message)
 }
 
 exports.MapDriver = MapDriver;
