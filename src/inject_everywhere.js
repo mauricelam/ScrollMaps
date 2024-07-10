@@ -23,63 +23,10 @@ if (window.SM_INJECT === undefined) {
             }
             return false;
         }
-    }
 
-    class GoogleMapFinder extends AbstractMapFinder {
-        static _findGmStyleMap() {
-            return Array.from(document.querySelectorAll('.gm-style'))
-                .filter(container =>
-                    this._querySrc(container, 'img',
-                        [
-                            '//maps.googleapis.com/maps/',
-                            '//www.google.com/maps/',
-                            '//maps.google.com/maps/'
-                        ])
-                    || container.querySelector('canvas'))
-                .map(container => container.parentNode);
-        }
-
-        static _findFallbackMap() {
+        static _findTiledMap(selector, filter) {
             let foundImages = Array.from(
-                document.querySelectorAll('img[src*="//maps.googleapis.com/maps/"]'));
-            // To handle multiple maps on the same page, we make the threshold
-            // number of images / 4. We consider the common ancestor to be found below
-            // that threshold.
-            let foundThreshold = foundImages.length / 4;
-            for (let i = 0; i < 5; i++) {
-                // Walk maximum 5 levels to find the common ancestor
-                foundImages = foundImages.map(img => img.parentNode);
-                const foundSet = new Set(foundImages);
-                if (foundSet.size <= foundThreshold) {
-                    return Array.from(foundSet)
-                        .map(container => this._matchAncestor(container,
-                            node => isVisible(node)
-                                && node.offsetHeight > 1
-                                && node.offsetWidth > 1));
-                }
-            }
-            return [];
-
-            function isVisible(node) {
-                return window.getComputedStyle(node).display !== "none";
-            }
-        }
-
-        static findMaps() {
-            let mapContainers = GoogleMapFinder._findGmStyleMap();
-            if (mapContainers.length > 0) {
-                return mapContainers;
-            }
-
-            mapContainers = GoogleMapFinder._findFallbackMap();
-            return mapContainers;
-        }
-    }
-
-    class ArcGisFinder extends AbstractMapFinder {
-        static findMaps() {
-            let foundImages = Array.from(
-                document.querySelectorAll('img[src*=".arcgisonline.com/"]'));
+                document.querySelectorAll(selector));
             // To handle multiple maps on the same page, we make the threshold
             // number of images / 4. We consider the common ancestor to be found below
             // that threshold.
@@ -94,7 +41,7 @@ if (window.SM_INJECT === undefined) {
                             node => isVisible(node)
                                 && node.offsetHeight > 1
                                 && node.offsetWidth > 1
-                                && node.getAttribute("id") == "map_layers"
+                                && (filter === undefined || filter(node))
                         ))
                         .filter(n => n);
                 }
@@ -107,23 +54,112 @@ if (window.SM_INJECT === undefined) {
         }
     }
 
+    class GoogleMapFinder extends AbstractMapFinder {
+        static _findGmStyleMap() {
+            return Array.from(document.querySelectorAll('.gm-style:has(img)'))
+                .filter(container =>
+                    this._querySrc(container, 'img',
+                        [
+                            '//maps.googleapis.com/maps/',
+                            '//www.google.com/maps/',
+                            '//maps.google.com/maps/'
+                        ])
+                )
+                .map(container => container.parentNode);
+        }
+
+        static _findCanvasMap() {
+            return Array.from(document.querySelectorAll('.gm-style:has(canvas)'))
+                .map(container => container.parentNode);
+        }
+
+        static _findFallbackMap() {
+            return GoogleMapFinder._findTiledMap('img[src*="//maps.googleapis.com/maps/"]');
+        }
+
+        static findMaps() {
+            let mapContainers = GoogleMapFinder._findCanvasMap();
+            if (mapContainers.length > 0) {
+                return mapContainers;
+            }
+
+            mapContainers = GoogleMapFinder._findGmStyleMap();
+            if (mapContainers.length > 0) {
+                return mapContainers;
+            }
+
+            mapContainers = GoogleMapFinder._findFallbackMap();
+            return mapContainers;
+        }
+    }
+
+    // https://developers.arcgis.com/javascript/latest/
+    class ArcGisFinder extends AbstractMapFinder {
+        static findMaps() {
+            return [
+                ...document.querySelectorAll('.esri-view:has(.esri-view-surface > canvas)'),
+                ...ArcGisFinder._findTiledMap(
+                    'img[src*=".arcgisonline.com/"]',
+                    (node) => node.getAttribute("id") == "map_layers")
+            ];
+        }
+    }
+
+    // https://docs.mapbox.com/
+    // https://leafletjs.com/
+    class MapBoxFinder extends AbstractMapFinder {
+        static findMaps() {
+            return [...document.querySelectorAll('.mapboxgl-map:has(canvas.mapboxgl-canvas)')]
+                .map((elem) => elem.closest('.leaflet-container') || elem);
+        }
+    }
+
+    // https://www.openstreetmap.org/
+    class OpenStreetMapFinder extends AbstractMapFinder {
+        static findMaps() {
+            return OpenStreetMapFinder._findTiledMap('img[src*="//tile.openstreetmap.org"]');
+        }
+    }
+
+    // https://developer.apple.com/documentation/mapkitjs/
+    class AppleMapKitFinder extends AbstractMapFinder {
+        static findMaps() {
+            return Array.from(document.querySelectorAll('.mk-map-view:has(canvas)'));
+        }
+    }
+
+    // https://openlayers.org/
+    class OpenLayersMapFinder extends AbstractMapFinder {
+        static findMaps() {
+            return Array.from(document.querySelectorAll('.ol-viewport:has(canvas)'));
+        }
+    }
+
+    // https://maplibre.org/maplibre-gl-js/docs/, including Azure Maps.
+    class MapLibreFinder extends AbstractMapFinder {
+        static findMaps() {
+            return Array.from(document.querySelectorAll('.maplibregl-map:has(canvas.maplibregl-canvas)'));
+        }
+    }
+
     async function scrollifyExistingMaps() {
-        const googleMaps = GoogleMapFinder.findMaps();
-        const arcgisMaps = ArcGisFinder.findMaps();
-        if (DEBUG) console.log('Found Google maps in page?', googleMaps, arcgisMaps);
-        if (googleMaps.length <= 0 && arcgisMaps.length <= 0) {
+        const maps = [
+            ...GoogleMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_GOOGLE_MAPS_API } }),
+            ...ArcGisFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_ARCGIS } }),
+            ...MapBoxFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPBOX } }),
+            ...OpenStreetMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_OPEN_STREET_MAP } }),
+            ...AppleMapKitFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_APPLE_MAPKIT } }),
+            ...MapLibreFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
+            ...OpenLayersMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
+        ];
+        if (DEBUG) console.log('Found maps in page?', maps);
+        if (maps.length <= 0) {
             return false;
         }
-        for (const map of googleMaps) {
+        const options = await Pref.getAllOptions();
+        for (const { map, type } of maps) {
             if (!map.hasAttribute('data-scrollmaps')) {
-                new ScrollableMap(map, ScrollableMap.TYPE_API, SM_INJECT.count++, await Pref.getAllOptions());
-            } else {
-                if (DEBUG) console.log('Skipping already scrollified map');
-            }
-        }
-        for (const map of arcgisMaps) {
-            if (!map.hasAttribute('data-scrollmaps')) {
-                new ScrollableMap(map, ScrollableMap.TYPE_ARCGIS, SM_INJECT.count++, await Pref.getAllOptions());
+                new ScrollableMap(map, type, SM_INJECT.count++, options);
             } else {
                 if (DEBUG) console.log('Skipping already scrollified map');
             }

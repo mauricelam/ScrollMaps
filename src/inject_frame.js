@@ -7,7 +7,7 @@ if (window.SM_FRAME === undefined) {
     async function injectMaps() {
         const elem = document.getElementById('content-container');
         if (elem) {
-            new ScrollableMap(elem, ScrollableMap.TYPE_NEWWEB, SM_FRAME.count++, await Pref.getAllOptions());
+            new ScrollableMap(elem, ScrollableMap.TYPE_GOOGLE_MAPS_WEB, SM_FRAME.count++, await Pref.getAllOptions());
         } else if (retries > 0) {
             // Retry a few times because the new map canvas is not installed on DOM load
             retries--;
@@ -21,7 +21,7 @@ if (window.SM_FRAME === undefined) {
         if (elem) {
             new ScrollableMap(
                 elem,
-                (SM_FRAME.inframe) ? ScrollableMap.TYPE_IFRAME : ScrollableMap.TYPE_WEB,
+                (SM_FRAME.inframe) ? ScrollableMap.TYPE_GOOGLE_MAPS_IFRAME : ScrollableMap.TYPE_GOOGLE_MAPS_LEGACY,
                 SM_FRAME.count++,
                 await Pref.getAllOptions());
         } else if (!SM_FRAME.inframe) {

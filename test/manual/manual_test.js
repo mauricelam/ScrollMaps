@@ -43,6 +43,7 @@ describe('Manual test suite', function() {
     })
 
     const TEST_SITES = [
+        // Google maps
         'https://www.google.com/maps?force=webgl',
         'https://developers.google.com/maps/documentation/javascript/styling',
         'https://developers.google.com/maps/documentation/embed/guide',
@@ -58,14 +59,30 @@ describe('Manual test suite', function() {
         'https://www.yelp.com/search?find_desc=Restaurants&find_loc=Chicago%2C%20IL',
         'https://www.google.com/travel/explore',
         'https://www.heywhatsthat.com/?view=P5XIGCII',
+        // ArcGis
+        // More demos at https://www.arcgis.com/apps/instant/filtergallery/index.html?appid=2833a9ccc8e648bc9bb8383c00694acf
         'https://www.arcgis.com/home/webmap/viewer.html',
         'https://sccplanning.maps.arcgis.com/apps/webappviewer/index.html?id=7d5a189b138e4aa3bea6dc0514f0b85b',
+        'https://geoxc-apps2.bd.esri.com/LivingAtlas/GlobalLandCoverChangePrediction/index.html',
+        'https://geoxc-apps2.bd.esri.com/Analysis/DistanceToInfrastructure/index.html',
+        // Mapbox
+        'https://docs.mapbox.com/mapbox-gl-js/example/simple-map/',
+        'http://en.parkopedia.com/parking/san_francisco_ca_united_states/?ac=1&country=US&lat=37.7749295&lng=-122.41941550000001',
+        'https://labs.mapbox.com/standard-style/#16.2/48.859605/2.293506/-20/62',
+        'https://www.wunderground.com/wundermap',
+        'https://www.napavalley.com/businesses/42931/napa-s-riverfront',
+        // Apple MapKit
+        'https://duckduckgo.com/?q=maps&iaxm=maps&source=maps',
+        'https://maps.apple.com/imagecollection/map?path=london',
+        'https://developer.apple.com/maps/web/',
+        // MapLibre
+        // More at https://github.com/maplibre/awesome-maplibre?tab=readme-ov-file#users
+        'https://maplibre.org/maplibre-gl-js/docs/',
+        'https://travelermap.net/parks/usa#map=10.2/37.6926/-121.9915',
+        'https://samples.azuremaps.com/animations/morph-shape-animation',
+        // OpenLayer
+        'https://openlayers.org/en/latest/examples/mapbox-vector-tiles-advanced.html',
     ]
-
-    // const MAPBOX_TEST_SITES = [
-    //     'http://en.parkopedia.com/parking/san_francisco_ca_united_states/?ac=1&country=US&lat=37.7749295&lng=-122.41941550000001',
-    //     'https://www.wunderground.com/'
-    // ];
 
     for (const site of TEST_SITES) {
         it(`Site: ${site}`, async () => {
