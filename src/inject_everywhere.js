@@ -117,7 +117,7 @@ if (window.SM_INJECT === undefined) {
     // https://www.openstreetmap.org/
     class OpenStreetMapFinder extends AbstractMapFinder {
         static findMaps() {
-            return OpenStreetMapFinder._findTiledMap('img[src*="//tile.openstreetmap.org"]');
+            return OpenStreetMapFinder._findTiledMap('img[src*="tile.openstreetmap.org"]');
         }
     }
 

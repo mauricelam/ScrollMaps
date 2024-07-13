@@ -68,6 +68,7 @@ if (window.ScrollableMap === undefined) {
                 transition: opacity 0.3s 0s, background 0.3s 0s;
                 opacity: 0;
                 text-shadow: 0 0 3px #5fb4fa;
+                pointer-events: none;
             }
             [data-scrollmaps].scrollMapsActivatable:hover::after {
                 outline: 3px solid rgba(33, 150, 243, 0.5);
@@ -162,6 +163,7 @@ if (window.ScrollableMap === undefined) {
                 if (_isMapActivatable()) {
                     if (event) event.stopPropagation();
                     mapClicked = true;
+                    div.focus();
                 }
                 refreshActivationAffordance();
                 lastTarget = null;
@@ -257,6 +259,7 @@ if (window.ScrollableMap === undefined) {
                 let scale = 1;
                 if (originalEvent.ctrlKey) {
                     scale = prefs['zoomSpeed'] / 100;
+                    if (type === ScrollableMap.TYPE_OPEN_STREET_MAP) scale *= 0.2;
                     if (type !== ScrollableMap.TYPE_GOOGLE_MAPS_WEB) scale *= 3;
                     if (type === ScrollableMap.TYPE_GOOGLE_MAPS_LEGACY
                         || type === ScrollableMap.TYPE_GOOGLE_MAPS_API
@@ -290,6 +293,7 @@ if (window.ScrollableMap === undefined) {
                 let scale = 1;
                 if (originalEvent.ctrlKey) {
                     scale = prefs['zoomSpeed'] / 100;
+                    if (type === ScrollableMap.TYPE_OPEN_STREET_MAP) scale *= 0.2;
                     if (type !== ScrollableMap.TYPE_GOOGLE_MAPS_WEB) scale *= 3;
                     if (type === ScrollableMap.TYPE_GOOGLE_MAPS_LEGACY
                         || type === ScrollableMap.TYPE_GOOGLE_MAPS_API
