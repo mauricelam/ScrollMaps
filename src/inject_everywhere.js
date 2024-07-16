@@ -184,8 +184,8 @@ if (window.SM_INJECT === undefined) {
     const THROTTLE_TIME_MS = 2000;
     window.addEventListener('wheel', async (e) => {
         if (e.timeStamp - lastEventTime > THROTTLE_TIME_MS) {
-            await scrollifyExistingMaps();
             lastEventTime = e.timeStamp;
+            await scrollifyExistingMaps();
         }
     }, true);
     poll(scrollifyExistingMaps, 2000, 3);

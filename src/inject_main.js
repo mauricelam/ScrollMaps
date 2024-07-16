@@ -1,3 +1,5 @@
+// Code injected into the "MAIN" execution world. (See chrome.scripting.ExecutionWorld)
+
 if (window.SM_INJECT_MAIN === undefined) {
     window.SM_INJECT_MAIN = true;
 

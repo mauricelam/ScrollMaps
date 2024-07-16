@@ -50,21 +50,6 @@ async function injectScript(tabId, frameId) {
             INJECT_EXPECTED_ERRORS
         ),
         checkErrors(
-            chrome.scripting.executeScript({
-                target: {
-                    tabId: tabId,
-                    frameIds: frameId === 'all' ? null : [frameId],
-                    allFrames: frameId === 'all',
-                },
-                files: [
-                    'inject_main.min.js',
-                ],
-                world: "MAIN",
-            }),
-            'inject main script',
-            INJECT_EXPECTED_ERRORS
-        ),
-        checkErrors(
             chrome.scripting.insertCSS({
                 files: ['src/inject_everywhere.css'],
                 target: {
@@ -267,6 +252,23 @@ function framePermissionGranted(tabId) {
     injectScript(tabId, 'all').then((r) => console.log(r));
 }
 
+async function injectMainScript(sender) {
+    return await checkErrors(
+        chrome.scripting.executeScript({
+            target: {
+                tabId: sender.tab.id,
+                frameIds: [sender.frameId],
+            },
+            files: [
+                'inject_main.min.js',
+            ],
+            world: "MAIN",
+        }),
+        'inject main script',
+        INJECT_EXPECTED_ERRORS
+    );
+}
+
 
 chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
@@ -281,6 +283,7 @@ chrome.runtime.onMessage.addListener(
                 } else {
                     refreshScrollMapsStatus(sender.tab.id);
                 }
+                injectMainScript(sender);
             } else {
                 console.warn('mapLoaded sent without tab', sender);
             }

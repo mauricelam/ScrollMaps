@@ -17,6 +17,11 @@
             border: 1px solid #666;
             display: flex;
             flex-direction: column;
+            background: #ccc;
+        }
+
+        body>div:hover {
+            background: #eee;
         }
 
         body>div>* {
@@ -36,45 +41,52 @@
 </head>
 
 <body>
-    <div>
-        <h5>Google Maps iframe</h5>
-        <iframe
-            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyD4iE2xVSpkLLOXoyqT-RuPwURN3ddScAI&amp;q=Space+Needle,Seattle+WA"></iframe>
-    </div>
-    <div>
-        <h5>Google Maps API</h5>
-        <iframe src="https://geo-devrel-javascript-samples.web.app/samples/map-simple/app/dist/" frameborder="0"></iframe>
-    </div>
-    <div>
-        <h5>OpenLayers</h5>
-        <iframe src="https://camptocamp.github.io/ngeo/master/examples/control.html" frameborder="0"></iframe>
-        <!-- <iframe src="https://openlayers.org/en/latest/examples/accessible.html" frameborder="0"></iframe> -->
-    </div>
-    <div>
-        <h5>Azure maps</h5>
-        <iframe src="https://samples.azuremaps.com/3d-layer/webgl" frameborder="0"></iframe>
-    </div>
-    <div>
-        <h5>MapBox</h5>
-        <iframe src="https://anvaka.github.io/peak-map/#7.36/47.538/-123.04" frameborder="0"></iframe>
-        <!-- <iframe src="https://demos.mapbox.com/sf_ships/" frameborder="0"></iframe> -->
-    </div>
-    <div>
-        <h5>ARCGIS</h5>
-        <iframe src="https://www.arcgis.com/apps/webappviewer/index.html?id=6b88d20c300b4991acce07500b89676f" frameborder="0"></iframe>
-    </div>
-    <div>
-        <h5>Apple MapKit</h5>
-        <iframe src="https://vasile.github.io/mapkit-js-demo/map.html" frameborder="0"></iframe>
-    </div>
-    <div>
-        <h5>Leaflet</h5>
-        <iframe src="https://leafletjs.com/examples/quick-start/example.html" frameborder="0"></iframe>
-    </div>
-    <div>
-        <h5>OpenStreetMap</h5>
-        <iframe src="https://harrywood.co.uk/maps/examples/openlayers/simple-marker.html" frameborder="0"></iframe>
-    </div>
+    <script>
+        const TEST_PAGES = {
+            "Google Maps iframe": "https://www.google.com/maps/embed/v1/place?key=AIzaSyD4iE2xVSpkLLOXoyqT-RuPwURN3ddScAI&q=Space+Needle,Seattle+WA",
+            "Google Maps API":
+                "https://geo-devrel-javascript-samples.web.app/samples/map-simple/app/dist/",
+            "Google Street View":
+                "https://geo-devrel-javascript-samples.web.app/samples/streetview-embed/app/dist/",
+            "OpenLayers":
+                "https://camptocamp.github.io/ngeo/master/examples/control.html",
+            // "https://openlayers.org/en/latest/examples/accessible.html"
+            "Azure maps":
+                "https://samples.azuremaps.com/3d-layer/webgl",
+            "MapBox":
+                "https://anvaka.github.io/peak-map/#7.36/47.538/-123.04",
+            // "https://demos.mapbox.com/sf_ships/"
+            "ARCGIS":
+                "https://www.arcgis.com/apps/webappviewer/index.html?id=6b88d20c300b4991acce07500b89676f",
+            "Apple MapKit":
+                "https://vasile.github.io/mapkit-js-demo/map.html",
+            "Leaflet":
+                "https://leafletjs.com/examples/quick-start/example.html",
+            "OpenStreetMap":
+                "https://harrywood.co.uk/maps/examples/openlayers/simple-marker.html",
+        };
+
+        for (const page in TEST_PAGES) {
+            const pageUrl = TEST_PAGES[page];
+            const container = document.createElement('div');
+            const title = document.createElement('h5');
+            const link = document.createElement('a');
+            link.innerText = page;
+            link.href = pageUrl;
+            link.target = "_blank";
+            title.appendChild(link);
+            container.appendChild(title);
+            document.body.append(container);
+
+            container.addEventListener('click', () => {
+                const iframe = document.createElement('iframe');
+                iframe.setAttribute("frameborder", "0");
+                iframe.src = pageUrl;
+                container.appendChild(iframe);
+                container.style.background = "#fff";
+            }, { once: true });
+        }
+    </script>
 </body>
 
 </html>

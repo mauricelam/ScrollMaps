@@ -67,7 +67,7 @@ if (window.ScrollableMap === undefined) {
                 all: initial;
                 transition: opacity 0.3s 0s, background 0.3s 0s;
                 opacity: 0;
-                text-shadow: 0 0 3px #5fb4fa;
+                text-shadow: 0 0 7px #fff;
                 pointer-events: none;
             }
             [data-scrollmaps].scrollMapsActivatable:hover::after {
@@ -82,7 +82,7 @@ if (window.ScrollableMap === undefined) {
                 z-index: 9999;
                 top: 3px; left: 50%;
                 transform: translateX(-50%);
-                background: rgba(33, 150, 243, 0.5);
+                background: linear-gradient(rgba(33, 150, 243, 0.5) 0%, rgba(33, 150, 243, 0.8) 40%);
                 padding: 0 7px 2px 7px;
                 border-radius: 0 0 8px 8px;
                 text-align: center;
@@ -197,13 +197,18 @@ if (window.ScrollableMap === undefined) {
                 chrome.runtime.sendMessage({ action: 'mapUnloaded' });
             });
 
-            window.addEventListener('mousemove', function (e) {
+            const onRealPointerMove = (e) => {
                 if (e.detail !== 88) {
-                    if (lastTarget) {
+                    if (lastTarget && dragger.mouseDownPoint) {
                         dragger.simulateMouseUp(lastTarget);
                     }
                 }
-            }, true);
+            };
+
+            // Attach to both event listeners to make sure our mouse-up code is run before any
+            // custom event handlers from the maps.
+            window.addEventListener('mousemove', onRealPointerMove, true);
+            window.addEventListener('pointermove', onRealPointerMove, true);
 
             window.addEventListener('mousemove', function (e) {
                 if (e.detail !== 88) {
@@ -240,8 +245,18 @@ if (window.ScrollableMap === undefined) {
             }
         }
 
-        var dragger = new DragSimulator({
-            maxDistanceUntilUp: type === ScrollableMap.TYPE_MAPBOX ? Infinity : 600
+        // See the documentation in DRAG_SIMULATOR_DEFAULT_OPTS
+        let maxDistanceUntilUp = 600;
+        if (type === ScrollableMap.TYPE_GOOGLE_MAPS_LEGACY
+            || type === ScrollableMap.TYPE_GOOGLE_MAPS_API
+            || type === ScrollableMap.TYPE_GOOGLE_MAPS_IFRAME
+            || type === ScrollableMap.TYPE_GOOGLE_MAPS_WEB) {
+            maxDistanceUntilUp = div.offsetWidth && (div.offsetWidth * 0.5) || 600;
+        } else {
+            maxDistanceUntilUp = Infinity;
+        }
+        const dragger = new DragSimulator({
+            maxDistanceUntilUp
         });
 
         self.move = function (point, dx, dy, target) {
@@ -250,7 +265,7 @@ if (window.ScrollableMap === undefined) {
 
         const zoomDeltaTracker = new ZoomDeltaTracker();
 
-        self.zoomIn = function (mousePos, target, originalEvent) {
+        self.zoomInOrOut = function (mousePos, target, originalEvent, isZoomIn) {
             // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
             // keep that behavior for Cmd-scrolling.
             if (originalEvent instanceof WheelEvent) {
@@ -265,60 +280,38 @@ if (window.ScrollableMap === undefined) {
                         || type === ScrollableMap.TYPE_GOOGLE_MAPS_API
                         || type === ScrollableMap.TYPE_GOOGLE_MAPS_IFRAME
                         || type === ScrollableMap.TYPE_OPEN_STREET_MAP
+                        || type === ScrollableMap.TYPE_ARCGIS
                         || (type === ScrollableMap.TYPE_GOOGLE_MAPS_WEB && !isWebGlCanvas(target))) {
                         // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
                         // behave naturally. It zooms a specific increment on each wheel event
                         // and doesn't look at deltaY. Throttle the number of events to keep the
                         // zooming at a reasonable rate.
-                        if (!zoomDeltaTracker.zoomInDelta(originalEvent.deltaY * scale)) {
+                        if (!zoomDeltaTracker.zoomDelta(originalEvent.deltaY * scale)) {
                             return;
                         }
                     }
                 }
-                let e = createBackdoorWheelEvent(originalEvent, true /* zoomIn */, scale);
-                target.dispatchEvent(e);
-                target.dispatchEvent(new WheelEvent('mousewheel', e))
+
+                const events = createBackdoorWheelEvents(originalEvent, isZoomIn, scale);
+                for (const e of events) {
+                    target.dispatchEvent(e);
+                    target.dispatchEvent(new WheelEvent('mousewheel', e))
+                }
                 return;
             } else {
                 console.warn('ScrollMaps unexpected event', originalEvent);
             }
+        };
+
+        self.zoomIn = function (mousePos, target, originalEvent) {
+            return self.zoomInOrOut(mousePos, target, originalEvent, /* isZoomIn= */ true);
         };
 
         self.zoomOut = function (mousePos, target, originalEvent) {
-            // New Google Maps zooms much better using unmodified mouse wheel events. Let's
-            // keep that behavior for Cmd-scrolling.
-            if (originalEvent instanceof WheelEvent) {
-                // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
-                // have much less "delta" than scroll
-                let scale = 1;
-                if (originalEvent.ctrlKey) {
-                    scale = prefs['zoomSpeed'] / 100;
-                    if (type === ScrollableMap.TYPE_OPEN_STREET_MAP) scale *= 0.2;
-                    if (type !== ScrollableMap.TYPE_GOOGLE_MAPS_WEB) scale *= 3;
-                    if (type === ScrollableMap.TYPE_GOOGLE_MAPS_LEGACY
-                        || type === ScrollableMap.TYPE_GOOGLE_MAPS_API
-                        || type === ScrollableMap.TYPE_GOOGLE_MAPS_IFRAME
-                        || type === ScrollableMap.TYPE_OPEN_STREET_MAP
-                        || (type === ScrollableMap.TYPE_GOOGLE_MAPS_WEB && !isWebGlCanvas(target))) {
-                        // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
-                        // behave naturally. It zooms a specific increment on each wheel event
-                        // and doesn't look at deltaY. Throttle the number of events to keep the
-                        // zooming at a reasonable rate.
-                        if (!zoomDeltaTracker.zoomOutDelta(originalEvent.deltaY * scale)) {
-                            return;
-                        }
-                    }
-                }
-                let e = createBackdoorWheelEvent(originalEvent, false /* zoomIn */, scale);
-                target.dispatchEvent(e);
-                target.dispatchEvent(new WheelEvent('mousewheel', e))
-                return;
-            } else {
-                console.warn('ScrollMaps unexpected event', originalEvent);
-            }
+            return self.zoomInOrOut(mousePos, target, originalEvent, /* isZoomIn= */ false);
         };
 
-        function createBackdoorWheelEvent(originalEvent, zoomIn, scale) {
+        function createBackdoorWheelEvents(originalEvent, zoomIn, scale) {
             if (originalEvent instanceof WheelEvent) {
                 const init = {};
                 for (const i in originalEvent) {
@@ -333,7 +326,15 @@ if (window.ScrollableMap === undefined) {
                 }
                 init.deltaY *= scale || 1;
 
-                return new WheelEvent('wheel', init);
+                if (type === ScrollableMap.TYPE_MAPBOX || type === ScrollableMap.TYPE_MAPLIBRE) {
+                    // Mapbox has this trackpad detection logic that we might confuse when we increase our zoom speed.
+                    // https://github.com/mapbox/mapbox-gl-js/blob/c708474eb65d9c6a117fe232b677db19525f70b4/src/ui/handler/scroll_zoom.js#L17-L22
+                    // Split the wheel event into many with small delta to make sure it's treated as trackpad
+                    const numEvents = Math.ceil(Math.abs(init.deltaY / 4));
+                    return Array(numEvents).fill(new WheelEvent('wheel', { ...init, deltaY: init.deltaY / numEvents }));
+                } else {
+                    return [new WheelEvent('wheel', init)];
+                }
             } else {
                 console.log('Trying to create backdoor event out of non-wheel event', originalEvent);
             }
@@ -449,21 +450,19 @@ if (window.ScrollableMap === undefined) {
             this.lastZoomTime = 0;
         }
 
-        zoomInDelta(delta) {
+        zoomDelta(delta) {
             if (Date.now() - this.lastZoomTime > 1000) this.accumulatedZoomDelta = 0;
             this.accumulatedZoomDelta += delta;
             this.lastZoomTime = Date.now();
-            if (this.accumulatedZoomDelta > -DELTA_PER_ZOOM_LEVEL) return false;
-            this.accumulatedZoomDelta += DELTA_PER_ZOOM_LEVEL;
-            return true;
-        }
-
-        zoomOutDelta(delta) {
-            if (Date.now() - this.lastZoomTime > 1000) this.accumulatedZoomDelta = 0;
-            this.accumulatedZoomDelta += delta;
-            this.lastZoomTime = Date.now();
-            if (this.accumulatedZoomDelta < DELTA_PER_ZOOM_LEVEL) return false;
-            this.accumulatedZoomDelta -= DELTA_PER_ZOOM_LEVEL;
+            if (delta < 0) {
+                // Zoom in
+                if (this.accumulatedZoomDelta > -DELTA_PER_ZOOM_LEVEL) return false;
+                this.accumulatedZoomDelta += DELTA_PER_ZOOM_LEVEL;
+            } else if (delta > 0) {
+                // Zoom out
+                if (this.accumulatedZoomDelta < DELTA_PER_ZOOM_LEVEL) return false;
+                this.accumulatedZoomDelta -= DELTA_PER_ZOOM_LEVEL;
+            }
             return true;
         }
     }
@@ -614,8 +613,9 @@ if (window.ScrollableMap === undefined) {
                 'clientX': this.simulatedMousePoint[0],
                 'clientY': this.simulatedMousePoint[1],
                 'button': 0,
-                'buttons': 0
-            })
+                'buttons': 0,
+                'pressure': 0,
+            });
 
             // Trigger a move event so that map updates the cursor based on the current cursor position.
             this._dispatchPointerEvent(target, 'move', {
