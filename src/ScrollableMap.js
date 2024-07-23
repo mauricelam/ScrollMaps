@@ -75,6 +75,7 @@ if (window.ScrollableMap === undefined) {
             }
             [data-scrollmaps].scrollMapsActivatable::before {
                 content: 'Click to activate ScrollMaps';
+                white-space: nowrap;
                 font-family: 'Arial', sans-serif;
                 font-size: 14px;
                 display: inline-block;
@@ -102,6 +103,7 @@ if (window.ScrollableMap === undefined) {
             [data-scrollmaps].scrollMapsActivated::before,
             [data-scrollmaps].scrollMapsActivated:hover::before {
                 content: 'ScrollMaps activated';
+                white-space: nowrap;
                 opacity: 1;
                 animation: fadeOutActivatedBanner 1s ease-in 3s forwards;
                 background: rgba(33, 150, 243, 0.8);
@@ -263,7 +265,44 @@ if (window.ScrollableMap === undefined) {
             dragger.simulateDrag(target, point, dx, dy);
         };
 
-        const zoomDeltaTracker = new ZoomDeltaTracker();
+        const PINCH_ZOOM_SCALE = {
+            [ScrollableMap.TYPE_GOOGLE_MAPS_LEGACY]: 8,
+            [ScrollableMap.TYPE_GOOGLE_MAPS_IFRAME]: 8,
+            [ScrollableMap.TYPE_GOOGLE_MAPS_API]: 8,
+            [ScrollableMap.TYPE_GOOGLE_MAPS_WEB]: 1,
+            [ScrollableMap.TYPE_ARCGIS]: 1.1,
+            [ScrollableMap.TYPE_MAPBOX]: 3,
+            [ScrollableMap.TYPE_OPEN_STREET_MAP]: 0.8,
+            [ScrollableMap.TYPE_APPLE_MAPKIT]: 1,
+            [ScrollableMap.TYPE_MAPLIBRE]: 4,
+        };
+
+        // How much deltaY should correspond to a zoom level. 0 if scrolling is smooth.
+        const ZOOM_STEP = {
+            [ScrollableMap.TYPE_GOOGLE_MAPS_LEGACY]: 50,
+            [ScrollableMap.TYPE_GOOGLE_MAPS_IFRAME]: 50,
+            [ScrollableMap.TYPE_GOOGLE_MAPS_API]: 50,
+            [ScrollableMap.TYPE_GOOGLE_MAPS_WEB]: 50,
+            [ScrollableMap.TYPE_ARCGIS]: 50,
+            [ScrollableMap.TYPE_MAPBOX]: 50,
+            [ScrollableMap.TYPE_OPEN_STREET_MAP]: 50,
+            [ScrollableMap.TYPE_APPLE_MAPKIT]: 0,
+            [ScrollableMap.TYPE_MAPLIBRE]: 0,
+        };
+
+        const TIME_THROTTLE = {
+            [ScrollableMap.TYPE_GOOGLE_MAPS_LEGACY]: 400,
+            [ScrollableMap.TYPE_GOOGLE_MAPS_IFRAME]: 400,
+            [ScrollableMap.TYPE_GOOGLE_MAPS_API]: 400,
+            [ScrollableMap.TYPE_GOOGLE_MAPS_WEB]: 0,
+            [ScrollableMap.TYPE_ARCGIS]: 0,
+            [ScrollableMap.TYPE_MAPBOX]: 0,
+            [ScrollableMap.TYPE_OPEN_STREET_MAP]: 0,
+            [ScrollableMap.TYPE_APPLE_MAPKIT]: 0,
+            [ScrollableMap.TYPE_MAPLIBRE]: 0,
+        };
+
+        const zoomDeltaTracker = new ZoomDeltaTracker(ZOOM_STEP[type], TIME_THROTTLE[type]);
 
         self.zoomInOrOut = function (mousePos, target, originalEvent, isZoomIn) {
             // New Google Maps zooms much better with respect to unmodified mouse wheel events. Let's
@@ -271,28 +310,28 @@ if (window.ScrollableMap === undefined) {
             if (originalEvent instanceof WheelEvent) {
                 // Scale the pinch gesture 3x for non-web maps, because pinch gesture normally
                 // have much less "delta" than scroll
-                let scale = 1;
+                let delta = originalEvent.deltaY;
                 if (originalEvent.ctrlKey) {
-                    scale = prefs['zoomSpeed'] / 100;
-                    if (type === ScrollableMap.TYPE_OPEN_STREET_MAP) scale *= 0.2;
-                    if (type !== ScrollableMap.TYPE_GOOGLE_MAPS_WEB) scale *= 3;
-                    if (type === ScrollableMap.TYPE_GOOGLE_MAPS_LEGACY
-                        || type === ScrollableMap.TYPE_GOOGLE_MAPS_API
-                        || type === ScrollableMap.TYPE_GOOGLE_MAPS_IFRAME
-                        || type === ScrollableMap.TYPE_OPEN_STREET_MAP
-                        || type === ScrollableMap.TYPE_ARCGIS
-                        || (type === ScrollableMap.TYPE_GOOGLE_MAPS_WEB && !isWebGlCanvas(target))) {
+                    delta *= prefs['zoomSpeed'] / 100;
+                    delta *= PINCH_ZOOM_SCALE[type];
+                    if (type === ScrollableMap.TYPE_GOOGLE_MAPS_WEB && isWebGlCanvas(target)) {
+                        // Special case: Google maps web scrolling is smooth when in webGL mode, but
+                        // we only just got the event target to know about that.
+                    } else {
                         // For 2d canvas (try with ?force=canvas in the URL), the zooming doesn't
                         // behave naturally. It zooms a specific increment on each wheel event
                         // and doesn't look at deltaY. Throttle the number of events to keep the
                         // zooming at a reasonable rate.
-                        if (!zoomDeltaTracker.zoomDelta(originalEvent.deltaY * scale)) {
+                        const trackerDelta = zoomDeltaTracker.zoomDelta(delta);
+                        if (trackerDelta === false) {
                             return;
+                        } else {
+                            delta = trackerDelta;
                         }
                     }
                 }
 
-                const events = createBackdoorWheelEvents(originalEvent, isZoomIn, scale);
+                const events = createBackdoorWheelEvents(originalEvent, isZoomIn, delta);
                 for (const e of events) {
                     target.dispatchEvent(e);
                     target.dispatchEvent(new WheelEvent('mousewheel', e))
@@ -311,7 +350,7 @@ if (window.ScrollableMap === undefined) {
             return self.zoomInOrOut(mousePos, target, originalEvent, /* isZoomIn= */ false);
         };
 
-        function createBackdoorWheelEvents(originalEvent, zoomIn, scale) {
+        function createBackdoorWheelEvents(originalEvent, zoomIn, delta) {
             if (originalEvent instanceof WheelEvent) {
                 const init = {};
                 for (const i in originalEvent) {
@@ -319,18 +358,18 @@ if (window.ScrollableMap === undefined) {
                 }
                 init.detail = 10888;
 
-                if (zoomIn && init.deltaY > 0) {
-                    init.deltaY *= -1;
-                } else if (!zoomIn && init.deltaY < 0) {
-                    init.deltaY *= -1;
+                if (zoomIn && delta > 0) {
+                    delta *= -1;
+                } else if (!zoomIn && delta < 0) {
+                    delta *= -1;
                 }
-                init.deltaY *= scale || 1;
+                init.deltaY = delta;
 
                 if (type === ScrollableMap.TYPE_MAPBOX || type === ScrollableMap.TYPE_MAPLIBRE) {
                     // Mapbox has this trackpad detection logic that we might confuse when we increase our zoom speed.
                     // https://github.com/mapbox/mapbox-gl-js/blob/c708474eb65d9c6a117fe232b677db19525f70b4/src/ui/handler/scroll_zoom.js#L17-L22
                     // Split the wheel event into many with small delta to make sure it's treated as trackpad
-                    const numEvents = Math.ceil(Math.abs(init.deltaY / 4));
+                    const numEvents = Math.ceil(Math.abs(delta / 4));
                     return Array(numEvents).fill(new WheelEvent('wheel', { ...init, deltaY: init.deltaY / numEvents }));
                 } else {
                     return [new WheelEvent('wheel', init)];
@@ -432,9 +471,6 @@ if (window.ScrollableMap === undefined) {
     ScrollableMap.TYPE_APPLE_MAPKIT = 7;
     ScrollableMap.TYPE_MAPLIBRE = 8;
 
-
-    const DELTA_PER_ZOOM_LEVEL = 50;
-
     /**
      * Tracker for mouse wheel events, to throttle the zoom level.
      *
@@ -445,25 +481,36 @@ if (window.ScrollableMap === undefined) {
      * certain threshold is reached.
      */
     class ZoomDeltaTracker {
-        constructor() {
+        constructor(deltaPerZoomLevel, timeThrottle) {
             this.accumulatedZoomDelta = 0;
             this.lastZoomTime = 0;
+            this.deltaPerZoomLevel = deltaPerZoomLevel;
+            this.timeThrottle = timeThrottle;
         }
 
+        /**
+         * Add `delta` to the zoom tracker.
+         *
+         * @returns `false` if the tracker should not be zooming, or a number indicating the
+         * accumulated zoom amount.
+         */
         zoomDelta(delta) {
+            if (this.deltaPerZoomLevel === 0) {
+                return delta;
+            }
             if (Date.now() - this.lastZoomTime > 1000) this.accumulatedZoomDelta = 0;
             this.accumulatedZoomDelta += delta;
             this.lastZoomTime = Date.now();
             if (delta < 0) {
                 // Zoom in
-                if (this.accumulatedZoomDelta > -DELTA_PER_ZOOM_LEVEL) return false;
-                this.accumulatedZoomDelta += DELTA_PER_ZOOM_LEVEL;
+                if (this.accumulatedZoomDelta > -this.deltaPerZoomLevel) return false;
+                this.accumulatedZoomDelta += this.deltaPerZoomLevel;
             } else if (delta > 0) {
                 // Zoom out
-                if (this.accumulatedZoomDelta < DELTA_PER_ZOOM_LEVEL) return false;
-                this.accumulatedZoomDelta -= DELTA_PER_ZOOM_LEVEL;
+                if (this.accumulatedZoomDelta < this.deltaPerZoomLevel) return false;
+                this.accumulatedZoomDelta -= this.deltaPerZoomLevel;
             }
-            return true;
+            return this.deltaPerZoomLevel;
         }
     }
 
