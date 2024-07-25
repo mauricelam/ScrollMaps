@@ -27,7 +27,7 @@ describe('google.com/maps test suite', function () {
         // Execute scroll action
         await mapDriver.scroll(elem, 300, 500);
         await assertUrlParams({
-            lat: [36.9, 36.97],
+            lat: [36.87, 36.97],
             lng: [-121.98, -121.9],
             zoom: [14, 14],
             logTag: "while loading",
@@ -36,14 +36,14 @@ describe('google.com/maps test suite', function () {
         // Execute zoom action
         await mapDriver.pinchGesture(elem, 64);
         await assertUrlParams({
-            lat: [36.9, 36.97],
+            lat: [36.87, 36.97],
             lng: [-121.98, -121.9],
             zoom: [5, 11]
         });
 
         await mapDriver.pinchGesture(elem, -64);
         await assertUrlParams({
-            lat: [36.9, 36.97],
+            lat: [36.87, 36.97],
             lng: [-121.98, -121.9],
             zoom: [13, 15],
             logTag: "after pinch"

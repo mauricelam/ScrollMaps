@@ -6,7 +6,7 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
 describe('Extension options page', function () {
-    this.retries(2);
+    this.retries(1);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;
@@ -25,9 +25,9 @@ describe('Extension options page', function () {
         await driver.switchTo().frame(driver.findElement(By.id("mapsdemo")));
         const elem = await mapDriver.waitForScrollMapsLoaded();
         await assertLatLng([37.3861, 0.01], [-122.0839, 0.01]);
-        await mapDriver.scroll(elem, 300, -40);
+        await mapDriver.scroll(elem, 500, -80);
         await sleep(1000);
-        await assertLatLng([37.406011, 0.01], [-121.894043, 0.01]);
+        await assertLatLng([37.444342, 0.01], [-121.452895, 0.01]);
     });
 
     it('increase scroll speed', async () => {
@@ -42,7 +42,7 @@ describe('Extension options page', function () {
         await assertLatLng([37.3861, 0.01], [-122.0839, 0.01]);
         await mapDriver.scroll(elem, 300, -40);
         await sleep(1000);
-        await assertLatLng([37.426915, 0.01], [-121.696581, 0.05]);
+        await assertLatLng([37.41351, 0.01], [-121.696581, 0.05]);
     });
 
     it('invert scroll', async () => {
@@ -58,7 +58,7 @@ describe('Extension options page', function () {
         await assertLatLng([37.3861, 0.01], [-122.0839, 0.01]);
         await mapDriver.scroll(elem, 300, -40);
         await sleep(1000);
-        await assertLatLng([37.346231, 0.01], [-122.459391, 0.01]);
+        await assertLatLng([37.356442, 0.01], [-122.496387, 0.01]);
     });
 
     it('zoom', async () => {

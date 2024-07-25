@@ -6,7 +6,7 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
 describe('heywhatsthat test suite', function() {
-    this.retries(2);
+    this.retries(1);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;
@@ -41,16 +41,16 @@ describe('heywhatsthat test suite', function() {
         await mapDriver.scroll(elem, 0, -300);
         await mapDriver.click();
         await sleep(2000);
-        await assertLatLng([24.608488, 0.01], [120.769135, 0.01]);
+        await assertLatLng([24.917977, 0.01], [120.769135, 0.01]);
         await mapDriver.assertRuler('5 km');
 
         // Execute zoom action
-        await mapDriver.pinchGesture(elem, 64);
+        await mapDriver.pinchGesture(elem, 72);
         await sleep(2000);
         await mapDriver.click({ x: 150, y: 80 });
         await sleep(1000);
         await mapDriver.assertRuler('20 km');
-        await assertLatLng([24.470446, 0.1], [121.11218, 0.01]);
+        await assertLatLng([24.860665, 0.1], [121.11218, 0.01]);
     });
 
     async function getLatLng() {

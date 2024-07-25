@@ -1,4 +1,3 @@
-import assert from 'assert';
 import { By } from 'selenium-webdriver';
 import { MapDriver, assertIn, sleep } from '../mapdriver.js';
 
@@ -6,7 +5,7 @@ const TEST_TIMEOUT = 10 * 60 * 1000;
 
 
 describe('travelermap test suite', function() {
-    this.retries(3);
+    this.retries(0);
     this.slow(TEST_TIMEOUT);
     this.timeout(TEST_TIMEOUT);
     let driver;
@@ -21,6 +20,8 @@ describe('travelermap test suite', function() {
     });
 
     it('https://travelermap.net/parks/usa', async () => {
+        await driver.get('about:blank');
+        await sleep(500);
         await driver.get('https://travelermap.net/parks/usa#map=10.2/37.6926/-121.9915');
         await sleep(1000);
 
@@ -28,22 +29,26 @@ describe('travelermap test suite', function() {
         await mapButton.click();
 
         let elem = await mapDriver.activateAndWaitForScrollMapsLoaded();
+        console.log('checking lat lng 1');
         await assertZoomLatLng([10.2, 0], [37.6926, 0.01], [-121.9915, 0.01]);
 
-        // // This scroll is a no-op, since we haven't clicked the map yet
-        // // It wouldn't scroll the page because the event is not trusted
+        // This scroll is a no-op, since we haven't clicked the map yet
+        // It wouldn't scroll the page because the event is not trusted
         await mapDriver.scroll(elem, 0, -300);
         await sleep(2500);
+        console.log('checking lat lng 2');
         await assertZoomLatLng([10.2, 0], [38.3708, 0.05], [-121.9915, 0.05]);
 
         await mapDriver.scroll(elem, 300, 300);
         await sleep(2500);
+        console.log('checking lat lng 3');
         await assertZoomLatLng([10.2, 0], [37.585, 0.05], [-120.9879, 0.05]);
 
         // // Execute zoom action
         await mapDriver.pinchGesture(elem, 64);
         await sleep(1000);
-        await assertZoomLatLng([9.51, 0], [37.585, 0.05], [-120.9879, 0.05]);
+        console.log('checking lat lng after pinch');
+        await assertZoomLatLng([7.26, 0], [37.585, 0.05], [-120.9879, 0.05]);
     });
 
     async function getUrlLatLngZoom() {

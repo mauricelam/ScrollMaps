@@ -29,7 +29,7 @@ describe('google.com/travel test suite', function() {
         // Execute scroll action
         await waitForCities(['Chicago']);
         await sleep(2000);
-        await mapDriver.scroll(elem, 200, -40);
+        await mapDriver.scroll(elem, 180, -40);
         await waitForCities(['London']);
         deepStrictEqual(
             await findCities(['Chicago', 'London', 'Paris', 'Beijing']),
