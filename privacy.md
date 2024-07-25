@@ -4,11 +4,11 @@ As required by the add-on store, this is a policy about how this extension handl
 
 ## Data sharing and transmission
 
-All of ScrollMaps runs inside your browser and it does not send data to outside of the extension. The only external components ScrollMaps interacts with is the browser, the page you are using ScrollMaps on, and Google Maps.
+All of ScrollMaps runs inside your browser and it does not send data to outside of the extension. The only external components ScrollMaps interacts with is the browser, the page you are using ScrollMaps on, and the map provider like Google Maps.
 
 ## Data collection and handling
 
-ScrollMaps functions by listening to scroll events on any Google Maps canvases and injecting a corresponding event to simulate panning the map. In order to get the available Google Maps canvases on a given page, ScrollMaps looks through the content on a web page and identifies potential map tiles that are provided by Google Maps. Additionally, ScrollMaps also listens to whether the page is making any web requests to use Google Maps APIs, in order to determine whether the developer is using the maps canvas. To determine that, ScrollMaps makes use of the URLs of the tab making the request and matches that against the tabs that you currently have open. These URLs are requested from the browser and is never shared outside of the ScrollMaps browser extension, and are not stored persistently.
+ScrollMaps functions by listening to scroll events on any supported map canvases and injecting a corresponding event to simulate panning the map. In order to get the available supported map canvases on a given page, ScrollMaps looks through the content on a web page and identifies potential map tiles that are provided by known map providers, like Google Maps, OpenStreetMap, Esri, MapBox, etc. Additionally, ScrollMaps also listens to whether the page is making any web requests to use Maps APIs, in order to determine whether the developer is using the maps canvas. To determine that, ScrollMaps makes use of the URLs of the tab making the request and matches that against the tabs that you currently have open. These URLs are requested from the browser and is never shared outside of the ScrollMaps browser extension, and are erased once you close the browser.
 
 All of the event capturing described above runs locally on your computer, and the data is not sent back to any servers.
 

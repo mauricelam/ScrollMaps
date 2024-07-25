@@ -1,9 +1,18 @@
 # ScrollMaps
-Lets you scroll with two fingers on your trackpad within Google Maps
+Lets you scroll with two fingers on your trackpad within online maps
 
 - [Chrome web store link](https://chrome.google.com/webstore/detail/scrollmaps/jifommjndpnefcfplgnbhabocomgdjjg)
 - [Firefox Add-ons store link](https://addons.mozilla.org/en-US/firefox/addon/scrollmaps)
 - [Microsoft Edge addon link](https://microsoftedge.microsoft.com/addons/detail/scrollmaps/mdhhlgkmnlaiofbbemcmigjleiiefmga)
+
+## Supported map providers
+
+- Google Maps
+- MapBox
+- Esri ArcGIS
+- Apple MapKit JS
+- OpenStreetMap
+- and a few others
 
 ## Building
 
