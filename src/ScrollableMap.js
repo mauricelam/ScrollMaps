@@ -272,6 +272,7 @@ if (window.ScrollableMap === undefined) {
             [ScrollableMap.TYPE_GOOGLE_MAPS_WEB]: 1,
             [ScrollableMap.TYPE_ARCGIS]: 1.1,
             [ScrollableMap.TYPE_MAPBOX]: 3,
+            [ScrollableMap.TYPE_LEAFLET]: 3,
             [ScrollableMap.TYPE_OPEN_STREET_MAP]: 0.8,
             [ScrollableMap.TYPE_APPLE_MAPKIT]: 1,
             [ScrollableMap.TYPE_MAPLIBRE]: 4,
@@ -285,6 +286,7 @@ if (window.ScrollableMap === undefined) {
             [ScrollableMap.TYPE_GOOGLE_MAPS_WEB]: 50,
             [ScrollableMap.TYPE_ARCGIS]: 50,
             [ScrollableMap.TYPE_MAPBOX]: 50,
+            [ScrollableMap.TYPE_LEAFLET]: 50,
             [ScrollableMap.TYPE_OPEN_STREET_MAP]: 50,
             [ScrollableMap.TYPE_APPLE_MAPKIT]: 0,
             [ScrollableMap.TYPE_MAPLIBRE]: 0,
@@ -297,6 +299,7 @@ if (window.ScrollableMap === undefined) {
             [ScrollableMap.TYPE_GOOGLE_MAPS_WEB]: 0,
             [ScrollableMap.TYPE_ARCGIS]: 0,
             [ScrollableMap.TYPE_MAPBOX]: 0,
+            [ScrollableMap.TYPE_LEAFLET]: 0,
             [ScrollableMap.TYPE_OPEN_STREET_MAP]: 0,
             [ScrollableMap.TYPE_APPLE_MAPKIT]: 0,
             [ScrollableMap.TYPE_MAPLIBRE]: 0,
@@ -470,6 +473,7 @@ if (window.ScrollableMap === undefined) {
     ScrollableMap.TYPE_OPEN_STREET_MAP = 6;
     ScrollableMap.TYPE_APPLE_MAPKIT = 7;
     ScrollableMap.TYPE_MAPLIBRE = 8;
+    ScrollableMap.TYPE_LEAFLET = 9;
 
     /**
      * Tracker for mouse wheel events, to throttle the zoom level.

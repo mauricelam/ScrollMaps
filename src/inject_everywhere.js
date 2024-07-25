@@ -30,7 +30,7 @@ if (window.SM_INJECT === undefined) {
             // To handle multiple maps on the same page, we make the threshold
             // number of images / 4. We consider the common ancestor to be found below
             // that threshold.
-            let foundThreshold = foundImages.length / 4;
+            let foundThreshold = Math.max(foundImages.length / 4, 1);
             for (let i = 0; i < 5; i++) {
                 // Walk maximum 5 levels to find the common ancestor
                 foundImages = foundImages.map(img => img.parentNode);
@@ -106,11 +106,22 @@ if (window.SM_INJECT === undefined) {
     }
 
     // https://docs.mapbox.com/
-    // https://leafletjs.com/
     class MapBoxFinder extends AbstractMapFinder {
         static findMaps() {
-            return [...document.querySelectorAll('.mapboxgl-map:has(canvas.mapboxgl-canvas)')]
+            return [
+                ...document.querySelectorAll('.mapboxgl-map:has(canvas.mapboxgl-canvas)'),
+            ]
                 .map((elem) => elem.closest('.leaflet-container') || elem);
+        }
+    }
+
+    // https://leafletjs.com/
+    class LeafletFinder extends AbstractMapFinder {
+        static findMaps() {
+            return [
+                // https://www.strava.com/activities
+                ...document.querySelectorAll('.leaflet-container:has(.leaflet-tile-container)')
+            ];
         }
     }
 
@@ -149,6 +160,7 @@ if (window.SM_INJECT === undefined) {
             ...MapBoxFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPBOX } }),
             ...OpenStreetMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_OPEN_STREET_MAP } }),
             ...AppleMapKitFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_APPLE_MAPKIT } }),
+            ...LeafletFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_LEAFLET } }),
             ...MapLibreFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
             ...OpenLayersMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
         ];
