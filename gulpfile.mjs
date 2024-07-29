@@ -82,7 +82,7 @@ class BuildContext {
     }
 
     copyImages() {
-        return src(['images/**/*.png'])
+        return src(['images/**/*.png'], { encoding: false })
             .pipe(newer(`${this.pluginDir()}/images`))
             .pipe(dest(`${this.pluginDir()}/images`))
     }
@@ -202,7 +202,7 @@ class BuildContext {
     }
 
     zipExtension() {
-        return src([this.pluginDir() + '/**'])
+        return src([this.pluginDir() + '/**'], { encoding: false })
             .pipe(newer(`gen/scrollmaps-${this.version}-${this.browser}.zip`))
             .pipe(zip(`scrollmaps-${this.version}-${this.browser}.zip`))
             .pipe(dest('gen'));

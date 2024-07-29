@@ -335,9 +335,31 @@ if (window.ScrollableMap === undefined) {
                 }
 
                 const events = createBackdoorWheelEvents(originalEvent, isZoomIn, delta);
-                for (const e of events) {
-                    target.dispatchEvent(e);
-                    target.dispatchEvent(new WheelEvent('mousewheel', e))
+                for (const eventInit of events) {
+                    target.dispatchEvent(new WheelEvent('wheel', eventInit));
+                    target.dispatchEvent(new WheelEvent('mousewheel', {
+                        ...eventInit,
+                        deltaY: eventInit.deltaY,
+                        detail: eventInit.deltaY,
+                    }));
+                    if (window.MouseScrollEvent) {
+                        // Very old and deprecated mouse scroll event used by Firefox.
+                        // OpenStreetMap still uses this event when it detects that the browser is Firefox.
+                        // https://developer.mozilla.org/en-US/docs/Web/API/Element/DOMMouseScroll_event
+                        const domMouseScrollEvent = new MouseEvent('DOMMouseScroll', {
+                            ...eventInit,
+                            detail: eventInit.deltaY / 16,
+                            shiftKey: type === ScrollableMap.TYPE_ARCGIS,
+                        });
+                        target.dispatchEvent(domMouseScrollEvent);
+                        if (type === ScrollableMap.TYPE_ARCGIS) {
+                            target.dispatchEvent(new MouseEvent('MozMousePixelScroll', {
+                                ...eventInit,
+                                detail: eventInit.deltaY / 16,
+                                shiftKey: true,
+                            }));
+                        }
+                    }
                 }
                 return;
             } else {
@@ -373,9 +395,9 @@ if (window.ScrollableMap === undefined) {
                     // https://github.com/mapbox/mapbox-gl-js/blob/c708474eb65d9c6a117fe232b677db19525f70b4/src/ui/handler/scroll_zoom.js#L17-L22
                     // Split the wheel event into many with small delta to make sure it's treated as trackpad
                     const numEvents = Math.ceil(Math.abs(delta / 4));
-                    return Array(numEvents).fill(new WheelEvent('wheel', { ...init, deltaY: init.deltaY / numEvents }));
+                    return Array(numEvents).fill({ ...init, deltaY: init.deltaY / numEvents });
                 } else {
-                    return [new WheelEvent('wheel', init)];
+                    return [init];
                 }
             } else {
                 console.log('Trying to create backdoor event out of non-wheel event', originalEvent);
