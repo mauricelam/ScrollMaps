@@ -153,6 +153,15 @@ if (window.SM_INJECT === undefined) {
         }
     }
 
+    // https://en.mapy.cz/
+    class MapyCzFinder extends AbstractMapFinder {
+        static findMaps() {
+            return MapyCzFinder._findTiledMap(
+                'img[src*=".mapy.cz/"]',
+                (node) => node.getAttribute("id") == "map")
+        }
+    }
+
     async function scrollifyExistingMaps() {
         const maps = [
             ...GoogleMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_GOOGLE_MAPS_API } }),
@@ -163,6 +172,7 @@ if (window.SM_INJECT === undefined) {
             ...LeafletFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_LEAFLET } }),
             ...MapLibreFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
             ...OpenLayersMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
+            ...MapyCzFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPYCZ } }),
         ];
         if (DEBUG) console.log('Found maps in page?', maps);
         if (maps.length <= 0) {

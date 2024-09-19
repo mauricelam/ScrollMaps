@@ -276,6 +276,7 @@ if (window.ScrollableMap === undefined) {
             [ScrollableMap.TYPE_OPEN_STREET_MAP]: 0.8,
             [ScrollableMap.TYPE_APPLE_MAPKIT]: 1,
             [ScrollableMap.TYPE_MAPLIBRE]: 4,
+            [ScrollableMap.TYPE_MAPYCZ]: 4,
         };
 
         // How much deltaY should correspond to a zoom level. 0 if scrolling is smooth.
@@ -290,6 +291,7 @@ if (window.ScrollableMap === undefined) {
             [ScrollableMap.TYPE_OPEN_STREET_MAP]: 50,
             [ScrollableMap.TYPE_APPLE_MAPKIT]: 0,
             [ScrollableMap.TYPE_MAPLIBRE]: 0,
+            [ScrollableMap.TYPE_MAPYCZ]: 50,
         };
 
         const TIME_THROTTLE = {
@@ -303,6 +305,7 @@ if (window.ScrollableMap === undefined) {
             [ScrollableMap.TYPE_OPEN_STREET_MAP]: 0,
             [ScrollableMap.TYPE_APPLE_MAPKIT]: 0,
             [ScrollableMap.TYPE_MAPLIBRE]: 0,
+            [ScrollableMap.TYPE_MAPYCZ]: 400,
         };
 
         const zoomDeltaTracker = new ZoomDeltaTracker(ZOOM_STEP[type], TIME_THROTTLE[type]);
@@ -496,6 +499,7 @@ if (window.ScrollableMap === undefined) {
     ScrollableMap.TYPE_APPLE_MAPKIT = 7;
     ScrollableMap.TYPE_MAPLIBRE = 8;
     ScrollableMap.TYPE_LEAFLET = 9;
+    ScrollableMap.TYPE_MAPYCZ = 10;
 
     /**
      * Tracker for mouse wheel events, to throttle the zoom level.
