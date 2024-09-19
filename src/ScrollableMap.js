@@ -257,7 +257,7 @@ if (window.ScrollableMap === undefined) {
         } else {
             maxDistanceUntilUp = Infinity;
         }
-        const dragger = new DragSimulator({
+        const dragger = new DragSimulator(type, {
             maxDistanceUntilUp
         });
 
@@ -637,7 +637,8 @@ if (window.ScrollableMap === undefined) {
     };
 
     class DragSimulator {
-        constructor(opts) {
+        constructor(mapType, opts) {
+            this.mapType = mapType;
             this.opts = { ...DRAG_SIMULATOR_DEFAULT_OPTS, ...opts };
         }
 
@@ -724,8 +725,13 @@ if (window.ScrollableMap === undefined) {
 
         simulateDrag(target, point, dx, dy) {
             if (!this.mouseDownPoint) {
-                const style = target.parentNode.style;
-                if (style && style.cursor === 'pointer' && this.lastAutoCursorPos) {
+                // In Google maps, if a hover card is shown, it might be a hint that dragging does something other than
+                // panning the map. Unfortunately, I couldn't find a more useful indicator to tell that, so we may be
+                // playing a little cat-and-mouse game here.
+                const hasDragHint = this.mapType === ScrollableMap.TYPE_GOOGLE_MAPS_WEB
+                    && Array.from(document.querySelectorAll('[jsaction*="hovercard"]'))
+                        .some(e => e.style.display !== "none")
+                if (hasDragHint && this.lastAutoCursorPos) {
                     // If the cursor style is pointer, we might be hovering on a route. Dragging
                     // will alter the route, which we don't want, so use the last mouse down point
                     // instead.

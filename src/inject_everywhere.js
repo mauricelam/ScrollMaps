@@ -185,7 +185,7 @@ if (window.SM_INJECT === undefined) {
 
     async function poll(func, timeout, count) {
         for (let i = 0; i < count; i++) {
-            console.log('poll scrollify maps', i);
+            if (DEBUG) console.log('Poll scrollify maps', i);
             func();
             await sleep(timeout * Math.pow(2, i));
         }
