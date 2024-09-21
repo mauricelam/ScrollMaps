@@ -24,7 +24,7 @@
     "geckodriver": "^4.3.1",
     "gulp": "^5.0.0",
     "gulp-concat": "^2.6.1",
-    "gulp-mocha": "^8.0.0",
+    "gulp-mocha": "^9.0.0",
     "gulp-newer": "^1.4.0",
     "gulp-rename": "^2.0.0",
     "gulp-uglify": "^3.0.2",
