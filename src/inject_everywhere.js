@@ -2,17 +2,17 @@ if (window.SM_INJECT === undefined) {
     const DEBUG = chrome.runtime.getManifest().version === '10000';
     window.SM_INJECT = { count: 0 };
 
-    class AbstractMapFinder {
-        static _matchAncestor(node, predicate) {
-            if (predicate(node)) {
-                return node;
-            }
-            if (node.parentNode instanceof Element && node.parentNode !== node) {
-                return this._matchAncestor(node.parentNode, predicate);
-            }
-            return null;
+    function _matchAncestor(node, predicate) {
+        if (predicate(node)) {
+            return node;
         }
+        if (node.parentNode instanceof Element && node.parentNode !== node) {
+            return _matchAncestor(node.parentNode, predicate);
+        }
+        return null;
+    }
 
+    class AbstractMapFinder {
         static _querySrc(container, tag, possible_substrings) {
             for (let elem of container.querySelectorAll(tag)) {
                 for (let substring of possible_substrings) {
@@ -37,7 +37,7 @@ if (window.SM_INJECT === undefined) {
                 const foundSet = new Set(foundImages);
                 if (foundSet.size <= foundThreshold) {
                     return Array.from(foundSet)
-                        .map(container => this._matchAncestor(container,
+                        .map(container => _matchAncestor(container,
                             node => isVisible(node)
                                 && node.offsetHeight > 1
                                 && node.offsetWidth > 1
@@ -77,6 +77,14 @@ if (window.SM_INJECT === undefined) {
             return GoogleMapFinder._findTiledMap('img[src*="//maps.googleapis.com/maps/"]');
         }
 
+        static _findAriaMap() {
+            if (new URL(location.href).host.indexOf('.google.') > -1) {
+                return [...document.querySelectorAll('[aria-label=Map]')];
+            } else {
+                return [];
+            }
+        }
+
         static findMaps() {
             let mapContainers = GoogleMapFinder._findCanvasMap();
             if (mapContainers.length > 0) {
@@ -84,6 +92,11 @@ if (window.SM_INJECT === undefined) {
             }
 
             mapContainers = GoogleMapFinder._findGmStyleMap();
+            if (mapContainers.length > 0) {
+                return mapContainers;
+            }
+
+            mapContainers = GoogleMapFinder._findAriaMap();
             if (mapContainers.length > 0) {
                 return mapContainers;
             }
@@ -207,10 +220,12 @@ if (window.SM_INJECT === undefined) {
     window.addEventListener('wheel', async (e) => {
         if (e.timeStamp - lastEventTime > THROTTLE_TIME_MS) {
             lastEventTime = e.timeStamp;
-            await scrollifyExistingMaps();
+            if (!_matchAncestor(e.target, (e) => e.hasAttribute('data-scrollmaps'))) {
+                await scrollifyExistingMaps();
+            }
         }
     }, true);
-    poll(scrollifyExistingMaps, 2000, 3);
+    poll(scrollifyExistingMaps, 2000, 2);
 
     window.addEventListener('mapsFound', async function (event) {
         let map = event.target;
