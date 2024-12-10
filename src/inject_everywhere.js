@@ -107,13 +107,18 @@ if (window.SM_INJECT === undefined) {
     }
 
     // https://developers.arcgis.com/javascript/latest/
+    // More examples at https://developers.arcgis.com/javascript/3/jssamples
     class ArcGisFinder extends AbstractMapFinder {
         static findMaps() {
             return [
                 ...document.querySelectorAll('.esri-view:has(.esri-view-surface > canvas)'),
+                // Examples:
+                // https://developers.arcgis.com/javascript/3/samples/analysis_connectoriginstodestinations/
+                // https://www.tsunami.gov/
                 ...ArcGisFinder._findTiledMap(
                     'img[src*=".arcgisonline.com/"]',
-                    (node) => node.getAttribute("id") == "map_layers")
+                    (node) => node.classList.contains("esriMapContainer") && node.getAttribute("id").endsWith("_root")),
+                ...document.querySelectorAll('.esriMapContainer[id$="_root"]:has(canvas)'),
             ];
         }
     }
