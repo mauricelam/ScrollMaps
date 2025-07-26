@@ -62,7 +62,8 @@ if (window.SM_INJECT === undefined) {
                         [
                             '//maps.googleapis.com/maps/',
                             '//www.google.com/maps/',
-                            '//maps.google.com/maps/'
+                            '//maps.google.com/maps/',
+                            '//maps.gstatic.com/',
                         ])
                 )
                 .map(container => container.parentNode);
