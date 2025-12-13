@@ -5,9 +5,16 @@ if (window.SM_FRAME === undefined) {
     let retries = 3;
 
     async function injectMaps() {
-        const elem = document.getElementById('content-container');
-        if (elem) {
-            new ScrollableMap(elem, ScrollableMap.TYPE_GOOGLE_MAPS_WEB, SM_FRAME.count++, await Pref.getAllOptions());
+        let elem = document.getElementById('content-container');
+        elem = elem || document.querySelector('[role=application]:has(canvas)');
+        const minimap = document.getElementById('minimap');
+        if (elem || minimap) {
+            if (elem) {
+                new ScrollableMap(elem, ScrollableMap.TYPE_GOOGLE_MAPS_WEB, SM_FRAME.count++, await Pref.getAllOptions());
+            }
+            if (minimap) {
+                new ScrollableMap(minimap, ScrollableMap.TYPE_GOOGLE_MAPS_WEB, SM_FRAME.count++, await Pref.getAllOptions());
+            }
         } else if (retries > 0) {
             // Retry a few times because the new map canvas is not installed on DOM load
             retries--;
