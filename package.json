@@ -19,7 +19,7 @@
   "devDependencies": {
     "async-done": "^2.0.0",
     "chai": "^4.3.7",
-    "chromedriver": "^126.0.4",
+    "chromedriver": "^143.0.1",
     "del": "^7.0.0",
     "geckodriver": "^4.3.1",
     "gulp": "^5.0.0",
