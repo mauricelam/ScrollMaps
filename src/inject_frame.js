@@ -9,13 +9,14 @@ if (window.SM_FRAME === undefined) {
         elem = elem || document.querySelector('[role=application]:has(canvas)');
         const minimap = document.getElementById('minimap');
         if (elem || minimap) {
-            if (elem) {
+            if (elem && !elem.hasAttribute('data-scrollmap')) {
                 new ScrollableMap(elem, ScrollableMap.TYPE_GOOGLE_MAPS_WEB, SM_FRAME.count++, await Pref.getAllOptions());
             }
-            if (minimap) {
+            if (minimap && !minimap.hasAttribute('data-scrollmap')) {
                 new ScrollableMap(minimap, ScrollableMap.TYPE_GOOGLE_MAPS_WEB, SM_FRAME.count++, await Pref.getAllOptions());
             }
-        } else if (retries > 0) {
+        }
+        if ((!elem || !minimap) && retries > 0) {
             // Retry a few times because the new map canvas is not installed on DOM load
             retries--;
             setTimeout(injectMaps, 1000);
