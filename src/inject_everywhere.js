@@ -64,6 +64,7 @@ if (window.SM_INJECT === undefined) {
                             '//www.google.com/maps/',
                             '//maps.google.com/maps/',
                             '//maps.gstatic.com/',
+                            '//mapsresources-pa.googleapis.com',
                         ])
                 )
                 .map(container => container.parentNode);
@@ -181,6 +182,15 @@ if (window.SM_INJECT === undefined) {
         }
     }
 
+    // https://www.bing.com/api/maps/sdk/mapcontrol/isdk/loadmapasync
+    // https://www.costco.com/WarehouseLocatorDetailsView?catalogId=10701&storeId=10301
+    // https://www.edinarealty.com/listing/listingsearch/properties
+    class MicrosoftMapFinder extends AbstractMapFinder {
+        static findMaps() {
+            return Array.from(document.querySelectorAll('.MicrosoftMap:has(canvas)'));
+        }
+    }
+
     async function scrollifyExistingMaps() {
         const maps = [
             ...GoogleMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_GOOGLE_MAPS_API } }),
@@ -192,6 +202,7 @@ if (window.SM_INJECT === undefined) {
             ...MapLibreFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
             ...OpenLayersMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
             ...MapyCzFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPYCZ } }),
+            ...MicrosoftMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MSMAP } }),
         ];
         if (DEBUG) console.log('Found maps in page?', maps);
         if (maps.length <= 0) {
