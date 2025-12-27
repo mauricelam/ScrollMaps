@@ -23,6 +23,10 @@ if (window.Scrollability === undefined) {
         },
 
         _hasScrollableParentInner(element, until) {
+            if (element instanceof DocumentFragment) {
+                return this._hasScrollableParentInner(element.getRootNode().host, until);
+            }
+
             if (this.isScrollable(element)) return true;
             if (!element || !element.parentNode) return false;
             if (getComputedStyle(element).position === 'fixed') return false;

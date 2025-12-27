@@ -24,9 +24,8 @@ if (window.SM_INJECT === undefined) {
             return false;
         }
 
-        static _findTiledMap(selector, filter) {
-            let foundImages = Array.from(
-                document.querySelectorAll(selector));
+        static _findTiledMap(finder, selector, filter) {
+            let foundImages = finder.querySelectorAll(selector);
             // To handle multiple maps on the same page, we make the threshold
             // number of images / 4. We consider the common ancestor to be found below
             // that threshold.
@@ -55,8 +54,8 @@ if (window.SM_INJECT === undefined) {
     }
 
     class GoogleMapFinder extends AbstractMapFinder {
-        static _findGmStyleMap() {
-            return Array.from(document.querySelectorAll('.gm-style:has(img)'))
+        static _findGmStyleMap(finder) {
+            return finder.querySelectorAll('.gm-style:has(img)')
                 .filter(container =>
                     this._querySrc(container, 'img',
                         [
@@ -70,40 +69,40 @@ if (window.SM_INJECT === undefined) {
                 .map(container => container.parentNode);
         }
 
-        static _findCanvasMap() {
-            return Array.from(document.querySelectorAll('.gm-style:has(canvas)'))
+        static _findCanvasMap(finder) {
+            return finder.querySelectorAll('.gm-style:has(canvas)')
                 .map(container => container.parentNode);
         }
 
-        static _findFallbackMap() {
-            return GoogleMapFinder._findTiledMap('img[src*="//maps.googleapis.com/maps/"]');
+        static _findFallbackMap(finder) {
+            return GoogleMapFinder._findTiledMap(finder, 'img[src*="//maps.googleapis.com/maps/"]');
         }
 
-        static _findAriaMap() {
+        static _findAriaMap(finder) {
             if (new URL(location.href).host.indexOf('.google.') > -1) {
-                return [...document.querySelectorAll('[aria-label=Map]')];
+                return [...finder.querySelectorAll('[aria-label=Map]')];
             } else {
                 return [];
             }
         }
 
-        static findMaps() {
-            let mapContainers = GoogleMapFinder._findCanvasMap();
+        static findMaps(finder) {
+            let mapContainers = GoogleMapFinder._findCanvasMap(finder);
             if (mapContainers.length > 0) {
                 return mapContainers;
             }
 
-            mapContainers = GoogleMapFinder._findGmStyleMap();
+            mapContainers = GoogleMapFinder._findGmStyleMap(finder);
             if (mapContainers.length > 0) {
                 return mapContainers;
             }
 
-            mapContainers = GoogleMapFinder._findAriaMap();
+            mapContainers = GoogleMapFinder._findAriaMap(finder);
             if (mapContainers.length > 0) {
                 return mapContainers;
             }
 
-            mapContainers = GoogleMapFinder._findFallbackMap();
+            mapContainers = GoogleMapFinder._findFallbackMap(finder);
             return mapContainers;
         }
     }
@@ -111,72 +110,70 @@ if (window.SM_INJECT === undefined) {
     // https://developers.arcgis.com/javascript/latest/
     // More examples at https://developers.arcgis.com/javascript/3/jssamples
     class ArcGisFinder extends AbstractMapFinder {
-        static findMaps() {
+        static findMaps(finder) {
             return [
-                ...document.querySelectorAll('.esri-view:has(.esri-view-surface > canvas)'),
+                ...finder.querySelectorAll('.esri-view:has(.esri-view-surface > canvas)'),
                 // Examples:
                 // https://developers.arcgis.com/javascript/3/samples/analysis_connectoriginstodestinations/
                 // https://www.tsunami.gov/
                 ...ArcGisFinder._findTiledMap(
+                    finder,
                     'img[src*=".arcgisonline.com/"]',
                     (node) => node.classList.contains("esriMapContainer") && node.getAttribute("id").endsWith("_root")),
-                ...document.querySelectorAll('.esriMapContainer[id$="_root"]:has(canvas)'),
+                ...finder.querySelectorAll('.esriMapContainer[id$="_root"]:has(canvas)'),
             ];
         }
     }
 
     // https://docs.mapbox.com/
     class MapBoxFinder extends AbstractMapFinder {
-        static findMaps() {
-            return [
-                ...document.querySelectorAll('.mapboxgl-map:has(canvas.mapboxgl-canvas)'),
-            ]
+        static findMaps(finder) {
+            return finder.querySelectorAll('.mapboxgl-map:has(canvas.mapboxgl-canvas)')
                 .map((elem) => elem.closest('.leaflet-container') || elem);
         }
     }
 
     // https://leafletjs.com/
     class LeafletFinder extends AbstractMapFinder {
-        static findMaps() {
-            return [
-                // https://www.strava.com/activities
-                ...document.querySelectorAll('.leaflet-container:has(.leaflet-tile-container)')
-            ];
+        static findMaps(finder) {
+            // https://www.strava.com/activities
+            return finder.querySelectorAll('.leaflet-container:has(.leaflet-tile-container)');
         }
     }
 
     // https://www.openstreetmap.org/
     class OpenStreetMapFinder extends AbstractMapFinder {
-        static findMaps() {
-            return OpenStreetMapFinder._findTiledMap('img[src*="tile.openstreetmap.org"]');
+        static findMaps(finder) {
+            return OpenStreetMapFinder._findTiledMap(finder, 'img[src*="tile.openstreetmap.org"]');
         }
     }
 
     // https://developer.apple.com/documentation/mapkitjs/
     class AppleMapKitFinder extends AbstractMapFinder {
-        static findMaps() {
-            return Array.from(document.querySelectorAll('.mk-map-view:has(canvas)'));
+        static findMaps(finder) {
+            return finder.querySelectorAll('.mk-map-view:has(canvas)');
         }
     }
 
     // https://openlayers.org/
     class OpenLayersMapFinder extends AbstractMapFinder {
-        static findMaps() {
-            return Array.from(document.querySelectorAll('.ol-viewport:has(canvas)'));
+        static findMaps(finder) {
+            return finder.querySelectorAll('.ol-viewport:has(canvas)');
         }
     }
 
     // https://maplibre.org/maplibre-gl-js/docs/, including Azure Maps.
     class MapLibreFinder extends AbstractMapFinder {
-        static findMaps() {
-            return Array.from(document.querySelectorAll('.maplibregl-map:has(canvas.maplibregl-canvas)'));
+        static findMaps(finder) {
+            return finder.querySelectorAll('.maplibregl-map:has(canvas.maplibregl-canvas)');
         }
     }
 
     // https://en.mapy.cz/
     class MapyCzFinder extends AbstractMapFinder {
-        static findMaps() {
+        static findMaps(finder) {
             return MapyCzFinder._findTiledMap(
+                finder,
                 'img[src*=".mapy.cz/"]',
                 (node) => node.getAttribute("id") == "map")
         }
@@ -186,23 +183,54 @@ if (window.SM_INJECT === undefined) {
     // https://www.costco.com/WarehouseLocatorDetailsView?catalogId=10701&storeId=10301
     // https://www.edinarealty.com/listing/listingsearch/properties
     class MicrosoftMapFinder extends AbstractMapFinder {
-        static findMaps() {
-            return Array.from(document.querySelectorAll('.MicrosoftMap:has(canvas)'));
+        static findMaps(finder) {
+            return finder.querySelectorAll('.MicrosoftMap:has(canvas)');
+        }
+    }
+
+    function findAllShadowRoots(container = document) {
+        const allElements = container.querySelectorAll('*');
+        const results = [];
+
+        allElements.forEach(el => {
+            if (el.shadowRoot) {
+                results.push(el.shadowRoot);
+                findAllShadowRoots(el.shadowRoot, results);
+            }
+        });
+
+        return results;
+    }
+
+    class ElementFinder {
+        constructor(container = document) {
+            this.shadowRoots = findAllShadowRoots(container);
+            this.container = container;
+        }
+
+        querySelectorAll(selector) {
+            const results = [];
+            results.push(...this.container.querySelectorAll(selector));
+            for (const shadowRoot of this.shadowRoots) {
+                results.push(...shadowRoot.querySelectorAll(selector));
+            }
+            return results;
         }
     }
 
     async function scrollifyExistingMaps() {
+        const finder = new ElementFinder();
         const maps = [
-            ...GoogleMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_GOOGLE_MAPS_API } }),
-            ...ArcGisFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_ARCGIS } }),
-            ...MapBoxFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPBOX } }),
-            ...OpenStreetMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_OPEN_STREET_MAP } }),
-            ...AppleMapKitFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_APPLE_MAPKIT } }),
-            ...LeafletFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_LEAFLET } }),
-            ...MapLibreFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
-            ...OpenLayersMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPLIBRE } }),
-            ...MapyCzFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MAPYCZ } }),
-            ...MicrosoftMapFinder.findMaps().map((m) => { return { map: m, type: ScrollableMap.TYPE_MSMAP } }),
+            ...GoogleMapFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_GOOGLE_MAPS_API })),
+            ...ArcGisFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_ARCGIS })),
+            ...MapBoxFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_MAPBOX })),
+            ...OpenStreetMapFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_OPEN_STREET_MAP })),
+            ...AppleMapKitFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_APPLE_MAPKIT })),
+            ...LeafletFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_LEAFLET })),
+            ...MapLibreFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_MAPLIBRE })),
+            ...OpenLayersMapFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_MAPLIBRE })),
+            ...MapyCzFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_MAPYCZ })),
+            ...MicrosoftMapFinder.findMaps(finder).map((m) => ({ map: m, type: ScrollableMap.TYPE_MSMAP })),
         ];
         if (DEBUG) console.log('Found maps in page?', maps);
         if (maps.length <= 0) {

@@ -118,7 +118,12 @@ if (window.ScrollableMap === undefined) {
                 outline: 3px solid rgba(33, 150, 243, 0.8);
             }
         `;
-        document.head.appendChild(style);
+        try {
+            const rootNode = div.getRootNode();
+            (rootNode.documentElement || rootNode).appendChild(style);
+        } catch (e) {
+            console.error("Error injecting CSS", e)
+        }
 
         Scrollability.monitorScrollabilitySuper(div, (scrolls) => {
             bodyScrolls = scrolls;
