@@ -1,6 +1,7 @@
 import gulp from 'gulp';
 const { src, dest, series, parallel } = gulp;
 import concat from 'gulp-concat';
+import webpack from 'webpack-stream';
 import { deleteAsync, deleteSync } from 'del';
 import rename from 'gulp-rename';
 import zip from 'gulp-zip';
@@ -53,7 +54,6 @@ class BuildContext {
 
     copySourceFiles() {
         return src([
-            'src/**/*.js',
             'src/**/*.mjs',
             'src/**/*.css',
             'src/**/*.html',
@@ -171,34 +171,13 @@ class BuildContext {
 
     MINIFY_FILES() {
         return {
-            'inject_everywhere': [
-                "src/pref.js",
-                "src/Scrollability.js",
-                "src/ScrollableMap.js",
-                "src/inject_everywhere.js"
-            ],
-            'inject_frame_permission': [
-                "src/inject_frame_permission.js",
-            ],
-            'scrollability_inject': ["src/Scrollability.js"],
-            'inject_frame': [
-                "src/pref.js",
-                "src/Scrollability.js",
-                "src/ScrollableMap.js",
-                "src/permission.js",
-                `${this.pluginDir()}/src/domains.js`,
-                "src/inject_frame.js"
-            ],
-            'inject_main': [
-                "src/inject_main.js",
-            ],
-            'background': [
-                "src/pref.js",
-                "src/permission.js",
-                "src/background.js",
-                `${this.pluginDir()}/src/domains.js`,
-            ],
-        }
+            'inject_everywhere': './src/inject_everywhere.entry.ts',
+            'inject_frame_permission': './src/inject_frame_permission.entry.ts',
+            'scrollability_inject': './src/scrollability_inject.entry.ts',
+            'inject_frame': './src/inject_frame.entry.ts',
+            'inject_main': './src/inject_main.entry.ts',
+            'background': './src/background.entry.ts',
+        };
     }
 
     zipExtension() {
@@ -209,18 +188,36 @@ class BuildContext {
     }
 
     async build() {
-        const minifyTasks = Object.entries(this.MINIFY_FILES()).map(([output, sourceFiles]) => {
-            const minifyTask = () =>
-                src(sourceFiles)
-                    .pipe(newer({ dest: `${this.pluginDir()}/${output}.min.js`, extra: __filename }))
-                    .pipe(concat(`${output}.min.js`))
-                    .pipe(doubleInclusionGuard())
-                    .pipe(dest(this.pluginDir()));
-            minifyTask.displayName = `[${this.browser}] minify_${output}`
-            return minifyTask;
-        });
+        const webpackTask = () => {
+            const entries = this.MINIFY_FILES();
+            return src(Object.values(entries))
+                .pipe(webpack({
+                    entry: entries,
+                    output: {
+                        filename: '[name].min.js',
+                    },
+                    resolve: {
+                        extensions: ['.ts', '.js'],
+                        modules: ['src', 'node_modules'],
+                    },
+                    module: {
+                        rules: [
+                            {
+                                test: /\.ts$/,
+                                loader: 'ts-loader',
+                                exclude: /node_modules/,
+                            }
+                        ]
+                    },
+                    mode: 'production',
+                }))
+                .pipe(dest(this.pluginDir()));
+
+        };
+        webpackTask.displayName = `[${this.browser}] webpack`;
+
         const buildUnpacked = parallel(
-            ...minifyTasks,
+            webpackTask,
             this.copySourceFiles,
             this.copyMapsEmbedFile,
             this.copyImages,
@@ -269,6 +266,34 @@ class BuildContext {
                     timeout: 100000
                 }))
         );
+    }
+
+    async buildUnitTestDependencies() {
+        return src(['src/permission.ts', 'src/Scrollability.ts'])
+            .pipe(webpack({
+                entry: {
+                    permission: './src/permission.ts',
+                    Scrollability: './src/Scrollability.ts',
+                },
+                output: {
+                    filename: '[name].js',
+                },
+                resolve: {
+                    extensions: ['.ts', '.js'],
+                    modules: ['src', 'node_modules'],
+                },
+                module: {
+                    rules: [
+                        {
+                            test: /\.ts$/,
+                            loader: 'ts-loader',
+                            exclude: /node_modules/,
+                        }
+                    ]
+                },
+                mode: 'development',
+            }))
+            .pipe(dest(`${this.pluginDir()}/src`));
     }
 
     runUnitTest(watch = false) {
@@ -389,7 +414,7 @@ watchDevBuild.description = 'Watch for changes in source files and build develop
 async function runUnitTest() {
     const bc = new BuildContext('chrome', 10000);
     await runSeries(
-        bc.build,
+        series(bc.generateDomainDotJs, bc.buildUnitTestDependencies),
         bc.runUnitTest(),
     );
 }
@@ -397,6 +422,7 @@ runUnitTest.description = 'Run unit tests in a headless chrome instance';
 
 async function watchUnitTest() {
     const bc = new BuildContext('chrome', 10000);
+    const buildTest = series(bc.generateDomainDotJs, bc.buildUnitTestDependencies);
     gulp.watch(
         [
             'src/**',
@@ -407,10 +433,10 @@ async function watchUnitTest() {
             __filename,
         ],
         { events: 'all' },
-        bc.build
+        buildTest
     );
     await runSeries(
-        bc.build,
+        buildTest,
         bc.runUnitTest(true),
     );
 }

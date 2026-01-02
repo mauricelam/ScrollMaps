@@ -17,9 +17,10 @@
   },
   "homepage": "https://github.com/mauricelam/ScrollMaps",
   "devDependencies": {
+    "@types/chrome": "^0.1.32",
     "async-done": "^2.0.0",
     "chai": "^4.3.7",
-    "chromedriver": "^143.0.1",
+    "chromedriver": "^126.0.0",
     "del": "^7.0.0",
     "geckodriver": "^4.3.1",
     "gulp": "^5.0.0",
@@ -37,6 +38,10 @@
     "mocha": "^10.2.0",
     "ms-chromium-edge-driver": "^0.5.1",
     "open": "^9.1.0",
-    "selenium-webdriver": "^4.22.0"
+    "selenium-webdriver": "^4.39.0",
+    "ts-loader": "^9.4.2",
+    "typescript": "^5.0.4",
+    "webpack": "^5.82.0",
+    "webpack-stream": "^7.0.0"
   }
 }
