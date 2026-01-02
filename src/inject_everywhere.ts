@@ -1,257 +1,286 @@
-// @ts-nocheck
-window.SM_INJECT = true;
+import PrefManager from "./pref";
+import ScrollableMap, { MapType } from "./ScrollableMap";
+import { DEBUG, sleep } from "./utils";
 
-(function () {
-  window.SM_INJECT = true;
+if ((window as any).SM_INJECT === undefined) {
+  const SM_INJECT = { count: 0 };
+  (window as any).SM_INJECT = SM_INJECT;
 
-  var pref;
-  var scrollability;
-  var lastFocus;
-
-  function init() {
-    new Pref(function (newPref) {
-      pref = newPref;
-      scrollability = new Scrollability(pref);
-      if (pref.enabled) {
-        scrollability.enable();
-      }
-      addSMStyle();
-
-      pref.subscribe(function (key, value) {
-        if (key === 'enabled' && value) {
-          scrollability.enable();
-        } else if (key === 'enabled' && !value) {
-          scrollability.disable();
-        }
-      });
-
-      window.addEventListener('focus', function (event) {
-        if (event.target === window || event.target === document) {
-          return;
-        }
-        lastFocus = event.target;
-      }, true);
-    });
+  function _matchAncestor(node: Element, predicate: (node: Element) => boolean) {
+    if (predicate(node)) {
+      return node;
+    }
+    if (node.parentNode instanceof Element && node.parentNode !== node) {
+      return _matchAncestor(node.parentNode, predicate);
+    }
+    return null;
   }
 
-  function SMLog(message) {
-    if (SM_DEBUG) {
-      console.log(message);
+  class AbstractMapFinder {
+    static _querySrc(container: Element, tag: string, possible_substrings: string[]) {
+      for (const elem of container.querySelectorAll(tag)) {
+        for (const substring of possible_substrings) {
+          if (elem['src']?.indexOf(substring) !== -1) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    static _findTiledMap(finder: ElementFinder, selector: string, filter?: (node: Element) => boolean) {
+      let foundImages = finder.querySelectorAll(selector);
+      // To handle multiple maps on the same page, we make the threshold
+      // number of images / 4. We consider the common ancestor to be found below
+      // that threshold.
+      let foundThreshold = Math.max(foundImages.length / 4, 1);
+      for (let i = 0; i < 5; i++) {
+        // Walk maximum 5 levels to find the common ancestor
+        foundImages = foundImages.map(img => img.parentNode as Element);
+        const foundSet = new Set(foundImages);
+        if (foundSet.size <= foundThreshold) {
+          return Array.from(foundSet)
+            .map(container => _matchAncestor(container,
+              elem => isVisible(elem)
+                && elem['offsetHeight'] > 1
+                && elem['offsetWidth'] > 1
+                && (filter === undefined || filter(elem))
+            ))
+            .filter(n => n);
+        }
+      }
+      return [];
+
+      function isVisible(elem: Element): boolean {
+        return window.getComputedStyle(elem).display !== "none";
+      }
     }
   }
 
-  function addSMStyle() {
-    var style = document.createElement('style');
-    style.textContent = '' +
-      '.scrollmaps_enabled {' +
-      'border: 2px solid #3879D9;' +
-      'box-sizing: border-box;' +
-      '}' +
-      '.scrollmaps_enabled.scrollmaps_focused {' +
-      'border-width: 3px;' +
-      '}' +
-      '';
-    document.head.appendChild(style);
-  }
+  class GoogleMapFinder extends AbstractMapFinder {
+    static _findGmStyleMap(finder: ElementFinder): Node[] {
+      return finder.querySelectorAll('.gm-style:has(img)')
+        .filter(container =>
+          this._querySrc(container, 'img',
+            [
+              '//maps.googleapis.com/maps/',
+              '//www.google.com/maps/',
+              '//maps.google.com/maps/',
+              '//maps.gstatic.com/',
+              '//mapsresources-pa.googleapis.com',
+            ])
+        )
+        .map(container => container.parentNode);
+    }
 
-  // Find all elements that can be made scrollable.
-  // This is not an easy task, as there are many different map providers.
-  // This is the basic heuristic used:
-  // - The element must be a certain size to be a map.
-  // - The element must not be a child of another map element.
-  // - The element must have some sign that it is a map.
-  //
-  // The following signs are used to determine if an element is a map:
-  // - Element has a class name containing "maps"
-  // - Element has a child with a class name containing "maps"
-  // - Element has a child with a "gm-" class name (for Google Maps)
-  // - Element has a URL as a background image.
-  //
-  // Returns a list of elements that can be made scrollable.
-  // Each element in the list has a "container" and a list of "shadowRoots"
-  // from which the map was found.
-  function findScrollableElements() {
-    const MIN_MAP_SIZE = 200;
-    const all = document.querySelectorAll('*:not(.scrollmaps_popup)');
-    const results = [];
+    static _findCanvasMap(finder: ElementFinder): Node[] {
+      return finder.querySelectorAll('.gm-style:has(canvas)')
+        .map(container => container.parentNode);
+    }
 
-    // Finds elements in a document or shadow root.
-    function findElementsIn(root) {
-      let elements = [];
-      try {
-        elements = Array.from(root.querySelectorAll('*'));
-      } catch (e) {
-        // Can get "DOMException: Not allowed to query selector in a non-connected route"
-        // in some cases.
+    static _findFallbackMap(finder: ElementFinder): Node[] {
+      return GoogleMapFinder._findTiledMap(finder, 'img[src*="//maps.googleapis.com/maps/"]');
+    }
+
+    static _findAriaMap(finder: ElementFinder): Node[] {
+      if (new URL(location.href).host.indexOf('.google.') > -1) {
+        return [...finder.querySelectorAll('[aria-label=Map]')];
+      } else {
         return [];
       }
-
-      for (let el of elements) {
-        let shadowRoot = el.shadowRoot;
-        if (shadowRoot) {
-          findElementsIn(shadowRoot).forEach(result => {
-            result.shadowRoots.unshift(shadowRoot);
-            results.push(result);
-          });
-        }
-      }
-
-      elements = elements.filter(el => {
-        if (el.scrollWidth > MIN_MAP_SIZE && el.scrollHeight > MIN_MAP_SIZE && el.matches(
-          // Heuristic for Google maps
-          '[class*="maps"], [class*="Maps"], [aria-label*="Map"], [aria-label*="map"], a[href*="/maps/"], a[href*="/maps/"], ' +
-          // Heuristic for Bing maps
-          '.b_map')) {
-          return true;
-        }
-
-        // Heuristic for Google maps, which uses a non-semantic class name for the map container
-        if (el.matches('[class^="gm-"]')) {
-          let parent = el.parentElement;
-          while (parent) {
-            if (parent.scrollWidth > MIN_MAP_SIZE && parent.scrollHeight > MIN_MAP_SIZE) {
-              elements.push(parent);
-            }
-            parent = parent.parentElement;
-          }
-        }
-        return false;
-      });
-      elements = elements.filter((el, i) => {
-        // remove children of other maps
-        for (let j = 0; j < elements.length; ++j) {
-          if (i === j) continue;
-          if (elements[j].contains(el)) {
-            return false;
-          }
-        }
-        return true;
-      });
-
-      return elements.map(el => { return { container: el, shadowRoots: [] }; });
     }
 
-    results.push(...findElementsIn(document));
+    static findMaps(finder: ElementFinder): Node[] {
+      let mapContainers = GoogleMapFinder._findCanvasMap(finder);
+      if (mapContainers.length > 0) {
+        return mapContainers;
+      }
+
+      mapContainers = GoogleMapFinder._findGmStyleMap(finder);
+      if (mapContainers.length > 0) {
+        return mapContainers;
+      }
+
+      mapContainers = GoogleMapFinder._findAriaMap(finder);
+      if (mapContainers.length > 0) {
+        return mapContainers;
+      }
+
+      mapContainers = GoogleMapFinder._findFallbackMap(finder);
+      return mapContainers;
+    }
+  }
+
+  // https://developers.arcgis.com/javascript/latest/
+  // More examples at https://developers.arcgis.com/javascript/3/jssamples
+  class ArcGisFinder extends AbstractMapFinder {
+    static findMaps(finder: ElementFinder): Node[] {
+      return [
+        ...finder.querySelectorAll('.esri-view:has(.esri-view-surface > canvas)'),
+        // Examples:
+        // https://developers.arcgis.com/javascript/3/samples/analysis_connectoriginstodestinations/
+        // https://www.tsunami.gov/
+        ...ArcGisFinder._findTiledMap(
+          finder,
+          'img[src*=".arcgisonline.com/"]',
+          (node) => node.classList.contains("esriMapContainer") && node.getAttribute("id").endsWith("_root")),
+        ...finder.querySelectorAll('.esriMapContainer[id$="_root"]:has(canvas)'),
+      ];
+    }
+  }
+
+  // https://docs.mapbox.com/
+  class MapBoxFinder extends AbstractMapFinder {
+    static findMaps(finder: ElementFinder): Node[] {
+      return finder.querySelectorAll('.mapboxgl-map:has(canvas.mapboxgl-canvas)')
+        .map((elem) => elem.closest('.leaflet-container') || elem);
+    }
+  }
+
+  // https://leafletjs.com/
+  class LeafletFinder extends AbstractMapFinder {
+    static findMaps(finder: ElementFinder): Node[] {
+      // https://www.strava.com/activities
+      return finder.querySelectorAll('.leaflet-container:has(.leaflet-tile-container)');
+    }
+  }
+
+  // https://www.openstreetmap.org/
+  class OpenStreetMapFinder extends AbstractMapFinder {
+    static findMaps(finder: ElementFinder): Node[] {
+      return OpenStreetMapFinder._findTiledMap(finder, 'img[src*="tile.openstreetmap.org"]');
+    }
+  }
+
+  // https://developer.apple.com/documentation/mapkitjs/
+  class AppleMapKitFinder extends AbstractMapFinder {
+    static findMaps(finder: ElementFinder): Node[] {
+      return finder.querySelectorAll('.mk-map-view:has(canvas)');
+    }
+  }
+
+  // https://openlayers.org/
+  class OpenLayersMapFinder extends AbstractMapFinder {
+    static findMaps(finder: ElementFinder): Node[] {
+      return finder.querySelectorAll('.ol-viewport:has(canvas)');
+    }
+  }
+
+  // https://maplibre.org/maplibre-gl-js/docs/, including Azure Maps.
+  class MapLibreFinder extends AbstractMapFinder {
+    static findMaps(finder: ElementFinder): Node[] {
+      return finder.querySelectorAll('.maplibregl-map:has(canvas.maplibregl-canvas)');
+    }
+  }
+
+  // https://en.mapy.cz/
+  class MapyCzFinder extends AbstractMapFinder {
+    static findMaps(finder: ElementFinder): Node[] {
+      return MapyCzFinder._findTiledMap(
+        finder,
+        'img[src*=".mapy.cz/"]',
+        (node) => node.getAttribute("id") == "map")
+    }
+  }
+
+  // https://www.bing.com/api/maps/sdk/mapcontrol/isdk/loadmapasync
+  // https://www.costco.com/WarehouseLocatorDetailsView?catalogId=10701&storeId=10301
+  // https://www.edinarealty.com/listing/listingsearch/properties
+  class MicrosoftMapFinder extends AbstractMapFinder {
+    static findMaps(finder: ElementFinder): Node[] {
+      return finder.querySelectorAll('.MicrosoftMap:has(canvas)');
+    }
+  }
+
+  function findAllShadowRoots(container: Document | HTMLElement | ShadowRoot = document): ShadowRoot[] {
+    const allElements = container.querySelectorAll('*');
+    const results = [];
+
+    allElements.forEach(el => {
+      if (el.shadowRoot) {
+        results.push(el.shadowRoot);
+        findAllShadowRoots(el.shadowRoot);
+      }
+    });
+
     return results;
   }
 
-  // The ElementFinder is responsible for finding map elements.
-  // It occasionally runs and looks for new maps.
-  function ElementFinder() {
-    let self = this;
-    let timer;
+  class ElementFinder {
+    shadowRoots: ShadowRoot[];
+    container: Document | HTMLElement | ShadowRoot;
 
-    // A list of all elements that have been found, and their corresponding ScrollableMap instance.
-    let foundElements = [];
+    constructor(container: Document | HTMLElement | ShadowRoot = document) {
+      this.shadowRoots = findAllShadowRoots(container);
+      this.container = container;
+    }
 
-    this.start = function () {
-      if (timer) {
-        return;
+    querySelectorAll(selector: string): Element[] {
+      const results = [];
+      results.push(...this.container.querySelectorAll(selector));
+      for (const shadowRoot of this.shadowRoots) {
+        results.push(...shadowRoot.querySelectorAll(selector));
       }
-      timer = window.setInterval(self.find, 1000);
-    };
-
-    this.stop = function () {
-      if (timer) {
-        window.clearInterval(timer);
-        timer = null;
-      }
-    };
-
-    this.find = function () {
-      let elements = findScrollableElements();
-      elements.forEach(element => {
-        if (foundElements.findIndex(found => found.container === element.container) !== -1) {
-          // already found this element
-          return;
-        }
-
-        let map = new ScrollableMap(element.container, scrollability);
-        let listeners = [];
-        let focusTimer;
-
-        function addFocusability(el, shadowRoot) {
-          if (!el.hasAttribute('tabindex')) {
-            el.setAttribute('tabindex', -1);
-          }
-          let focusListener = () => {
-            el.classList.add('scrollmaps_focused');
-            window.clearTimeout(focusTimer);
-            focusTimer = window.setTimeout(function () {
-              el.classList.remove('scrollmaps_focused');
-            }, 500);
-          };
-          shadowRoot.addEventListener('focus', focusListener, true);
-          listeners.push({
-            el: shadowRoot,
-            type: 'focus',
-            listener: focusListener,
-            capture: true,
-          });
-        }
-        addFocusability(element.container, document);
-        element.shadowRoots.forEach(shadowRoot => addFocusability(element.container, shadowRoot));
-        element.container.classList.add('scrollmaps_enabled');
-
-        foundElements.push({
-          ...element,
-          map: map,
-          listeners: listeners,
-        });
-
-      });
-
-      // Find elements that are no longer maps and remove them.
-      for (let i = foundElements.length - 1; i >= 0; --i) {
-        let found = foundElements[i];
-        if (!document.contains(found.container) ||
-          elements.findIndex(el => el.container === found.container) === -1) {
-          found.listeners.forEach(l => l.el.removeEventListener(l.type, l.listener, l.capture));
-          found.container.classList.remove('scrollmaps_enabled');
-          found.map.disable();
-          foundElements.splice(i, 1);
-        }
-      }
-    };
-
-  }
-  let elementFinder = new ElementFinder();
-  elementFinder.start();
-
-  function SMכהnabled() {
-    elementFinder.find();
-  }
-  function SMכהisabled() {
+      return results;
+    }
   }
 
-  // For Google maps, we inject some code into the page to get access to their
-  // internal map object. This allows us to do a few things that aren't possible
-  // otherwise, such as getting the current map location.
-  if (window.location.host.match(/^(www|maps)\.google\./)) {
-    let script = document.createElement('script');
-    script.textContent = `
-    (function() {
-      if (window.SM_HOOK) {
-        return;
+  async function scrollifyExistingMaps(): Promise<boolean> {
+    const finder = new ElementFinder();
+    const maps = [
+      ...GoogleMapFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_GOOGLE_MAPS_API })),
+      ...ArcGisFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_ARCGIS })),
+      ...MapBoxFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_MAPBOX })),
+      ...OpenStreetMapFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_OPEN_STREET_MAP })),
+      ...AppleMapKitFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_APPLE_MAPKIT })),
+      ...LeafletFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_LEAFLET })),
+      ...MapLibreFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_MAPLIBRE })),
+      ...OpenLayersMapFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_MAPLIBRE })),
+      ...MapyCzFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_MAPYCZ })),
+      ...MicrosoftMapFinder.findMaps(finder).map((m) => ({ map: m, type: MapType.TYPE_MSMAP })),
+    ];
+    if (DEBUG) console.log('Found maps in page?', maps);
+    if (maps.length <= 0) {
+      return false;
+    }
+    const options = await PrefManager.getAllOptions();
+    for (const { map, type } of maps) {
+      if (map instanceof HTMLElement && !map.hasAttribute('data-scrollmaps')) {
+        new ScrollableMap(map, type, SM_INJECT.count++, options);
+      } else {
+        if (DEBUG) console.log('Skipping already scrollified map');
       }
-      window.SM_HOOK = true;
-      let originalAddListener = google.maps.event.addListener;
-      google.maps.event.addListener = function(...args) {
-        if (args[1] === 'wheel') {
-          return {remove: () => {}};
-        }
-        return originalAddListener.apply(this, args);
-      };
-    })();
-    `;
-    document.documentElement.appendChild(script);
+    }
+    return true;
   }
 
+  async function poll(func, timeout, count) {
+    for (let i = 0; i < count; i++) {
+      if (DEBUG) console.log('Poll scrollify maps', i);
+      func();
+      await sleep(timeout * Math.pow(2, i));
+    }
+  }
 
-  document.addEventListener('SrollMapsSetFocus', function (event) {
-    new ScrollableMap(event.detail.element, SM_INJECT.scrollability).setFocus();
-  });
+  // Init
+  let lastEventTime = 0;
+  const THROTTLE_TIME_MS = 2000;
+  window.addEventListener('wheel', async (e) => {
+    if (e.timeStamp - lastEventTime > THROTTLE_TIME_MS) {
+      lastEventTime = e.timeStamp;
+      if (!_matchAncestor(e.target as Element, (e) => e.hasAttribute('data-scrollmaps'))) {
+        await scrollifyExistingMaps();
+      }
+    }
+  }, true);
+  poll(scrollifyExistingMaps, 2000, 2);
 
-
-  init();
-})();
+  window.addEventListener('mapsFound', async function (event: CustomEvent) {
+    new ScrollableMap(
+      event.target as HTMLElement,
+      event.detail.type,
+      (window as any).SM_INJECT.count++,
+      await PrefManager.getAllOptions()
+    );
+  }, true);
+}

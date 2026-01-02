@@ -1,38 +1,28 @@
 import gulp from 'gulp';
 const { src, dest, series, parallel } = gulp;
-import concat from 'gulp-concat';
 import webpack from 'webpack-stream';
-import { deleteAsync, deleteSync } from 'del';
+import { deleteAsync } from 'del';
 import rename from 'gulp-rename';
 import zip from 'gulp-zip';
 import mocha from 'gulp-mocha';
 import { promises as fs } from 'fs';
 import open from 'open';
-import { makePromise, runParallel, runSeries, contentTransform, execTask } from './gulputils.mjs';
+import { makePromise, runParallel, runSeries, contentTransform, execTask } from './gulputils.ts';
 import newer from 'gulp-newer';
 import minimist from 'minimist';
 import karma from 'karma';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 
-
-const BROWSERS = ['chrome', 'firefox', 'edge'];
-const BROWSER_FLAGS = {};
-for (const browser of BROWSERS) {
-    BROWSER_FLAGS[`--${browser}`] = `for [${browser}] browser`;
-}
-
-function doubleInclusionGuard() {
-    return contentTransform((contents, file, enc) =>
-        `if (!self["..SMLoaded:${file.basename}"]) {
-${contents};
-self["..SMLoaded:${file.basename}"]=true;
-}`);
-}
+type Browser = 'chrome' | 'firefox' | 'edge'
+const BROWSERS: Browser[] = ['chrome', 'firefox', 'edge']
+const BROWSER_FLAGS = Object.fromEntries(BROWSERS.map((browser) => [`--${browser}`, `for [${browser}] browser`]));
 
 class BuildContext {
+    browser: Browser;
+    version: number;
 
-    constructor(browser, version) {
+    constructor(browser: Browser, version: number) {
         if (!browser) throw new Error('Browser is not defined');
         if (!version) throw new Error('Version is not defined');
         this.browser = browser;
@@ -40,9 +30,9 @@ class BuildContext {
 
         // Bind all the functions of this instance
         for (const prop of Object.getOwnPropertyNames(BuildContext.prototype)) {
-            if (this[prop] instanceof Function) {
-                this[prop] = this[prop].bind(this);
-                this[prop].displayName = `[${browser}] ${this[prop].name}`;
+            if ((this as any)[prop] instanceof Function) {
+                (this as any)[prop] = (this as any)[prop].bind(this);
+                (this as any)[prop].displayName = `[${browser}] ${(this as any)[prop].name}`;
             }
         }
     }
@@ -54,29 +44,9 @@ class BuildContext {
 
     copySourceFiles() {
         return src([
-            'src/**/*.mjs',
             'src/**/*.css',
             'src/**/*.html',
-            '!src/inject_frame.js',
-            '!src/inject_frame_permission.js',
-            '!src/inject_everywhere.js',
-            '!src/options/maps_embed.mjs',
-            '!src/options/maps_embed_with_key.mjs',
         ])
-            .pipe(newer(`${this.pluginDir()}/src`))
-            .pipe(dest(`${this.pluginDir()}/src`));
-    }
-
-    async copyMapsEmbedFile() {
-        let mapsEmbedFile;
-        try {
-            await fs.access('src/options/maps_embed_with_key.mjs');
-            mapsEmbedFile = 'src/options/maps_embed_with_key.mjs';
-        } catch (e) {
-            mapsEmbedFile = 'src/options/maps_embed.mjs';
-        }
-        return src([mapsEmbedFile])
-            .pipe(rename('options/maps_embed.mjs'))
             .pipe(newer(`${this.pluginDir()}/src`))
             .pipe(dest(`${this.pluginDir()}/src`));
     }
@@ -97,15 +67,15 @@ class BuildContext {
 
     async generateDomainDotJs() {
         const urls = this._getGoogleMapUrls();
-        await fs.mkdir(`${this.pluginDir()}/src`, { recursive: true });
+        await fs.mkdir(this.intermediatesDir(), { recursive: true });
         await fs.writeFile(
-            `${this.pluginDir()}/src/domains.js`,
-            'const SCROLLMAPS_DOMAINS = ' + JSON.stringify(urls));
+            `${this.intermediatesDir()}/domains.override.ts`,
+            'export default ' + JSON.stringify(urls));
     }
 
-    _processManifestTemplate(content) {
+    _processManifestTemplate(content: string) {
         let manifest = JSON.parse(content);
-        let processObj = (obj) => {
+        let processObj = (obj: any) => {
             if (Array.isArray(obj)) {
                 let index = obj.indexOf('<%= all_google_maps_urls %>');
                 if (index !== -1) {
@@ -171,12 +141,14 @@ class BuildContext {
 
     MINIFY_FILES() {
         return {
-            'inject_everywhere': './src/inject_everywhere.entry.ts',
-            'inject_frame_permission': './src/inject_frame_permission.entry.ts',
-            'scrollability_inject': './src/scrollability_inject.entry.ts',
-            'inject_frame': './src/inject_frame.entry.ts',
-            'inject_main': './src/inject_main.entry.ts',
-            'background': './src/background.entry.ts',
+            'inject_everywhere': './src/inject_everywhere.ts',
+            'inject_frame_permission': './src/inject_frame_permission.ts',
+            'inject_scrollability': './src/Scrollability.ts',
+            'inject_frame': './src/inject_frame.ts',
+            'inject_main': './src/inject_main.ts',
+            'background': './src/background.ts',
+            'options': './src/options/options.ts',
+            'popup': './src/popup/popup.ts',
         };
     }
 
@@ -197,8 +169,8 @@ class BuildContext {
                         filename: '[name].min.js',
                     },
                     resolve: {
-                        extensions: ['.ts', '.js'],
-                        modules: ['src', 'node_modules'],
+                        extensions: ['.override.ts', '.ts', '.js'],
+                        modules: [`${this.intermediatesDir()}`, 'src', 'node_modules'],
                     },
                     module: {
                         rules: [
@@ -219,7 +191,6 @@ class BuildContext {
         const buildUnpacked = parallel(
             webpackTask,
             this.copySourceFiles,
-            this.copyMapsEmbedFile,
             this.copyImages,
             this.processManifest,
         );
@@ -297,7 +268,7 @@ class BuildContext {
     }
 
     runUnitTest(watch = false) {
-        const task = async (done) => {
+        const task = async (done: karma.ServerCallback | undefined) => {
             let config = await karma.config.parseConfig(null, {
                 frameworks: ['mocha', 'chai'],
                 files: [
@@ -361,7 +332,7 @@ devBuild.description = 'Build the development version of the browser';
 devBuild.flags = BROWSER_FLAGS;
 
 async function releaseBuild() {
-    const packageJsonString = await fs.readFile('package.json');
+    const packageJsonString = await fs.readFile('package.json') as any as string;
     const packageJson = JSON.parse(packageJsonString);
     if (!packageJson.version) {
         throw new Error('Cannot get version from package.json')
@@ -376,7 +347,7 @@ releaseBuild.description = 'Build for all releases';
 
 // Task to be run after running `npm version [major/minor]`
 export async function postVersion() {
-    const packageJsonString = await fs.readFile('package.json');
+    const packageJsonString = await fs.readFile('package.json') as any as string;
     const packageJson = JSON.parse(packageJsonString);
     if (!packageJson.version) {
         throw new Error('Cannot get version from package.json')
@@ -453,7 +424,7 @@ export async function clean() {
 clean.description = 'Remove all build outputs';
 
 // Allow --chrome, --firefox, --edge as command line args
-function getBrowser() {
+function getBrowser(): Browser {
     const args = minimist(process.argv.slice(1));
     for (const browser of BROWSERS) {
         if (args[browser]) {
@@ -463,7 +434,7 @@ function getBrowser() {
     if (!process.env.BROWSER) {
         throw new Error('Browser must be specified with --chrome, --firefox, or --edge');
     }
-    return process.env.BROWSER;
+    return process.env.BROWSER as Browser;
 }
 
 export default devBuild;

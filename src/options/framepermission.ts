@@ -4,10 +4,7 @@
 //
 // Used only on Firefox.
 
-function getRequestingTabId() {
-    const url = new URL(location.href);
-    return parseInt(url.searchParams.get('id'), 10);
-}
+import Permission from "../permission";
 
 function init() {
     const permissonBtn = document.getElementById('frame-perm-btn');
@@ -23,7 +20,6 @@ function init() {
                 }
             };
             boxContent.style.visibility = 'visible';
-            responseSender = sendResponse;
             return true;
         }
     });

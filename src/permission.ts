@@ -1,108 +1,77 @@
-// @ts-nocheck
-'use strict';
+import SCROLLMAPS_DOMAINS from "domains"
 
-function getGrantedUrls(callback) {
-  chrome.permissions.getAll(function (permissions) {
-    callback(permissions.origins);
-  });
+interface SiteStatus {
+    tabUrl: string, isSiteGranted: boolean, isAllGranted: boolean,
 }
 
-// given a url, find a matching url in a list of granted urls
-function findMatchingGrantedUrl(url, grantedUrls) {
-  var urlHostname = new URL(url).hostname;
-  return grantedUrls.find(function (grantedUrl) {
-    var grantedHostname = new URL(grantedUrl.replace('*://', 'http://')).hostname.replace('*.', '');
-    return urlHostname.endsWith(grantedHostname);
-  });
-}
+const Permission = {
+    getPermissions(urls: string[]): Promise<boolean> {
+        return new Promise((resolve, _reject) => {
+            chrome.permissions.contains({ 'origins': urls }, resolve);
+        });
+    },
+    async loadSiteStatus(urlString: string): Promise<SiteStatus> {
+        const url = new URL(urlString);
+        let [isSiteGrantedResult, isAllGrantedResult] = await Promise.allSettled([
+            Permission.getPermissions([`${url.protocol}//${url.host}/`]),
+            Permission.getPermissions(['<all_urls>'])
+        ]);
+        console.log('Site status: ', url, isSiteGrantedResult, isAllGrantedResult)
+        const isSiteGranted = isSiteGrantedResult.status === 'fulfilled' && isSiteGrantedResult.value;
+        const isAllGranted = isAllGrantedResult.status === 'fulfilled' && isAllGrantedResult.value;
+        return {
+            'tabUrl': urlString,
+            'isSiteGranted': isSiteGranted,
+            'isAllGranted': isAllGranted
+        };
+    },
 
-var isSiteGranted = false;
-var isAllGranted = false;
-getGrantedUrls(function (urls) {
-  isSiteGranted = findMatchingGrantedUrl(window.location.href, urls) !== undefined;
-  isAllGranted = urls.findIndex(url => url === '*://*/*') !== -1;
-});
+    canInjectIntoPage(url: string): boolean {
+        let protocol = new URL(url).protocol;
+        return Permission.isOwnExtensionPage(url) ||
+            (protocol !== 'chrome:'
+                && protocol !== 'chrome-extension:'
+                && protocol !== 'about:'
+                && protocol !== 'moz-extension:');
+    },
 
-chrome.permissions.onAdded.addListener(function (permissions) {
-  isSiteGranted = isSiteGranted || findMatchingGrantedUrl(window.location.href, permissions.origins) !== undefined;
-  isAllGranted = isAllGranted || permissions.origins.findIndex(url => url === '*://*/*') !== -1;
-});
-chrome.permissions.onRemoved.addListener(function (permissions) {
-  isSiteGranted = isSiteGranted && findMatchingGrantedUrl(window.location.href, permissions.origins) === undefined;
-  isAllGranted = isAllGranted && permissions.origins.findIndex(url => url === '*://*/*') === -1;
-});
+    isOwnExtensionPage(url: string): boolean {
+        return url.indexOf(`chrome-extension://${chrome.runtime.id}`) === 0
+            || url.indexOf(`moz-extension://${chrome.runtime.id}`) === 0;
+    },
 
-function isSiteOnPermissionList(url, callback) {
-  getGrantedUrls(function (urls) {
-    if (urls.findIndex(u => u === '<all_urls>') !== -1 ||
-      urls.findIndex(u => u === '*://*/*') !== -1) {
-      callback(true);
-      return;
-    }
-    var matching = findMatchingGrantedUrl(url, urls);
-    callback(matching !== undefined);
-  });
-}
-
-function removeUrlFromPermissionList(url, callback) {
-  getGrantedUrls(function (grantedUrls) {
-    var matchingUrl = findMatchingGrantedUrl(url, grantedUrls);
-    if (matchingUrl) {
-      chrome.permissions.remove({ origins: [matchingUrl] }, function (removed) {
-        callback(removed);
-      });
-    }
-  });
-}
-
-function addUrlToPermissionList(url, callback) {
-  var suggestedPermission = getSuggestedPermission(url);
-  chrome.permissions.request({ origins: [suggestedPermission] }, function (granted) {
-    callback(granted);
-  });
-}
-
-function getSuggestedPermission(url) {
-  var domains = SCROLLMAPS_DOMAINS.map(domain => domain.replace(/.*:\/\//, ''));
-  var matchingDomain = domains.find(domain => urlUrlMatchesPermission(domain, url));
-  if (matchingDomain) {
-    return `*://${matchingDomain}*`;
-  }
-  return `*://${new URL(url).hostname}/*`;
-}
-
-function urlMatchesPermission(permission, url) {
-  if (permission === '<all_urls>') {
-    return true;
-  }
-  return new RegExp(permission.replace(/\*/g, '.*')).test(url);
-}
-
-// A more robust way to check if a url matches a permission.
-// The manifest match pattern spec is here:
-// https://developer.chrome.com/docs/extensions/mv3/match_patterns/
-function urlUrlMatchesPermission(pattern, url) {
-  // scheme://host/path
-  var patternMatch = pattern.match(/(.*):\/\/(.*?)(\/.*)/);
-  var urlMatch = url.match(/(.*):\/\/(.*?)\/(.*)/);
-
-  if (!urlMatch) {
-    return false;
-  }
-  if (patternMatch[1] !== '*' && patternMatch[1] !== urlMatch[1]) {
-    return false;
-  }
-  if (patternMatch[2] !== '*' && patternMatch[2] !== urlMatch[2]) {
-    if (patternMatch[2].startsWith('*.')) {
-      if (!urlMatch[2].endsWith(patternMatch[2].substring(1))) {
+    isMapsSite(url: string): boolean {
+        for (const domain of SCROLLMAPS_DOMAINS) {
+            if (_matchPattern(domain, url)) {
+                return true;
+            }
+        }
         return false;
-      }
-    } else {
-      return false;
-    }
-  }
-  if (patternMatch[3] !== '/*' && patternMatch[3] !== ('/' + urlMatch[3])) {
-    return false;
-  }
-  return true;
+    },
+
+    async requestFramePermission(): Promise<boolean> {
+        return await chrome.permissions.request({ origins: ['*://www.google.com/maps/embed'] });
+    },
+};
+
+export default Permission;
+
+const MATCH_PATTERN = /^(\*|http|https|file|ftp):\/\/(\*|(?:\*\.)?[^*/]*)(?:\/(.*))?$/;
+
+function _matchPattern(pattern: string, url: string): boolean {
+    let regex = pattern.replace(MATCH_PATTERN, (_match, scheme, host, path, _offset, _string) => {
+        let result = '';
+        if (scheme === '*') {
+            result += '(http|https)';
+        } else {
+            result += scheme;
+        }
+        result += '://';
+        result += host.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace('\\*', '[^\\./]*');
+        result += '(/';
+        result += path.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace('\\*', '.*');
+        result += '|$)';
+        return result;
+    });
+    return !!url.match(regex);
 }

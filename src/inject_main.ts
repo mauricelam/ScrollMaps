@@ -1,39 +1,19 @@
-// @ts-nocheck
-'use strict';
+// Code injected into the "MAIN" execution world. (See chrome.scripting.ExecutionWorld)
 
-window.SM_INJECT_MAIN = true;
-window.SM_INJECT_MAIN = true;
+if ((window as any).SM_INJECT_MAIN === undefined) {
+    (window as any).SM_INJECT_MAIN = true;
 
-var scrollData = {};
+    const origSetPointerCapture = Element.prototype.setPointerCapture;
+    Element.prototype.setPointerCapture = function (pointerId) {
+        if (pointerId !== 10088) {
+            origSetPointerCapture.apply(this, arguments);
+        }
+    };
 
-function handleWheelEvent(event) {
-  var isVertical = Math.abs(event.deltaY) > Math.abs(event.deltaX);
-  var scrollAmount = isVertical ? event.deltaY : event.deltaX;
-  if (event.shiftKey) {
-    chrome.runtime.sendMessage({
-      message: 'scroll',
-      direction: 'zoom',
-      amount: scrollAmount,
-      point: { x: event.clientX, y: event.clientY },
-    });
-  } else {
-    chrome.runtime.sendMessage({
-      message: 'scroll',
-      direction: isVertical ? 'y' : 'x',
-      amount: scrollAmount,
-      point: { x: event.clientX, y: event.clientY },
-    });
-  }
+    const origReleasePointerCapture = Element.prototype.releasePointerCapture;
+    Element.prototype.releasePointerCapture = function (pointerId) {
+        if (pointerId !== 10088) {
+            origReleasePointerCapture.apply(this, arguments);
+        }
+    };
 }
-
-function init() {
-  chrome.runtime.sendMessage({ message: 'get-scroll-data' }, function (response) {
-    scrollData = response.scrollData;
-    var pref = response.pref;
-    if (pref.enabled) {
-      window.addEventListener('wheel', handleWheelEvent, { passive: false, capture: true });
-    }
-  });
-}
-
-init();

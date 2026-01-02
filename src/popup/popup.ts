@@ -1,11 +1,12 @@
-document.addEventListener('DOMContentLoaded', async () => {
+import Permission from "../permission";
+import { DEBUG } from "../utils";
 
-    const DEBUG = chrome.runtime.getManifest().version === '10000';
+document.addEventListener('DOMContentLoaded', async () => {
     const siteStatus = loadSiteStatus();
 
-    function getTabUrl() {
+    function getTabUrl(): Promise<string> {
         return new Promise((resolve, reject) => {
-            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                 if (tabs) {
                     resolve(tabs[0].url);
                 } else {
@@ -31,38 +32,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         return false;
     }, false);
 
-    document.getElementById('site_granted').addEventListener('change', async function() {
+    document.getElementById('site_granted').addEventListener('change', async function () {
         const status = await siteStatus;
-        if (this.checked) {
-            let granted = await chrome.permissions.request({origins: [status.tabUrl]});
+        if ((this as HTMLInputElement).checked) {
+            let granted = await chrome.permissions.request({ origins: [status.tabUrl] });
             if (!granted) {
-                this.checked = false;
+                (this as HTMLInputElement).checked = false;
             }
         } else {
-            chrome.permissions.remove({origins: [status.tabUrl]});
+            chrome.permissions.remove({ origins: [status.tabUrl] });
         }
     }, false);
-    document.getElementById('all_granted').addEventListener('change', async function() {
-        let allGranted = this.checked;
+    document.getElementById('all_granted').addEventListener('change', async function () {
+        let allGranted = (this as HTMLInputElement).checked;
         if (allGranted) {
-            let granted = await chrome.permissions.request({origins: ['<all_urls>']});
+            let granted = await chrome.permissions.request({ origins: ['<all_urls>'] });
             if (!granted) {
                 allGranted = false;
-                this.checked = false;
+                (this as HTMLInputElement).checked = false;
             }
         } else {
-            chrome.permissions.remove({origins: ['<all_urls>']})
+            chrome.permissions.remove({ origins: ['<all_urls>'] })
         }
-        document.getElementById('site_granted').checked = allGranted;
+        (document.getElementById('site_granted') as HTMLInputElement).checked = allGranted;
         refreshCheckboxEnabledStates(allGranted);
     }, false);
 
     function refreshCheckboxEnabledStates(allGranted) {
-        document.getElementById('site_granted').disabled = allGranted;
+        (document.getElementById('site_granted') as HTMLInputElement).disabled = allGranted;
         document.querySelector('label[for=site_granted]').classList.toggle('disabled', allGranted);
     }
 
-    chrome.runtime.sendMessage({action: 'popupLoaded'});
+    chrome.runtime.sendMessage({ action: 'popupLoaded' });
 
     const status = await siteStatus;
     if (Permission.isOwnExtensionPage(status.tabUrl)) {
@@ -79,11 +80,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     const host = new URL(status.tabUrl).host;
-    document.querySelector('label[for=site_granted] .PMcheckbox_smalltext')
+    (document.querySelector('label[for=site_granted] .PMcheckbox_smalltext') as HTMLElement)
         .innerText = `Enable ScrollMaps on ${host} without having to click on the extension icon`;
 
-    document.getElementById('all_granted').checked = status.isAllGranted;
-    document.getElementById('site_granted').checked = status.isSiteGranted;
+    (document.getElementById('all_granted') as HTMLInputElement).checked = status.isAllGranted;
+    (document.getElementById('site_granted') as HTMLInputElement).checked = status.isSiteGranted;
     refreshCheckboxEnabledStates(status.isAllGranted);
 
 }, false);

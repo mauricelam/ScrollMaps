@@ -1,25 +1,81 @@
-// @ts-nocheck
-window.SM_FRAME_INJECT = true;
+if ((window as any).SM_FRAME_INJECT === undefined) {
+    (window as any).SM_FRAME_INJECT = { count: 0 };
 
-chrome.runtime.onMessage.addListener(
-  function (message, sender, sendResponse) {
-    if (message.message === 'scrollmaps-permission-check') {
-      isSiteOnPermissionList(window.location.href, function (isAllowed) {
-        sendResponse({ isAllowed: isAllowed });
-      });
-      return true;
+    class GoogleMapIframeFinder {
+        static findIframeMap(): Element[] {
+            const iframes = document.querySelectorAll('iframe[src^="https://www.google.com/maps/embed"]');
+            return Array.from(iframes);
+        }
     }
-  }
-);
 
-window.addEventListener('message', function (event) {
-  if (event.data.message === 'scrollmaps-ask-permission') {
-    window.parent.postMessage({
-      message: 'scrollmaps-ask-permission-from-frame',
-    }, '*');
-  } else if (event.data.message === 'scrollmaps-remove-permission') {
-    window.parent.postMessage({
-      message: 'scrollmaps-remove-permission-from-frame',
-    }, '*');
-  }
-});
+    async function checkIFramePermissions(): Promise<void> {
+        const iframes = GoogleMapIframeFinder.findIframeMap();
+        for (const frame of iframes) {
+            if (!frame.hasAttribute('data-scrollmaps-frame')) {
+                const container = document.createElement('div');
+                container.setAttribute('data-scrollmaps-perm-button', '1');
+                container.style.position = 'relative';
+                const shadow = container.attachShadow({ mode: "open" });
+                const btn = document.createElement('div');
+                btn.classList.add('sm-perm-btn');
+                btn.style.backgroundImage = 'url("' + chrome.runtime.getURL('images/permission_icon.png') + '")';
+                shadow.appendChild(btn);
+                frame.insertAdjacentElement('beforebegin', container);
+
+                const styleSheet = document.createElement('style');
+                styleSheet.innerHTML = `
+                .sm-perm-btn {
+                    position: absolute; top: 0px; right: 0px;
+                    width: 24px; height: 24px;
+                    margin: 8px;
+                    cursor: pointer;
+                    background-size: 24px 24px;
+                    filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.5));
+                }
+                .sm-perm-btn:hover:after {
+                    content: 'ScrollMaps extension need additional permission to work in this embedded Google Maps';
+                    position: absolute; top: 0px; right: 105%;
+                    font-size: 16px;
+                    width: 250px;
+                    padding: 4px;
+                    background: rgba(255, 255, 255, 0.9);
+                    border: 1px solid #ccc;
+                    border-radius: 5px;
+                }
+                `;
+                shadow.appendChild(styleSheet);
+
+                btn.onclick = async () => {
+                    let granted = await chrome.runtime.sendMessage({ action: 'requestIframePermission' });
+                    console.log('request iframe perm', granted)
+                    if (granted) {
+                        btn.remove();
+                    }
+                };
+                frame.setAttribute('data-scrollmaps-frame', '1');
+            }
+        }
+    }
+
+    function poll(func: () => Promise<boolean>, timeout: number, count: number) {
+        if (count <= 0) {
+            return;
+        }
+        window.setTimeout(() => {
+            if (!func()) {
+                poll(func, timeout, count - 1);
+            }
+        }, timeout);
+    }
+
+    // Init
+    let lastEventTime = 0;
+    const THROTTLE_TIME_MS = 2000;
+    window.addEventListener('wheel', async (e) => {
+        if (e.timeStamp - lastEventTime > THROTTLE_TIME_MS) {
+            await checkIFramePermissions();
+            lastEventTime = e.timeStamp;
+        }
+    }, true);
+    // poll(checkIFramePermissions, 2000, 3);
+}
