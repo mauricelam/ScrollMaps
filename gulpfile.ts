@@ -1,5 +1,4 @@
-import gulp from 'gulp';
-const { src, dest, series, parallel } = gulp;
+import gulp, { src, dest, series, parallel, TaskFunction, TaskFunctionCallback } from 'gulp';
 import webpackStream from 'webpack-stream';
 import { deleteAsync } from 'del';
 import rename from 'gulp-rename';
@@ -7,14 +6,11 @@ import zip from 'gulp-zip';
 import mocha from 'gulp-mocha';
 import { promises as fs } from 'fs';
 import open from 'open';
-import { makePromise, runParallel, runSeries, contentTransform, execTask } from './gulputils.ts';
+import { makePromise, runParallel, runSeries, contentTransform, execTask } from './gulputils';
 import newer from 'gulp-newer';
 import minimist from 'minimist';
 import karma from 'karma';
-import { fileURLToPath } from 'url';
 import path from 'path';
-import webpack from 'webpack';
-const __filename = fileURLToPath(import.meta.url);
 
 type Browser = 'chrome' | 'firefox' | 'edge'
 const BROWSERS: Browser[] = ['chrome', 'firefox', 'edge']
@@ -269,8 +265,8 @@ class BuildContext {
             .pipe(dest(`${this.pluginDir()}/src`));
     }
 
-    runUnitTest(watch = false) {
-        const task = async (done: karma.ServerCallback | undefined) => {
+    runUnitTest(watch = false): TaskFunction {
+        const task = async (done: TaskFunctionCallback) => {
             const pluginConfig = {
                 webpack: {
                     resolve: {
@@ -283,7 +279,7 @@ class BuildContext {
                 singleRun: !watch,
                 ...pluginConfig
             }, { throwErrors: true });
-            new karma.Server(config, done).start();
+            new karma.Server(config, () => done()).start();
         };
         task.displayName = `[${this.browser}] runUnitTest`;
         return task;

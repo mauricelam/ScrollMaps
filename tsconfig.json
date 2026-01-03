@@ -10,7 +10,15 @@
     "types": [
       "chrome",
       "jasmine"
-    ]
+    ],
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "NodeNext",
+      "moduleResolution": "NodeNext",
+      "strict": true,
+      "noImplicitAny": true,
+    }
   },
   "include": [
     "src/**/*"
