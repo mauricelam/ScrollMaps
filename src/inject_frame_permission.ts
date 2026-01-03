@@ -1,15 +1,14 @@
-if (window.SM_FRAME_INJECT === undefined) {
-    const DEBUG = chrome.runtime.getManifest().version === '10000';
-    window.SM_FRAME_INJECT = { count: 0 };
+if ((window as any).SM_FRAME_INJECT === undefined) {
+    (window as any).SM_FRAME_INJECT = { count: 0 };
 
     class GoogleMapIframeFinder {
-        static findIframeMap() {
+        static findIframeMap(): Element[] {
             const iframes = document.querySelectorAll('iframe[src^="https://www.google.com/maps/embed"]');
-            return iframes;
+            return Array.from(iframes);
         }
     }
 
-    async function checkIFramePermissions() {
+    async function checkIFramePermissions(): Promise<void> {
         const iframes = GoogleMapIframeFinder.findIframeMap();
         for (const frame of iframes) {
             if (!frame.hasAttribute('data-scrollmaps-frame')) {
@@ -47,7 +46,7 @@ if (window.SM_FRAME_INJECT === undefined) {
                 shadow.appendChild(styleSheet);
 
                 btn.onclick = async () => {
-                    let granted = await chrome.runtime.sendMessage( { action: 'requestIframePermission' });
+                    let granted = await chrome.runtime.sendMessage({ action: 'requestIframePermission' });
                     console.log('request iframe perm', granted)
                     if (granted) {
                         btn.remove();
@@ -58,7 +57,7 @@ if (window.SM_FRAME_INJECT === undefined) {
         }
     }
 
-    function poll(func, timeout, count) {
+    function poll(func: () => Promise<boolean>, timeout: number, count: number) {
         if (count <= 0) {
             return;
         }
@@ -78,5 +77,5 @@ if (window.SM_FRAME_INJECT === undefined) {
             lastEventTime = e.timeStamp;
         }
     }, true);
-    poll(checkIFramePermissions, 2000, 3);
+    // poll(checkIFramePermissions, 2000, 3);
 }

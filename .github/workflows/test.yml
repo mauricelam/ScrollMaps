@@ -10,11 +10,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: '18' # Or a version compatible with your project
+          node-version: '25' # Or a version compatible with your project
       - name: Install dependencies
         run: npm install
       - name: Run unit tests

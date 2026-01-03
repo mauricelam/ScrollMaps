@@ -4,14 +4,11 @@
 //
 // Used only on Firefox.
 
-function getRequestingTabId() {
-    const url = new URL(location.href);
-    return parseInt(url.searchParams.get('id'), 10);
-}
+import Permission from "../permission";
 
 function init() {
-    const permissonBtn = document.getElementById('frame-perm-btn');
-    const boxContent = document.getElementById('box-content');
+    const permissonBtn = document.getElementById('frame-perm-btn')!;
+    const boxContent = document.getElementById('box-content')!;
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.action === 'waitForPermission') {
             console.log('waiting for permission', sender, sendResponse);
@@ -23,7 +20,6 @@ function init() {
                 }
             };
             boxContent.style.visibility = 'visible';
-            responseSender = sendResponse;
             return true;
         }
     });

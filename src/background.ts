@@ -1,28 +1,36 @@
-const DEBUG = chrome.runtime.getManifest().version === '10000';
+import Permission from "./permission";
+import PrefManager from "./pref";
+import { DEBUG, sleep } from "./utils";
 
-const BADGE_ACTIVE = '\u2713';
-const BADGE_LOADING = '\u21bb';
-const BADGE_DISABLED = '\u2715';
-
-const BADGE_COLORS = {
-    [BADGE_ACTIVE]: '#4CAF50',
-    [BADGE_LOADING]: '#CDDC39',
-    [BADGE_DISABLED]: '#BDBDBD'
+enum Badge {
+    Active = '\u2713',
+    Loading = '\u21bb',
+    Disabled = '\u2715',
+    None = '',
 }
 
-async function checkErrors(promise, name, expectedErrors = []) {
+const BADGE_COLORS = {
+    [Badge.Active]: '#4CAF50',
+    [Badge.Loading]: '#CDDC39',
+    [Badge.Disabled]: '#BDBDBD'
+}
+
+async function checkErrors<T>(promise: Promise<T>, name: string, expectedErrors: string[] = []): Promise<T | undefined> {
     try {
         return await promise;
     } catch (e) {
-        let errorMessage = e ? e.message : undefined;
-        if (DEBUG && errorMessage) {
-            for (let expectedError of expectedErrors) {
-                if (errorMessage.indexOf(expectedError) !== -1) {
-                    console.log(name, errorMessage);
-                    return;
+        if (e instanceof Error) {
+            if (DEBUG && e.message) {
+                for (let expectedError of expectedErrors) {
+                    if (e.message.indexOf(expectedError) !== -1) {
+                        console.log(name, e.message);
+                        return;
+                    }
                 }
+                console.warn(name, e.message);
             }
-            console.warn(name, errorMessage);
+        } else {
+            console.warn(name, e);
         }
     }
 }
@@ -32,15 +40,18 @@ const INJECT_EXPECTED_ERRORS = [
     'The extensions gallery cannot be scripted'
 ];
 
-async function injectScript(tabId, frameId) {
+async function injectScript(tabId: number, frameId: number | 'all') {
+    const injectionTarget = frameId === 'all' ? {
+        tabId: tabId,
+        allFrames: true,
+    } : {
+        tabId: tabId,
+        frameIds: [frameId],
+    };
     const injectPromises = [
         checkErrors(
             chrome.scripting.executeScript({
-                target: {
-                    tabId: tabId,
-                    frameIds: frameId === 'all' ? null : [frameId],
-                    allFrames: frameId === 'all',
-                },
+                target: injectionTarget,
                 files: [
                     'inject_everywhere.min.js',
                     'inject_frame.min.js',
@@ -52,11 +63,7 @@ async function injectScript(tabId, frameId) {
         checkErrors(
             chrome.scripting.insertCSS({
                 files: ['src/inject_everywhere.css'],
-                target: {
-                    tabId: tabId,
-                    frameIds: frameId === 'all' ? null : [frameId],
-                    allFrames: frameId === 'all',
-                },
+                target: injectionTarget,
             }),
             'inject everywhere CSS'
         ),
@@ -66,7 +73,7 @@ async function injectScript(tabId, frameId) {
                     'tabId': tabId,
                     'allFrames': true
                 },
-                files: ['scrollability_inject.min.js'],
+                files: ['inject_scrollability.min.js'],
             }),
             'inject scrollability',
             INJECT_EXPECTED_ERRORS
@@ -77,14 +84,15 @@ async function injectScript(tabId, frameId) {
 }
 
 
-async function handleBrowserActionClicked(tab) {
-    if (!Permission.canInjectIntoPage(tab.url)) {
+async function handleBrowserActionClicked(tab: chrome.tabs.Tab) {
+    if (!tab.id) return;
+    if (!tab.url || !Permission.canInjectIntoPage(tab.url)) {
         // This extension can't inject into chrome:// pages. Just show the popup
         // directly
-        setBrowserActionBadge(tab.id, BADGE_DISABLED)
+        setBrowserActionBadge(tab.id, Badge.Disabled)
         return;
     }
-    if (Permission.isOwnExtensionPage(tab.url)) {
+    if (tab.url && Permission.isOwnExtensionPage(tab.url)) {
         // If the permission is required (e.g. if it is on the domain
         // google.com), we cannot allow users to toggle the permission.
         chrome.tabs.sendMessage(tab.id, { 'action': 'browserActionClicked' });
@@ -92,7 +100,7 @@ async function handleBrowserActionClicked(tab) {
     }
 
     chrome.scripting.executeScript({
-        func: () => { window.SCROLLMAPS_enabled = true },
+        func: () => { (window as any).SCROLLMAPS_enabled = true },
         target: {
             tabId: tab.id,
             allFrames: true
@@ -116,12 +124,13 @@ async function handleBrowserActionClicked(tab) {
     }
 
     chrome.tabs.sendMessage(tab.id, { 'action': 'browserActionClicked' });
-    setBrowserActionBadge(tab.id, BADGE_LOADING);
+    setBrowserActionBadge(tab.id, Badge.Loading);
     refreshScrollMapsStatus(tab.id);
     setTimeout(async () => {
+        if (!tab.id) return;
         // Remove the loading badge if no maps responded in 10s
-        if (await chrome.action.getBadgeText({ tabId: tab.id }) === BADGE_LOADING) {
-            setBrowserActionBadge(tab.id, '');
+        if (await chrome.action.getBadgeText({ tabId: tab.id }) === Badge.Loading) {
+            setBrowserActionBadge(tab.id, Badge.None);
         }
     }, 10000);
 }
@@ -129,20 +138,20 @@ async function handleBrowserActionClicked(tab) {
 
 chrome.action.onClicked.addListener(handleBrowserActionClicked);
 
-async function refreshScrollMapsStatus(tabId) {
+async function refreshScrollMapsStatus(tabId: number) {
     // Check if the map already has a scrollmaps injected (e.g. after extension reloading)
-    let responses = await checkErrors(chrome.scripting.executeScript({
+    const rawResponses = await checkErrors(chrome.scripting.executeScript({
         target: {
             tabId: tabId,
             allFrames: true
         },
         func: () => !!document.querySelector("[data-scrollmaps='enabled']"),
     }), 'map probe', INJECT_EXPECTED_ERRORS);
-    responses = responses ? responses.map((r) => r && r.result) : [];
+    const responses = rawResponses ? rawResponses.map((r) => r && r.result) : [];
     if (DEBUG) {
         console.log('Map probe responses', tabId, responses);
     }
-    const any = (arr) => {
+    const any = (arr: any[] | undefined) => {
         for (const v of arr || []) {
             if (v) return true;
         }
@@ -151,29 +160,31 @@ async function refreshScrollMapsStatus(tabId) {
     await updateMapStatus(tabId, any(responses));
 }
 
-async function updateMapStatus(tabId, mapEnabled) {
+async function updateMapStatus(tabId: number, mapEnabled: boolean): Promise<void> {
     if (mapEnabled) {
-        setBrowserActionBadge(tabId, BADGE_ACTIVE);
+        setBrowserActionBadge(tabId, Badge.Active);
     } else {
-        if (await chrome.action.getBadgeText({ tabId: tabId }) === BADGE_ACTIVE) {
-            setBrowserActionBadge(tabId, '');
+        if (await chrome.action.getBadgeText({ tabId: tabId }) === Badge.Active) {
+            setBrowserActionBadge(tabId, Badge.None);
         }
     }
 }
 
 function updateAllTabs() {
     chrome.tabs.query({}, (tabs) => {
-        for (let tab of tabs) {
-            refreshScrollMapsStatus(tab.id);
+        for (const tab of tabs) {
+            if (tab.id) {
+                refreshScrollMapsStatus(tab.id);
+            }
         }
     });
 }
 
 updateAllTabs();
 
-Pref.initBackgroundPage();
+PrefManager.initBackgroundPage();
 
-async function registerApiInjection(init) {
+async function registerApiInjection(init: boolean): Promise<void> {
     try {
         let func = init ? chrome.scripting.registerContentScripts : chrome.scripting.updateContentScripts;
         await func([
@@ -203,7 +214,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 });
 
 
-function setBrowserActionBadge(tabId, badge) {
+function setBrowserActionBadge(tabId: number, badge: Badge) {
     chrome.action.setBadgeText({ 'text': badge, 'tabId': tabId });
     if (badge !== '') {
         chrome.action.setBadgeBackgroundColor(
@@ -215,11 +226,7 @@ function setBrowserActionBadge(tabId, badge) {
     });
 }
 
-function sleep(time) {
-    return new Promise((accept, _) => { setTimeout(accept, time); });
-}
-
-async function requestFramePermission(tabId) {
+async function requestFramePermission(tabId: number): Promise<boolean> {
     let granted = await requestFramePermissionImpl(tabId);
     if (granted) {
         framePermissionGranted(tabId);
@@ -227,7 +234,7 @@ async function requestFramePermission(tabId) {
     return granted;
 }
 
-async function requestFramePermissionImpl(tabId) {
+async function requestFramePermissionImpl(tabId: number): Promise<boolean> {
     try {
         return await Permission.requestFramePermission();
     } catch (e) {
@@ -238,7 +245,9 @@ async function requestFramePermissionImpl(tabId) {
         let tab = await chrome.tabs.create({ openerTabId: tabId, url: chrome.runtime.getURL(`src/options/framepermission.html?id=${tabId}`) });
         for (let i = 0; i < 5; i++) {
             try {
-                return await chrome.tabs.sendMessage(tab.id, { 'action': 'waitForPermission' });
+                if (tab.id) {
+                    return await chrome.tabs.sendMessage(tab.id, { 'action': 'waitForPermission' });
+                }
             } catch (e) {
                 console.log('waitForPermission error', e, 'retrying...')
                 await sleep(1000);
@@ -248,11 +257,12 @@ async function requestFramePermissionImpl(tabId) {
     }
 }
 
-function framePermissionGranted(tabId) {
+function framePermissionGranted(tabId: number): void {
     injectScript(tabId, 'all').then((r) => console.log(r));
 }
 
-async function injectMainScript(sender) {
+async function injectMainScript(sender: chrome.runtime.MessageSender) {
+    if (!sender.tab?.id || !sender.frameId) return;
     return await checkErrors(
         chrome.scripting.executeScript({
             target: {
@@ -274,8 +284,8 @@ chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
         if (request.action === 'mapLoaded') {
             if (DEBUG) console.log('mapLoaded', sender.tab);
-            console.log(sender.tab.url, chrome.runtime.getURL('src/options/options.html'))
-            if (sender.tab) {
+            console.log(sender.tab?.url, chrome.runtime.getURL('src/options/options.html'))
+            if (sender.tab?.id) {
                 if (sender.tab.url == chrome.runtime.getURL('src/options/options.html')) {
                     // Cannot inject script into extension page. Just trust the result from our
                     // options page
@@ -289,7 +299,7 @@ chrome.runtime.onMessage.addListener(
             }
         } else if (request.action === 'mapUnloaded') {
             if (DEBUG) console.log('mapUnloaded', sender.tab);
-            if (sender.tab) {
+            if (sender.tab?.id) {
                 if (sender.tab.url == chrome.runtime.getURL('src/options/options.html')) {
                     // Cannot inject script into extension page. Just trust the result from our
                     // options page
@@ -307,9 +317,11 @@ chrome.runtime.onMessage.addListener(
                 }
             });
         } else if (request.action === 'requestIframePermission') {
-            requestFramePermission(sender.tab.id).then(sendResponse);
-            return true;
+            if (sender.tab?.id) {
+                requestFramePermission(sender.tab.id).then(sendResponse);
+                return true;
+            }
         } else if (request.action === 'framePermissionGranted') {
-            framePermissionGranted(request.tabId || sender.tab.id);
+            framePermissionGranted(request.tabId || sender.tab?.id);
         }
     });

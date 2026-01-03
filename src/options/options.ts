@@ -1,26 +1,27 @@
-import { PrefMaker } from '../prefmaker.mjs';
-import { SCROLLMAPS_IFRAME_URL } from './maps_embed.mjs';
+import Permission from '../permission';
+import { PrefMaker } from '../prefmaker';
+import { SCROLLMAPS_IFRAME_URL } from './maps_embed';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const mapsDemo = document.getElementById('mapsdemo');
+    const mapsDemo = document.getElementById('mapsdemo') as HTMLIFrameElement;
     mapsDemo.src = SCROLLMAPS_IFRAME_URL;
 
-    const box = document.getElementById('checkboxes');
+    const box = document.getElementById('checkboxes')!;
 
     const enabledCheckbox = PrefMaker.makeBooleanCheckbox(
         'enabled',
         'Activate automatically',
         {
-            true: 'Activate automatically on sites you have already granted permissions',
-            false: 'Click on the extension icon to activate ScrollMaps manually'
+            enabled: 'Activate automatically on sites you have already granted permissions',
+            disabled: 'Click on the extension icon to activate ScrollMaps manually'
         }
     );
     box.appendChild(enabledCheckbox);
 
-    const scrollSpeedSlider = PrefMaker.makeSlider('scrollSpeed', 'Scrolling speed', 500, 10, 10);
+    const scrollSpeedSlider = PrefMaker.makeSlider('scrollSpeed', 'Scrolling speed', '500', '10', '10');
     box.appendChild(scrollSpeedSlider);
 
-    const zoomSpeedSlider = PrefMaker.makeSlider('zoomSpeed', 'Zoom speed', 500, 10, 10);
+    const zoomSpeedSlider = PrefMaker.makeSlider('zoomSpeed', 'Zoom speed', '500', '10', '10');
     box.appendChild(zoomSpeedSlider);
 
     const invertScrollCheckbox = PrefMaker.makeBooleanCheckbox('invertScroll',
@@ -49,8 +50,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         '<all_urls>',
         'Allow ScrollMaps on all sites',
         {
-            true: 'ScrollMaps will enable on embedded Google Maps automatically',
-            false: 'Click on the extension icon to activate ScrollMaps manually'
+            enabled: 'ScrollMaps will enable on embedded Google Maps automatically',
+            disabled: 'Click on the extension icon to activate ScrollMaps manually'
         }
     );
     box.appendChild(allowAccessToAllSites);
@@ -60,8 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     zoomHint.innerText = "Pinch to zoom in or out";
     box.appendChild(zoomHint);
 
-    const framePermissionMessage = document.getElementById('frame-permission-message');
-    const framePermButton = document.getElementById('frame-perm-btn');
+    const framePermissionMessage = document.getElementById('frame-permission-message')!;
+    const framePermButton = document.getElementById('frame-perm-btn')!;
     framePermButton.onclick = async () => {
         let granted = await Permission.requestFramePermission();
         if (granted) {
@@ -79,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 framePermissionMessage.style.display = 'flex';
             } else {
                 framePermissionMessage.style.display = 'none';
-                const mapsDemo = document.getElementById('mapsdemo');
+                const mapsDemo = document.getElementById('mapsdemo') as HTMLIFrameElement;
                 mapsDemo.src = SCROLLMAPS_IFRAME_URL;
             }
             lastFramePermissionGranted = framePermissionGranted;

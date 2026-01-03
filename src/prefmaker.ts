@@ -1,14 +1,25 @@
 /** Create views or widgets to toggle certain preference values. */
 
+import Permission from "./permission";
+import PrefManager, { BoolPrefKey, pref, Preferences } from "./pref";
+
+type SecondLine = string | { enabled: string, disabled: string };
+
 export class PrefMaker {
 
-    static makePermissionCheckbox(key, origin, label, secondLine) {
+    static makePermissionCheckbox(
+        key: string,
+        origin: string,
+        label: string,
+        secondLine: SecondLine
+    ): HTMLDivElement {
+        let labelDiv: HTMLDivElement;
         if (typeof secondLine === 'string') {
-            label = this._createTwoLineBox(label, secondLine);
+            labelDiv = this._createTwoLineBox(label, secondLine);
         } else if (typeof secondLine === 'object') {
-            // secondLine can also be in the form
-            // { true: 'string when enabled', false: 'string when disabled' }
-            label = this._createTwoLineBox(label, secondLine[false]);
+            labelDiv = this._createTwoLineBox(label, secondLine.disabled);
+        } else {
+            throw new Error("Unexpected type for second line");
         }
         const div = document.createElement('div');
         div.classList.add('PMcheckbox');
@@ -17,24 +28,25 @@ export class PrefMaker {
         box.type = 'checkbox';
         const labelElem = document.createElement('label');
         labelElem.htmlFor = 'PMcheckbox_' + key;
-        labelElem.appendChild(label);
+        labelElem.appendChild(labelDiv);
         div.appendChild(box);
         div.appendChild(labelElem);
         box.addEventListener('change', updateOption, false);
         updateView();
 
-        function updateOption(){
+        function updateOption() {
             if (box.checked) {
-                chrome.permissions.request({origins: [origin]}, () => updateView());
+                chrome.permissions.request({ origins: [origin] }, () => updateView());
             } else {
-                chrome.permissions.remove({origins: [origin]}, () => updateView());
+                chrome.permissions.remove({ origins: [origin] }, () => updateView());
             }
         }
-        async function updateView() {
+        async function updateView(): Promise<void> {
             const permission = await Permission.getPermissions([origin]);
             box.checked = permission;
             if (typeof secondLine === 'object') {
-                label.querySelector('.PMcheckbox_smalltext').innerText = secondLine[permission];
+                const elem = labelDiv.querySelector('.PMcheckbox_smalltext') as HTMLElement
+                elem.innerText = permission ? secondLine.enabled : secondLine.disabled
             }
         }
         chrome.permissions.onAdded.addListener(updateView);
@@ -43,13 +55,18 @@ export class PrefMaker {
         return div;
     }
 
-    static makeBooleanCheckbox(key, label, secondLine) {
+    static makeBooleanCheckbox(
+        key: BoolPrefKey,
+        label: string,
+        secondLine: SecondLine
+    ): HTMLDivElement {
+        let labelDiv: HTMLDivElement;
         if (typeof secondLine === 'string') {
-            label = this._createTwoLineBox(label, secondLine);
+            labelDiv = this._createTwoLineBox(label, secondLine);
         } else if (typeof secondLine === 'object') {
-            // secondLine can also be in the form
-            // { true: 'string when enabled', false: 'string when disabled' }
-            label = this._createTwoLineBox(label, secondLine[false]);
+            labelDiv = this._createTwoLineBox(label, secondLine.disabled);
+        } else {
+            throw new Error("Unexpected type for second line");
         }
         const div = document.createElement('div');
         div.classList.add('PMcheckbox');
@@ -58,37 +75,43 @@ export class PrefMaker {
         box.type = 'checkbox';
         const labelElem = document.createElement('label');
         labelElem.htmlFor = box.id;
-        labelElem.appendChild(label);
+        labelElem.appendChild(labelDiv);
         div.appendChild(box);
         div.appendChild(labelElem);
         box.addEventListener('change', updateOption, false);
         updateView(false);
 
         let prefChange = false;
-        Pref.onPreferenceChanged(key, async (key, value) => {
+        PrefManager.onPreferenceChanged(key, async (_key, _value) => {
             await updateView(prefChange);
             prefChange = false;
         });
 
         function updateOption() {
             prefChange = true;
-            Pref.setOption(key, box.checked);
+            PrefManager.setOption(key, box.checked);
         }
-        async function updateView(prefChange) {
+        async function updateView(prefChange: boolean) {
             const prefValue = await pref(key);
             if (!prefChange) {
                 box.checked = prefValue;
             }
             if (typeof secondLine === 'object') {
-                labelElem.querySelector('.PMcheckbox_smalltext').innerText = secondLine[prefValue];
+                (labelElem.querySelector('.PMcheckbox_smalltext') as HTMLElement).innerText =
+                    prefValue ? secondLine.enabled : secondLine.disabled;
             }
         }
 
         return div;
     }
 
-    static makeSlider(key, label, max, min, step) {
-        step = step || 1;
+    static makeSlider(
+        key: keyof Preferences,
+        label: string,
+        max: string,
+        min: string,
+        step: string = '1',
+    ): HTMLDivElement {
         const div = document.createElement('div');
         div.classList.add('PMslider');
         const slider = document.createElement('input');
@@ -110,28 +133,28 @@ export class PrefMaker {
 
         slider.addEventListener('change', async () => {
             prefChange = true;
-            await Pref.setOption(key, slider.value);
-            preview.innerText = await pref(key);
+            await PrefManager.setOption(key, Number(slider.value));
+            preview.innerText = String(await pref(key));
         }, false);
         slider.addEventListener('input', () => { preview.innerText = slider.value; }, false)
         updateView();
 
-        Pref.onPreferenceChanged(key, async (key, value) => {
-            if(!prefChange) {
-                await updateView(value);
+        PrefManager.onPreferenceChanged(key, async (_key, _value) => {
+            if (!prefChange) {
+                await updateView();
             }
             prefChange = false;
         });
 
         async function updateView() {
-            slider.value = await pref(key);
-            preview.innerText =  await pref(key);
+            slider.value = String(await pref(key));
+            preview.innerText = String(await pref(key));
         }
 
         return div;
     }
 
-    static _createTwoLineBox(label, secondLine) {
+    static _createTwoLineBox(label: string, secondLine: string): HTMLDivElement {
         const wrap = document.createElement('div');
         wrap.classList.add('PMcheckbox_labelwrap');
         const line1 = document.createElement('div');
