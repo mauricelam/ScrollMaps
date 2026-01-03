@@ -1,4 +1,4 @@
-const assert = chai.assert;
+import Permission from "../../src/permission"
 
 describe('Permission tests', function() {
 
@@ -12,7 +12,7 @@ describe('Permission tests', function() {
     ];
     for (const site of isMapsSite_trueTests) {
         it(`isMapsSite ${site}`, () => {
-            assert.isTrue(Permission.isMapsSite(site));
+            expect(Permission.isMapsSite(site)).toBeTrue();
         })
     }
 
@@ -24,15 +24,15 @@ describe('Permission tests', function() {
     ];
     for (const site of isMapsSite_falseTests) {
         it(`isMapsSite ${site}`, () => {
-            assert.isFalse(Permission.isMapsSite(site));
+            expect(Permission.isMapsSite(site)).toBeFalse();
         });
     }
 
-    /* global */ chrome = { runtime: { id: 'jifommjndpnefcfplgnbhabocomgdjjg' } };
+    (window as any).chrome = { runtime: { id: 'jifommjndpnefcfplgnbhabocomgdjjg' } };
     it('isOwnExtensionPage options page', () => {
-        assert.isTrue(Permission.isOwnExtensionPage(
+        expect(Permission.isOwnExtensionPage(
             'chrome-extension://jifommjndpnefcfplgnbhabocomgdjjg/src/options/options.html',
-        ))
+        )).toBeTrue()
     });
 
     const isOwnExtensionPage_falseTests = [
@@ -42,7 +42,7 @@ describe('Permission tests', function() {
     ];
     for (const site of isOwnExtensionPage_falseTests) {
         it(`isOwnExtensionPage ${site}`, () => {
-            assert.isFalse(Permission.isOwnExtensionPage(site));
+            expect(Permission.isOwnExtensionPage(site)).toBeFalse();
         });
     }
 });

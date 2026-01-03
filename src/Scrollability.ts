@@ -2,7 +2,7 @@ import { DEBUG } from "./utils";
 
 const Scrollability = {
   // Whether an element is scrollable
-  isScrollable(element: Element): boolean {
+  isScrollable(element: Element | null): boolean {
     if (!element || !element.ownerDocument) return false;
     if (element.scrollHeight <= element.clientHeight) return false;
     // if (element.clientHeight === 0 || element.clientWidth === 0) return false;

@@ -1,6 +1,6 @@
 import gulp from 'gulp';
 const { src, dest, series, parallel } = gulp;
-import webpack from 'webpack-stream';
+import webpackStream from 'webpack-stream';
 import { deleteAsync } from 'del';
 import rename from 'gulp-rename';
 import zip from 'gulp-zip';
@@ -12,6 +12,8 @@ import newer from 'gulp-newer';
 import minimist from 'minimist';
 import karma from 'karma';
 import { fileURLToPath } from 'url';
+import path from 'path';
+import webpack from 'webpack';
 const __filename = fileURLToPath(import.meta.url);
 
 type Browser = 'chrome' | 'firefox' | 'edge'
@@ -163,7 +165,7 @@ class BuildContext {
         const webpackTask = () => {
             const entries = this.MINIFY_FILES();
             return src(Object.values(entries))
-                .pipe(webpack({
+                .pipe(webpackStream({
                     entry: entries,
                     output: {
                         filename: '[name].min.js',
@@ -241,7 +243,7 @@ class BuildContext {
 
     async buildUnitTestDependencies() {
         return src(['src/permission.ts', 'src/Scrollability.ts'])
-            .pipe(webpack({
+            .pipe(webpackStream({
                 entry: {
                     permission: './src/permission.ts',
                     Scrollability: './src/Scrollability.ts',
@@ -269,19 +271,18 @@ class BuildContext {
 
     runUnitTest(watch = false) {
         const task = async (done: karma.ServerCallback | undefined) => {
-            let config = await karma.config.parseConfig(null, {
-                frameworks: ['mocha', 'chai'],
-                files: [
-                    'test/unit/fakes.js',
-                    `${this.pluginDir()}/src/domains.js`,
-                    `${this.pluginDir()}/src/permission.js`,
-                    `${this.pluginDir()}/src/Scrollability.js`,
-                    'test/unit/permission_test.js',
-                    'test/unit/Scrollability_test.js'
-                ],
+            const pluginConfig = {
+                webpack: {
+                    resolve: {
+                        extensions: ['.override.ts', '.ts', '.js'],
+                        modules: [`${this.intermediatesDir()}`, 'src', 'node_modules'],
+                    },
+                }
+            }
+            let config = karma.config.parseConfig(path.resolve('test/unit/karma.conf.js'), {
                 singleRun: !watch,
-                browsers: ['ChromeHeadless'],
-            });
+                ...pluginConfig
+            }, { throwErrors: true });
             new karma.Server(config, done).start();
         };
         task.displayName = `[${this.browser}] runUnitTest`;
