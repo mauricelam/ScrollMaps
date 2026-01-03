@@ -63,7 +63,7 @@ class BuildContext {
             .pipe(dest(this.pluginDir()));
     }
 
-    async generateDomainDotJs() {
+    async generateDomainOverrideTs() {
         const urls = this._getGoogleMapUrls();
         await fs.mkdir(this.intermediatesDir(), { recursive: true });
         await fs.writeFile(
@@ -193,9 +193,9 @@ class BuildContext {
             this.processManifest,
         );
         if (this.browser === 'firefox') {
-            return runSeries(this.generateDomainDotJs, buildUnpacked, this.zipExtension);
+            return runSeries(this.generateDomainOverrideTs, buildUnpacked, this.zipExtension);
         } else {
-            return runSeries(this.generateDomainDotJs, buildUnpacked);
+            return runSeries(this.generateDomainOverrideTs, buildUnpacked);
         }
     }
 
@@ -358,7 +358,7 @@ watchDevBuild.description = 'Watch for changes in source files and build develop
 async function runUnitTest() {
     const bc = new BuildContext('chrome', 10000);
     await runSeries(
-        bc.generateDomainDotJs,
+        bc.generateDomainOverrideTs,
         bc.runUnitTest(),
     );
 }
@@ -366,7 +366,7 @@ runUnitTest.description = 'Run unit tests in a headless chrome instance';
 
 async function watchUnitTest() {
     const bc = new BuildContext('chrome', 10000);
-    const buildTest = bc.generateDomainDotJs;
+    const buildTest = bc.generateDomainOverrideTs;
     gulp.watch(
         [
             'src/**',
