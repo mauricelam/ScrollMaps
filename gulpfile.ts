@@ -237,35 +237,8 @@ class BuildContext {
         );
     }
 
-    async buildUnitTestDependencies() {
-        return src(['src/permission.ts', 'src/Scrollability.ts'])
-            .pipe(webpackStream({
-                entry: {
-                    permission: './src/permission.ts',
-                    Scrollability: './src/Scrollability.ts',
-                },
-                output: {
-                    filename: '[name].js',
-                },
-                resolve: {
-                    extensions: ['.ts', '.js'],
-                    modules: ['src', 'node_modules'],
-                },
-                module: {
-                    rules: [
-                        {
-                            test: /\.ts$/,
-                            loader: 'ts-loader',
-                            exclude: /node_modules/,
-                        }
-                    ]
-                },
-                mode: 'development',
-            }))
-            .pipe(dest(`${this.pluginDir()}/src`));
-    }
-
     runUnitTest(watch = false): TaskFunction {
+        const filter = getTestFilter()
         const task = async (done: TaskFunctionCallback) => {
             const pluginConfig = {
                 webpack: {
@@ -273,6 +246,9 @@ class BuildContext {
                         extensions: ['.override.ts', '.ts', '.js'],
                         modules: [`${this.intermediatesDir()}`, 'src', 'node_modules'],
                     },
+                },
+                client: {
+                    args: filter ? ['--grep', filter] : []
                 }
             }
             let config = karma.config.parseConfig(path.resolve('test/unit/karma.conf.js'), {
@@ -367,7 +343,7 @@ function watchDevBuild() {
     gulp.watch(
         [
             'src/**',
-            'gulputils.js',
+            'gulputils.ts',
             'manifest_template.json',
             'manifest_chrome_template.json',
             'images/*',
@@ -382,7 +358,7 @@ watchDevBuild.description = 'Watch for changes in source files and build develop
 async function runUnitTest() {
     const bc = new BuildContext('chrome', 10000);
     await runSeries(
-        series(bc.generateDomainDotJs, bc.buildUnitTestDependencies),
+        bc.generateDomainDotJs,
         bc.runUnitTest(),
     );
 }
@@ -390,11 +366,11 @@ runUnitTest.description = 'Run unit tests in a headless chrome instance';
 
 async function watchUnitTest() {
     const bc = new BuildContext('chrome', 10000);
-    const buildTest = series(bc.generateDomainDotJs, bc.buildUnitTestDependencies);
+    const buildTest = bc.generateDomainDotJs;
     gulp.watch(
         [
             'src/**',
-            'gulputils.js',
+            'gulputils.ts',
             'manifest_template.json',
             'manifest_chrome_template.json',
             'images/*',
@@ -419,6 +395,11 @@ export async function clean() {
     return await deleteAsync(['gen/*']);
 }
 clean.description = 'Remove all build outputs';
+
+function getTestFilter(): string | null {
+    const args = minimist(process.argv.slice(1));
+    return args.filter
+}
 
 // Allow --chrome, --firefox, --edge as command line args
 function getBrowser(): Browser {
