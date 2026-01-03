@@ -28,6 +28,8 @@ To build the current release version for all browsers, use `gulp release`.
 
 Unit tests can be run using `gulp unit` or `gulp watchunit`.
 
+A filter can be applied with `gulp unit --filter 'Scrollability'`
+
 ## Integration Testing
 
 Tests can be run using `gulp test --<chrome/firefox/edge>`.
