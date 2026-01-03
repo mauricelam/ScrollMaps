@@ -4,9 +4,9 @@
     "module": "es2020",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": false,
+    "strict": true,
     "skipLibCheck": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "types": [
       "chrome",
       "jasmine"
@@ -16,8 +16,6 @@
     "compilerOptions": {
       "module": "NodeNext",
       "moduleResolution": "NodeNext",
-      "strict": true,
-      "noImplicitAny": true,
     }
   },
   "include": [

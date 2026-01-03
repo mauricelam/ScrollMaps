@@ -15,19 +15,22 @@ const BADGE_COLORS = {
     [Badge.Disabled]: '#BDBDBD'
 }
 
-async function checkErrors<T>(promise: Promise<T>, name: string, expectedErrors = []): Promise<T> {
+async function checkErrors<T>(promise: Promise<T>, name: string, expectedErrors: string[] = []): Promise<T | undefined> {
     try {
         return await promise;
     } catch (e) {
-        let errorMessage = e ? e.message : undefined;
-        if (DEBUG && errorMessage) {
-            for (let expectedError of expectedErrors) {
-                if (errorMessage.indexOf(expectedError) !== -1) {
-                    console.log(name, errorMessage);
-                    return;
+        if (e instanceof Error) {
+            if (DEBUG && e.message) {
+                for (let expectedError of expectedErrors) {
+                    if (e.message.indexOf(expectedError) !== -1) {
+                        console.log(name, e.message);
+                        return;
+                    }
                 }
+                console.warn(name, e.message);
             }
-            console.warn(name, errorMessage);
+        } else {
+            console.warn(name, e);
         }
     }
 }
@@ -81,14 +84,15 @@ async function injectScript(tabId: number, frameId: number | 'all') {
 }
 
 
-async function handleBrowserActionClicked(tab) {
-    if (!Permission.canInjectIntoPage(tab.url)) {
+async function handleBrowserActionClicked(tab: chrome.tabs.Tab) {
+    if (!tab.id) return;
+    if (!tab.url || !Permission.canInjectIntoPage(tab.url)) {
         // This extension can't inject into chrome:// pages. Just show the popup
         // directly
         setBrowserActionBadge(tab.id, Badge.Disabled)
         return;
     }
-    if (Permission.isOwnExtensionPage(tab.url)) {
+    if (tab.url && Permission.isOwnExtensionPage(tab.url)) {
         // If the permission is required (e.g. if it is on the domain
         // google.com), we cannot allow users to toggle the permission.
         chrome.tabs.sendMessage(tab.id, { 'action': 'browserActionClicked' });
@@ -123,6 +127,7 @@ async function handleBrowserActionClicked(tab) {
     setBrowserActionBadge(tab.id, Badge.Loading);
     refreshScrollMapsStatus(tab.id);
     setTimeout(async () => {
+        if (!tab.id) return;
         // Remove the loading badge if no maps responded in 10s
         if (await chrome.action.getBadgeText({ tabId: tab.id }) === Badge.Loading) {
             setBrowserActionBadge(tab.id, Badge.None);
@@ -167,8 +172,10 @@ async function updateMapStatus(tabId: number, mapEnabled: boolean): Promise<void
 
 function updateAllTabs() {
     chrome.tabs.query({}, (tabs) => {
-        for (let tab of tabs) {
-            refreshScrollMapsStatus(tab.id);
+        for (const tab of tabs) {
+            if (tab.id) {
+                refreshScrollMapsStatus(tab.id);
+            }
         }
     });
 }
@@ -238,7 +245,9 @@ async function requestFramePermissionImpl(tabId: number): Promise<boolean> {
         let tab = await chrome.tabs.create({ openerTabId: tabId, url: chrome.runtime.getURL(`src/options/framepermission.html?id=${tabId}`) });
         for (let i = 0; i < 5; i++) {
             try {
-                return await chrome.tabs.sendMessage(tab.id, { 'action': 'waitForPermission' });
+                if (tab.id) {
+                    return await chrome.tabs.sendMessage(tab.id, { 'action': 'waitForPermission' });
+                }
             } catch (e) {
                 console.log('waitForPermission error', e, 'retrying...')
                 await sleep(1000);
@@ -253,6 +262,7 @@ function framePermissionGranted(tabId: number): void {
 }
 
 async function injectMainScript(sender: chrome.runtime.MessageSender) {
+    if (!sender.tab?.id || !sender.frameId) return;
     return await checkErrors(
         chrome.scripting.executeScript({
             target: {
@@ -274,8 +284,8 @@ chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
         if (request.action === 'mapLoaded') {
             if (DEBUG) console.log('mapLoaded', sender.tab);
-            console.log(sender.tab.url, chrome.runtime.getURL('src/options/options.html'))
-            if (sender.tab) {
+            console.log(sender.tab?.url, chrome.runtime.getURL('src/options/options.html'))
+            if (sender.tab?.id) {
                 if (sender.tab.url == chrome.runtime.getURL('src/options/options.html')) {
                     // Cannot inject script into extension page. Just trust the result from our
                     // options page
@@ -289,7 +299,7 @@ chrome.runtime.onMessage.addListener(
             }
         } else if (request.action === 'mapUnloaded') {
             if (DEBUG) console.log('mapUnloaded', sender.tab);
-            if (sender.tab) {
+            if (sender.tab?.id) {
                 if (sender.tab.url == chrome.runtime.getURL('src/options/options.html')) {
                     // Cannot inject script into extension page. Just trust the result from our
                     // options page
@@ -307,9 +317,11 @@ chrome.runtime.onMessage.addListener(
                 }
             });
         } else if (request.action === 'requestIframePermission') {
-            requestFramePermission(sender.tab.id).then(sendResponse);
-            return true;
+            if (sender.tab?.id) {
+                requestFramePermission(sender.tab.id).then(sendResponse);
+                return true;
+            }
         } else if (request.action === 'framePermissionGranted') {
-            framePermissionGranted(request.tabId || sender.tab.id);
+            framePermissionGranted(request.tabId || sender.tab?.id);
         }
     });

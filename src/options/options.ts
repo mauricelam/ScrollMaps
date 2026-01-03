@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const mapsDemo = document.getElementById('mapsdemo') as HTMLIFrameElement;
     mapsDemo.src = SCROLLMAPS_IFRAME_URL;
 
-    const box = document.getElementById('checkboxes');
+    const box = document.getElementById('checkboxes')!;
 
     const enabledCheckbox = PrefMaker.makeBooleanCheckbox(
         'enabled',
@@ -61,8 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     zoomHint.innerText = "Pinch to zoom in or out";
     box.appendChild(zoomHint);
 
-    const framePermissionMessage = document.getElementById('frame-permission-message');
-    const framePermButton = document.getElementById('frame-perm-btn');
+    const framePermissionMessage = document.getElementById('frame-permission-message')!;
+    const framePermButton = document.getElementById('frame-perm-btn')!;
     framePermButton.onclick = async () => {
         let granted = await Permission.requestFramePermission();
         if (granted) {

@@ -2,15 +2,21 @@ import PrefManager from "./pref";
 import ScrollableMap, { MapType } from "./ScrollableMap";
 import { DEBUG, sleep } from "./utils";
 
+declare global {
+  interface WindowEventMap {
+    mapsFound: CustomEvent
+  }
+}
+
 if ((window as any).SM_INJECT === undefined) {
   const SM_INJECT = { count: 0 };
   (window as any).SM_INJECT = SM_INJECT;
 
-  function _matchAncestor(node: Element, predicate: (node: Element) => boolean) {
+  function _matchAncestor(node: Node, predicate: (node: Node) => boolean) {
     if (predicate(node)) {
       return node;
     }
-    if (node.parentNode instanceof Element && node.parentNode !== node) {
+    if (node.parentNode && node.parentNode !== node) {
       return _matchAncestor(node.parentNode, predicate);
     }
     return null;
@@ -20,7 +26,7 @@ if ((window as any).SM_INJECT === undefined) {
     static _querySrc(container: Element, tag: string, possible_substrings: string[]) {
       for (const elem of container.querySelectorAll(tag)) {
         for (const substring of possible_substrings) {
-          if (elem['src']?.indexOf(substring) !== -1) {
+          if (elem.getAttribute('src')?.indexOf(substring) !== -1) {
             return true;
           }
         }
@@ -28,7 +34,7 @@ if ((window as any).SM_INJECT === undefined) {
       return false;
     }
 
-    static _findTiledMap(finder: ElementFinder, selector: string, filter?: (node: Element) => boolean) {
+    static _findTiledMap(finder: ElementFinder, selector: string, filter?: (node: Element) => boolean): HTMLElement[] {
       let foundImages = finder.querySelectorAll(selector);
       // To handle multiple maps on the same page, we make the threshold
       // number of images / 4. We consider the common ancestor to be found below
@@ -36,17 +42,17 @@ if ((window as any).SM_INJECT === undefined) {
       let foundThreshold = Math.max(foundImages.length / 4, 1);
       for (let i = 0; i < 5; i++) {
         // Walk maximum 5 levels to find the common ancestor
-        foundImages = foundImages.map(img => img.parentNode as Element);
-        const foundSet = new Set(foundImages);
+        const foundSet = new Set(foundImages.map(img => img.parentNode).filter(e => !!e));
         if (foundSet.size <= foundThreshold) {
           return Array.from(foundSet)
             .map(container => _matchAncestor(container,
-              elem => isVisible(elem)
-                && elem['offsetHeight'] > 1
-                && elem['offsetWidth'] > 1
+              elem => elem instanceof HTMLElement
+                && isVisible(elem)
+                && elem.offsetHeight > 1
+                && elem.offsetWidth > 1
                 && (filter === undefined || filter(elem))
             ))
-            .filter(n => n);
+            .filter(n => n instanceof HTMLElement);
         }
       }
       return [];
@@ -58,7 +64,7 @@ if ((window as any).SM_INJECT === undefined) {
   }
 
   class GoogleMapFinder extends AbstractMapFinder {
-    static _findGmStyleMap(finder: ElementFinder): Node[] {
+    static _findGmStyleMap(finder: ElementFinder): HTMLElement[] {
       return finder.querySelectorAll('.gm-style:has(img)')
         .filter(container =>
           this._querySrc(container, 'img',
@@ -70,27 +76,30 @@ if ((window as any).SM_INJECT === undefined) {
               '//mapsresources-pa.googleapis.com',
             ])
         )
-        .map(container => container.parentNode);
+        .map(container => container.parentNode)
+        .filter(elem => elem instanceof HTMLElement);
     }
 
-    static _findCanvasMap(finder: ElementFinder): Node[] {
+    static _findCanvasMap(finder: ElementFinder): HTMLElement[] {
       return finder.querySelectorAll('.gm-style:has(canvas)')
-        .map(container => container.parentNode);
+        .map(container => container.parentNode)
+        .filter(elem => elem instanceof HTMLElement);
     }
 
-    static _findFallbackMap(finder: ElementFinder): Node[] {
+    static _findFallbackMap(finder: ElementFinder): HTMLElement[] {
       return GoogleMapFinder._findTiledMap(finder, 'img[src*="//maps.googleapis.com/maps/"]');
     }
 
-    static _findAriaMap(finder: ElementFinder): Node[] {
+    static _findAriaMap(finder: ElementFinder): HTMLElement[] {
       if (new URL(location.href).host.indexOf('.google.') > -1) {
-        return [...finder.querySelectorAll('[aria-label=Map]')];
+        return [...finder.querySelectorAll('[aria-label=Map]')]
+          .filter(e => e instanceof HTMLElement);
       } else {
         return [];
       }
     }
 
-    static findMaps(finder: ElementFinder): Node[] {
+    static findMaps(finder: ElementFinder): HTMLElement[] {
       let mapContainers = GoogleMapFinder._findCanvasMap(finder);
       if (mapContainers.length > 0) {
         return mapContainers;
@@ -114,7 +123,7 @@ if ((window as any).SM_INJECT === undefined) {
   // https://developers.arcgis.com/javascript/latest/
   // More examples at https://developers.arcgis.com/javascript/3/jssamples
   class ArcGisFinder extends AbstractMapFinder {
-    static findMaps(finder: ElementFinder): Node[] {
+    static findMaps(finder: ElementFinder): HTMLElement[] {
       return [
         ...finder.querySelectorAll('.esri-view:has(.esri-view-surface > canvas)'),
         // Examples:
@@ -123,59 +132,66 @@ if ((window as any).SM_INJECT === undefined) {
         ...ArcGisFinder._findTiledMap(
           finder,
           'img[src*=".arcgisonline.com/"]',
-          (node) => node.classList.contains("esriMapContainer") && node.getAttribute("id").endsWith("_root")),
+          node => node.classList.contains("esriMapContainer") && (node.getAttribute("id")?.endsWith("_root") === true)
+        ),
         ...finder.querySelectorAll('.esriMapContainer[id$="_root"]:has(canvas)'),
-      ];
+      ]
+        .filter(e => e instanceof HTMLElement);
     }
   }
 
   // https://docs.mapbox.com/
   class MapBoxFinder extends AbstractMapFinder {
-    static findMaps(finder: ElementFinder): Node[] {
+    static findMaps(finder: ElementFinder): HTMLElement[] {
       return finder.querySelectorAll('.mapboxgl-map:has(canvas.mapboxgl-canvas)')
-        .map((elem) => elem.closest('.leaflet-container') || elem);
+        .map((elem) => elem.closest('.leaflet-container') || elem)
+        .filter(e => e instanceof HTMLElement);
     }
   }
 
   // https://leafletjs.com/
   class LeafletFinder extends AbstractMapFinder {
-    static findMaps(finder: ElementFinder): Node[] {
+    static findMaps(finder: ElementFinder): HTMLElement[] {
       // https://www.strava.com/activities
-      return finder.querySelectorAll('.leaflet-container:has(.leaflet-tile-container)');
+      return finder.querySelectorAll('.leaflet-container:has(.leaflet-tile-container)')
+        .filter(e => e instanceof HTMLElement);
     }
   }
 
   // https://www.openstreetmap.org/
   class OpenStreetMapFinder extends AbstractMapFinder {
-    static findMaps(finder: ElementFinder): Node[] {
+    static findMaps(finder: ElementFinder): HTMLElement[] {
       return OpenStreetMapFinder._findTiledMap(finder, 'img[src*="tile.openstreetmap.org"]');
     }
   }
 
   // https://developer.apple.com/documentation/mapkitjs/
   class AppleMapKitFinder extends AbstractMapFinder {
-    static findMaps(finder: ElementFinder): Node[] {
-      return finder.querySelectorAll('.mk-map-view:has(canvas)');
+    static findMaps(finder: ElementFinder): HTMLElement[] {
+      return finder.querySelectorAll('.mk-map-view:has(canvas)')
+        .filter(e => e instanceof HTMLElement);
     }
   }
 
   // https://openlayers.org/
   class OpenLayersMapFinder extends AbstractMapFinder {
-    static findMaps(finder: ElementFinder): Node[] {
-      return finder.querySelectorAll('.ol-viewport:has(canvas)');
+    static findMaps(finder: ElementFinder): HTMLElement[] {
+      return finder.querySelectorAll('.ol-viewport:has(canvas)')
+        .filter(e => e instanceof HTMLElement);
     }
   }
 
   // https://maplibre.org/maplibre-gl-js/docs/, including Azure Maps.
   class MapLibreFinder extends AbstractMapFinder {
-    static findMaps(finder: ElementFinder): Node[] {
-      return finder.querySelectorAll('.maplibregl-map:has(canvas.maplibregl-canvas)');
+    static findMaps(finder: ElementFinder): HTMLElement[] {
+      return finder.querySelectorAll('.maplibregl-map:has(canvas.maplibregl-canvas)')
+        .filter(e => e instanceof HTMLElement);
     }
   }
 
   // https://en.mapy.cz/
   class MapyCzFinder extends AbstractMapFinder {
-    static findMaps(finder: ElementFinder): Node[] {
+    static findMaps(finder: ElementFinder): HTMLElement[] {
       return MapyCzFinder._findTiledMap(
         finder,
         'img[src*=".mapy.cz/"]',
@@ -187,14 +203,15 @@ if ((window as any).SM_INJECT === undefined) {
   // https://www.costco.com/WarehouseLocatorDetailsView?catalogId=10701&storeId=10301
   // https://www.edinarealty.com/listing/listingsearch/properties
   class MicrosoftMapFinder extends AbstractMapFinder {
-    static findMaps(finder: ElementFinder): Node[] {
-      return finder.querySelectorAll('.MicrosoftMap:has(canvas)');
+    static findMaps(finder: ElementFinder): HTMLElement[] {
+      return finder.querySelectorAll('.MicrosoftMap:has(canvas)')
+        .filter(e => e instanceof HTMLElement);
     }
   }
 
   function findAllShadowRoots(container: Document | HTMLElement | ShadowRoot = document): ShadowRoot[] {
     const allElements = container.querySelectorAll('*');
-    const results = [];
+    const results: ShadowRoot[] = [];
 
     allElements.forEach(el => {
       if (el.shadowRoot) {
@@ -245,7 +262,7 @@ if ((window as any).SM_INJECT === undefined) {
     }
     const options = await PrefManager.getAllOptions();
     for (const { map, type } of maps) {
-      if (map instanceof HTMLElement && !map.hasAttribute('data-scrollmaps')) {
+      if (!map.hasAttribute('data-scrollmaps')) {
         new ScrollableMap(map, type, SM_INJECT.count++, options);
       } else {
         if (DEBUG) console.log('Skipping already scrollified map');
@@ -254,7 +271,7 @@ if ((window as any).SM_INJECT === undefined) {
     return true;
   }
 
-  async function poll(func, timeout, count) {
+  async function poll(func: () => void, timeout: number, count: number) {
     for (let i = 0; i < count; i++) {
       if (DEBUG) console.log('Poll scrollify maps', i);
       func();
@@ -268,14 +285,14 @@ if ((window as any).SM_INJECT === undefined) {
   window.addEventListener('wheel', async (e) => {
     if (e.timeStamp - lastEventTime > THROTTLE_TIME_MS) {
       lastEventTime = e.timeStamp;
-      if (!_matchAncestor(e.target as Element, (e) => e.hasAttribute('data-scrollmaps'))) {
+      if (!_matchAncestor(e.target as Node, (e) => e instanceof Element && e.hasAttribute('data-scrollmaps'))) {
         await scrollifyExistingMaps();
       }
     }
   }, true);
   poll(scrollifyExistingMaps, 2000, 2);
 
-  window.addEventListener('mapsFound', async function (event: CustomEvent) {
+  window.addEventListener('mapsFound', async (event: CustomEvent) => {
     new ScrollableMap(
       event.target as HTMLElement,
       event.detail.type,

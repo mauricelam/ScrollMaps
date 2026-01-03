@@ -1,18 +1,25 @@
 /** Create views or widgets to toggle certain preference values. */
 
 import Permission from "./permission";
-import PrefManager, { pref } from "./pref";
+import PrefManager, { BoolPrefKey, pref, Preferences } from "./pref";
 
 type SecondLine = string | { enabled: string, disabled: string };
 
 export class PrefMaker {
 
-    static makePermissionCheckbox(key: string, origin: string, label: string, secondLine: SecondLine): HTMLDivElement {
+    static makePermissionCheckbox(
+        key: string,
+        origin: string,
+        label: string,
+        secondLine: SecondLine
+    ): HTMLDivElement {
         let labelDiv: HTMLDivElement;
         if (typeof secondLine === 'string') {
             labelDiv = this._createTwoLineBox(label, secondLine);
         } else if (typeof secondLine === 'object') {
             labelDiv = this._createTwoLineBox(label, secondLine.disabled);
+        } else {
+            throw new Error("Unexpected type for second line");
         }
         const div = document.createElement('div');
         div.classList.add('PMcheckbox');
@@ -48,12 +55,18 @@ export class PrefMaker {
         return div;
     }
 
-    static makeBooleanCheckbox(key: string, label: string, secondLine: SecondLine): HTMLDivElement {
+    static makeBooleanCheckbox(
+        key: BoolPrefKey,
+        label: string,
+        secondLine: SecondLine
+    ): HTMLDivElement {
         let labelDiv: HTMLDivElement;
         if (typeof secondLine === 'string') {
             labelDiv = this._createTwoLineBox(label, secondLine);
         } else if (typeof secondLine === 'object') {
             labelDiv = this._createTwoLineBox(label, secondLine.disabled);
+        } else {
+            throw new Error("Unexpected type for second line");
         }
         const div = document.createElement('div');
         div.classList.add('PMcheckbox');
@@ -92,8 +105,13 @@ export class PrefMaker {
         return div;
     }
 
-    static makeSlider(key: string, label: string, max: string, min: string, step: string): HTMLDivElement {
-        step = step || '1';
+    static makeSlider(
+        key: keyof Preferences,
+        label: string,
+        max: string,
+        min: string,
+        step: string = '1',
+    ): HTMLDivElement {
         const div = document.createElement('div');
         div.classList.add('PMslider');
         const slider = document.createElement('input');
@@ -115,8 +133,8 @@ export class PrefMaker {
 
         slider.addEventListener('change', async () => {
             prefChange = true;
-            await PrefManager.setOption(key, slider.value);
-            preview.innerText = await pref(key);
+            await PrefManager.setOption(key, Number(slider.value));
+            preview.innerText = String(await pref(key));
         }, false);
         slider.addEventListener('input', () => { preview.innerText = slider.value; }, false)
         updateView();
@@ -129,8 +147,8 @@ export class PrefMaker {
         });
 
         async function updateView() {
-            slider.value = await pref(key);
-            preview.innerText = await pref(key);
+            slider.value = String(await pref(key));
+            preview.innerText = String(await pref(key));
         }
 
         return div;

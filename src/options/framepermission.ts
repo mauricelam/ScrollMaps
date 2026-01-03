@@ -7,8 +7,8 @@
 import Permission from "../permission";
 
 function init() {
-    const permissonBtn = document.getElementById('frame-perm-btn');
-    const boxContent = document.getElementById('box-content');
+    const permissonBtn = document.getElementById('frame-perm-btn')!;
+    const boxContent = document.getElementById('box-content')!;
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.action === 'waitForPermission') {
             console.log('waiting for permission', sender, sendResponse);

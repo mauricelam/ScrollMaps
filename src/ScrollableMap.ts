@@ -4,23 +4,23 @@ import { DEBUG } from "./utils";
 
 type Point = [number, number]
 
-function _findAncestorScrollMap(node: Node): Element | undefined {
+function _findAncestorScrollMap(node: Element | null): Element | null {
   if (!(node instanceof Element)) {
-    return undefined;
+    return null;
   }
   if (node.hasAttribute('data-scrollmaps')) {
     return node;
   }
-  return _findAncestorScrollMap(node.parentNode);
+  return _findAncestorScrollMap(node.parentElement);
 }
 
-function _findDescendantScrollMap(node: Element): Element | undefined {
+function _findDescendantScrollMap(node: Element): Element | null {
   return node.querySelector('[data-scrollmaps]');
 }
 
-function _findLineageScrollMap(node: Element): Element | undefined {
+function _findLineageScrollMap(node: Element): Element | null {
   return _findDescendantScrollMap(node)
-    || _findAncestorScrollMap(node.parentNode);
+    || _findAncestorScrollMap(node.parentElement);
 }
 
 function isWebGlCanvas(target: Element) {
@@ -47,8 +47,27 @@ class ScrollableMap {
   dragger: DragSimulator;
   zoomDeltaTracker: ZoomDeltaTracker;
 
-  constructor(private div: HTMLElement, private type: MapType, private id: number, private prefs: Preferences) {
+  constructor(
+    private div: HTMLElement,
+    private type: MapType,
+    private id: number,
+    private prefs: Preferences
+  ) {
     this.zoomDeltaTracker = new ZoomDeltaTracker(ZOOM_STEP[this.type], TIME_THROTTLE[this.type])
+
+    // See the documentation in DRAG_SIMULATOR_DEFAULT_OPTS
+    let maxDistanceUntilUp = 600;
+    if (type === MapType.TYPE_GOOGLE_MAPS_LEGACY
+      || type === MapType.TYPE_GOOGLE_MAPS_API
+      || type === MapType.TYPE_GOOGLE_MAPS_IFRAME
+      || type === MapType.TYPE_GOOGLE_MAPS_WEB) {
+      maxDistanceUntilUp = div.offsetWidth && (div.offsetWidth * 0.5) || 600;
+    } else {
+      maxDistanceUntilUp = Infinity;
+    }
+    this.dragger = new DragSimulator(type, {
+      maxDistanceUntilUp
+    });
 
     const lineage = _findLineageScrollMap(div);
     if (lineage) {
@@ -63,8 +82,8 @@ class ScrollableMap {
     }
 
     // Avoid adding multiple event listeners to the same map
-    if (div['__scrollMapAttached']) return;
-    div['__scrollMapAttached'] = true;
+    if ((div as any).__scrollMapAttached) return;
+    (div as any).__scrollMapAttached = true;
 
     div.setAttribute('data-scrollmaps', 'false');
 
@@ -134,7 +153,7 @@ class ScrollableMap {
         `;
     try {
       const rootNode = div.getRootNode();
-      (rootNode['documentElement'] || rootNode).appendChild(style);
+      ((rootNode as any).documentElement || rootNode).appendChild(style);
     } catch (e) {
       console.error("Error injecting CSS", e)
     }
@@ -142,20 +161,6 @@ class ScrollableMap {
     Scrollability.monitorScrollabilitySuper(div, (scrolls) => {
       this.bodyScrolls = scrolls;
       this.refreshActivationAffordance();
-    });
-
-    // See the documentation in DRAG_SIMULATOR_DEFAULT_OPTS
-    let maxDistanceUntilUp = 600;
-    if (type === MapType.TYPE_GOOGLE_MAPS_LEGACY
-      || type === MapType.TYPE_GOOGLE_MAPS_API
-      || type === MapType.TYPE_GOOGLE_MAPS_IFRAME
-      || type === MapType.TYPE_GOOGLE_MAPS_WEB) {
-      maxDistanceUntilUp = div.offsetWidth && (div.offsetWidth * 0.5) || 600;
-    } else {
-      maxDistanceUntilUp = Infinity;
-    }
-    this.dragger = new DragSimulator(type, {
-      maxDistanceUntilUp
     });
 
     this.init(div, type);
@@ -358,7 +363,7 @@ class ScrollableMap {
   createBackdoorWheelEvents(originalEvent: WheelEvent, zoomIn: boolean, delta: number) {
     const init: Partial<WheelEventInit> = {};
     for (const i in originalEvent) {
-      init[i] = originalEvent[i];
+      (init as any)[i] = (originalEvent as any)[i];
     }
     init.detail = 10888;
 
@@ -380,7 +385,7 @@ class ScrollableMap {
     }
   }
 
-  lastTarget: EventTarget;
+  lastTarget: EventTarget | null = null;
   handleWheelEvent(e: WheelEvent) {
     if (!this.enabled && !(window as any).safari) return;
     if (this._isMapActivatable()) {
@@ -415,7 +420,7 @@ class ScrollableMap {
           // In Chrome, ctrl + wheel => pinch gesture. Do not invert zoom for the pinch
           // gesture.
           var factor = (this.prefs['invertZoom'] && !(window.chrome && e.ctrlKey)) ? -1 : 1;
-          if ((window as any).safari && e['webkitDirectionInvertedFromDevice']) {
+          if ((window as any).safari && (e as any).webkitDirectionInvertedFromDevice) {
             factor *= -1;
           }
           if (e.deltaY * factor < 0) {
@@ -660,11 +665,11 @@ const DRAG_SIMULATOR_DEFAULT_OPTS: DragSimulatorOptions = {
 };
 
 class DragSimulator {
-  mouseDownPoint: Point;
-  simulatedMousePoint: Point;
+  mouseDownPoint: Point | null = null;
+  simulatedMousePoint: Point | null = null;
   opts: DragSimulatorOptions;
-  lastAutoCursorPos: Point;
-  timer: number;
+  lastAutoCursorPos: Point | null = null;
+  timer: number | null = null;
 
   constructor(private mapType: MapType, opts: Partial<DragSimulatorOptions>) {
     this.opts = { ...DRAG_SIMULATOR_DEFAULT_OPTS, ...opts };
@@ -695,7 +700,7 @@ class DragSimulator {
   }
 
   simulateMouseUp(target: Element) {
-    if (!this.mouseDownPoint) return;
+    if (!this.mouseDownPoint || !this.simulatedMousePoint) throw new Error("Missing mouse point");
 
     // If the minimum drag distance is not reached, dispatch an extra move event
     let dx = this.simulatedMousePoint[0] - this.mouseDownPoint[0];
@@ -736,6 +741,8 @@ class DragSimulator {
   }
 
   simulateMouseMove(target: Element, dx: number, dy: number) {
+    if (!this.simulatedMousePoint) throw new Error("Missing mouse point");
+
     this.simulatedMousePoint[0] += dx;
     this.simulatedMousePoint[1] += dy;
     const eventOpts = {
@@ -776,13 +783,15 @@ class DragSimulator {
     // There is a visible jump when this happens if you observe carefully, but the results
     // are good enough for general use.
     const maxDistanceUntilUp = this.opts.maxDistanceUntilUp;
-    if (Math.abs(this.simulatedMousePoint[0] - this.mouseDownPoint[0]) > maxDistanceUntilUp ||
-      Math.abs(this.simulatedMousePoint[1] - this.mouseDownPoint[1]) > maxDistanceUntilUp) {
-      this.simulateMouseUp(target);
+    if (this.simulatedMousePoint && this.mouseDownPoint) {
+      if (Math.abs(this.simulatedMousePoint[0] - this.mouseDownPoint[0]) > maxDistanceUntilUp ||
+        Math.abs(this.simulatedMousePoint[1] - this.mouseDownPoint[1]) > maxDistanceUntilUp) {
+        this.simulateMouseUp(target);
+      }
     }
 
     if (this.opts.mouseUpDelay > 0) {
-      window.clearTimeout(this.timer);
+      this.timer && window.clearTimeout(this.timer);
       this.timer = window.setTimeout(
         () => this.simulateMouseUp(target),
         this.opts.mouseUpDelay);

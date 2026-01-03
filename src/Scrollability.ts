@@ -24,14 +24,19 @@ const Scrollability = {
 
   _hasScrollableParentInner(element: Element, until?: Node): boolean {
     if (element instanceof DocumentFragment) {
-      return this._hasScrollableParentInner(element.getRootNode()['host'], until);
+      const rootNode = element.getRootNode()
+      if (rootNode instanceof ShadowRoot) {
+        return this._hasScrollableParentInner(rootNode.host, until);
+      } else {
+        return false;
+      }
     }
 
     if (this.isScrollable(element)) return true;
-    if (!element || !element.parentNode) return false;
+    if (!element || !element.parentElement) return false;
     if (getComputedStyle(element).position === 'fixed') return false;
     if (until && (element === until || element.isSameNode(until))) return false;
-    return this._hasScrollableParentInner(element.parentNode, until);
+    return this._hasScrollableParentInner(element.parentElement, until);
   },
 
   isWindowScrollable(): boolean {
@@ -68,7 +73,7 @@ const Scrollability = {
 
   // Monitor parent scrollability for given element across iframes
   monitorScrollabilitySuper(element: Element, callback: (scrolls: boolean) => void) {
-    let overallScrollable = null;
+    let overallScrollable: boolean | null = null;
     let ancestorScrollable = false;  // Scrollability of parent documents of this frame
 
     const updateScrollability = () => {
@@ -127,6 +132,10 @@ if ((window as any).Scrollability === undefined) {
 
   window.addEventListener('message', function (message) {
     if (message.data.action === 'monitorScroll') {
+      if (!message.source) {
+        console.warn("No message source");
+        return;
+      }
       const iframe = getIframeForWindow(message.source);
       if (!iframe) {
         console.warn('No matching iframe for message', message);
@@ -134,7 +143,7 @@ if ((window as any).Scrollability === undefined) {
       }
 
       Scrollability.monitorScrollabilitySuper(iframe, function (scrollable) {
-        message.source.postMessage({ 'action': 'pageNeedsScrolling', 'value': scrollable }, { targetOrigin: '*' });
+        message.source?.postMessage({ 'action': 'pageNeedsScrolling', 'value': scrollable }, { targetOrigin: '*' });
       });
     }
   });
