@@ -4,6 +4,7 @@ Lets you scroll with two fingers on your trackpad within online maps
 - [Chrome web store link](https://chrome.google.com/webstore/detail/scrollmaps/jifommjndpnefcfplgnbhabocomgdjjg)
 - [Firefox Add-ons store link](https://addons.mozilla.org/en-US/firefox/addon/scrollmaps)
 - [Microsoft Edge addon link](https://microsoftedge.microsoft.com/addons/detail/scrollmaps/mdhhlgkmnlaiofbbemcmigjleiiefmga)
+- Safari Web Extension package: build locally with `gulp --safari`, then package on macOS with Xcode/App Store Connect. See [Safari packaging](docs/safari.md).
 
 ## Supported map providers
 
@@ -18,9 +19,9 @@ Lets you scroll with two fingers on your trackpad within online maps
 
 After checking out the source, initialize the dependencies using `npm install`.
 
-After making changes, build a development version using `gulp --<chrome/firefox/edge>`. This will create an unpacked extension under `gen/plugin-10000-<browser>` that can then be loaded into Chrome as an unpacked extension.
+After making changes, build a development version using `gulp --<chrome/firefox/edge/safari>`. This will create an unpacked extension under `gen/plugin-10000-<browser>` that can then be loaded into the target browser's extension tooling.
 
-You can also use `gulp watch --<chrome/firefox/edge>` to watch for changes and build new dev versions automatically.
+You can also use `gulp watch --<chrome/firefox/edge/safari>` to watch for changes and build new dev versions automatically.
 
 To build the current release version for all browsers, use `gulp release`.
 

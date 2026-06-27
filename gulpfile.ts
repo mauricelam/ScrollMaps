@@ -12,9 +12,11 @@ import minimist from 'minimist';
 import karma from 'karma';
 import path from 'path';
 
-type Browser = 'chrome' | 'firefox' | 'edge'
-const BROWSERS: Browser[] = ['chrome', 'firefox', 'edge']
-const BROWSER_FLAGS = Object.fromEntries(BROWSERS.map((browser) => [`--${browser}`, `for [${browser}] browser`]));
+type Browser = 'chrome' | 'firefox' | 'edge' | 'safari'
+type TestBrowser = Exclude<Browser, 'safari'>
+const BUILD_BROWSERS: Browser[] = ['chrome', 'firefox', 'edge', 'safari']
+const TEST_BROWSERS: TestBrowser[] = ['chrome', 'firefox', 'edge']
+const BROWSER_FLAGS = Object.fromEntries(BUILD_BROWSERS.map((browser) => [`--${browser}`, `for [${browser}] browser`]));
 
 class BuildContext {
     browser: Browser;
@@ -100,6 +102,9 @@ class BuildContext {
             }
         }
         processObj(manifest);
+        if (this.browser === 'safari') {
+            delete manifest.minimum_chrome_version;
+        }
         manifest.version = '' + this.version;
         return JSON.stringify(manifest, null, '  ');
     }
@@ -192,7 +197,7 @@ class BuildContext {
             this.copyImages,
             this.processManifest,
         );
-        if (this.browser === 'firefox') {
+        if (this.browser === 'firefox' || this.browser === 'safari') {
             return runSeries(this.generateDomainOverrideTs, buildUnpacked, this.zipExtension);
         } else {
             return runSeries(this.generateDomainOverrideTs, buildUnpacked);
@@ -274,6 +279,9 @@ class BuildContext {
             case 'firefox':
                 await open('https://addons.mozilla.org/en-US/developers/addon/scrollmaps/ownership');
                 break;
+            case 'safari':
+                await open('https://appstoreconnect.apple.com/apps');
+                break;
             default:
                 throw new Error(`Unsupported browser ${this.browser}`)
         }
@@ -281,7 +289,7 @@ class BuildContext {
 }
 
 export async function testall() {
-    const tasks = BROWSERS.map((browser) => {
+    const tasks = TEST_BROWSERS.map((browser) => {
         const bc = new BuildContext(browser, 10000);
         return series(bc.build, bc.runAutoTest);
     });
@@ -310,7 +318,7 @@ async function releaseBuild() {
     if (!packageJson.version) {
         throw new Error('Cannot get version from package.json')
     }
-    const tasks = BROWSERS
+    const tasks = BUILD_BROWSERS
         .map((browser) => new BuildContext(browser, packageJson.version))
         .map((bc) => series(bc.build, bc.zipExtension));
     await runParallel(...tasks);
@@ -325,7 +333,7 @@ export async function postVersion() {
     if (!packageJson.version) {
         throw new Error('Cannot get version from package.json')
     }
-    const tasks = BROWSERS
+    const tasks = BUILD_BROWSERS
         .map((browser) => new BuildContext(browser, packageJson.version))
         .map((bc) => series(bc.build, bc.zipExtension));
     await runSeries(
@@ -401,16 +409,16 @@ function getTestFilter(): string | null {
     return args.filter
 }
 
-// Allow --chrome, --firefox, --edge as command line args
+// Allow --chrome, --firefox, --edge, --safari as command line args
 function getBrowser(): Browser {
     const args = minimist(process.argv.slice(1));
-    for (const browser of BROWSERS) {
+    for (const browser of BUILD_BROWSERS) {
         if (args[browser]) {
             process.env.BROWSER = browser;
         }
     }
     if (!process.env.BROWSER) {
-        throw new Error('Browser must be specified with --chrome, --firefox, or --edge');
+        throw new Error('Browser must be specified with --chrome, --firefox, --edge, or --safari');
     }
     return process.env.BROWSER as Browser;
 }
