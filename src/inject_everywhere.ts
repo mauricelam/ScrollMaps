@@ -40,9 +40,15 @@ if ((window as any).SM_INJECT === undefined) {
       // number of images / 4. We consider the common ancestor to be found below
       // that threshold.
       let foundThreshold = Math.max(foundImages.length / 4, 1);
+      let foundSet = new Set(foundImages);
       for (let i = 0; i < 5; i++) {
         // Walk maximum 5 levels to find the common ancestor
-        const foundSet = new Set(foundImages.map(img => img.parentNode).filter(e => !!e));
+        const parentFoundSet = new Set();
+        for (const element of foundSet) {
+          if (element.parentElement) {
+            parentFoundSet.add(element.parentElement);
+          }
+        }
         if (foundSet.size <= foundThreshold) {
           return Array.from(foundSet)
             .map(container => _matchAncestor(container,
@@ -54,6 +60,7 @@ if ((window as any).SM_INJECT === undefined) {
             ))
             .filter(n => n instanceof HTMLElement);
         }
+        foundSet = parentFoundSet;
       }
       return [];
 
@@ -92,7 +99,10 @@ if ((window as any).SM_INJECT === undefined) {
 
     static _findAriaMap(finder: ElementFinder): HTMLElement[] {
       if (new URL(location.href).host.indexOf('.google.') > -1) {
-        return [...finder.querySelectorAll('[aria-label=Map]')]
+        return [
+          ...finder.querySelectorAll('[aria-label=Map]'),
+          ...finder.querySelectorAll('[aria-label="Street View"]')
+        ]
           .filter(e => e instanceof HTMLElement);
       } else {
         return [];
@@ -184,7 +194,7 @@ if ((window as any).SM_INJECT === undefined) {
   // https://maplibre.org/maplibre-gl-js/docs/, including Azure Maps.
   class MapLibreFinder extends AbstractMapFinder {
     static findMaps(finder: ElementFinder): HTMLElement[] {
-      return finder.querySelectorAll('.maplibregl-map:has(canvas.maplibregl-canvas)')
+      return finder.querySelectorAll('.maplibregl-map:has(canvas.maplibregl-canvas),.maplibregl-canvas-container:has(canvas.maplibregl-canvas)')
         .filter(e => e instanceof HTMLElement);
     }
   }
@@ -194,7 +204,7 @@ if ((window as any).SM_INJECT === undefined) {
     static findMaps(finder: ElementFinder): HTMLElement[] {
       return MapyCzFinder._findTiledMap(
         finder,
-        'img[src*=".mapy.cz/"]',
+        'img[src*=".mapy.cz/"],img[src*=".mapy.com/"]',
         (node) => node.getAttribute("id") == "map")
     }
   }
