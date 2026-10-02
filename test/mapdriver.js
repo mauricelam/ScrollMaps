@@ -1,6 +1,7 @@
 const webdriver = require('selenium-webdriver');
 const process = require('process');
 const child_process = require('child_process');
+const path = require('path');
 const util = require('util');
 const exec = util.promisify(child_process.exec);
 const portprober = require('selenium-webdriver/net/portprober');
@@ -15,7 +16,6 @@ if (process.env.BROWSER === 'chrome') {
     require('geckodriver');
 } else if (process.env.BROWSER === 'edge') {
     edge = require('selenium-webdriver/edge');
-    edge.driverModule = require('ms-chromium-edge-driver');
 }
 
 const By = webdriver.By;
@@ -37,7 +37,23 @@ class MapDriver {
                 )
                 .build();
         } else if (process.env.BROWSER === 'edge') {
-            const edgePaths = await edge.driverModule.installDriver();
+            const seleniumManagerPlatform = process.platform === 'darwin'
+                ? 'macos'
+                : process.platform === 'win32'
+                    ? 'windows'
+                    : `linux-${process.arch === 'arm64' ? 'arm64' : 'x86_64'}`;
+            const seleniumManagerPath = path.join(
+                path.dirname(require.resolve('selenium-webdriver')),
+                'bin',
+                seleniumManagerPlatform,
+                `selenium-manager${process.platform === 'win32' ? '.exe' : ''}`
+            );
+            const seleniumManagerOutput = child_process.execFileSync(
+                seleniumManagerPath,
+                ['--browser', 'edge', '--output', 'json'],
+                { encoding: 'utf8' }
+            );
+            const edgeDriverPath = JSON.parse(seleniumManagerOutput).result[0].driver_path;
             driver = new webdriver.Builder()
                 .forBrowser('MicrosoftEdge')
                 .setEdgeOptions(
@@ -51,7 +67,7 @@ class MapDriver {
                         .setUserPreferences({"user_experience_metrics.personalization_data_consent_enabled": true})
                 )
                 .setEdgeService(
-                    new edge.ServiceBuilder(edgePaths.driverPath)
+                    new edge.ServiceBuilder(edgeDriverPath)
                         .setPort(port)
                 )
                 .build();
