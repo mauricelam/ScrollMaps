@@ -18,24 +18,26 @@ Lets you scroll with two fingers on your trackpad within online maps
 
 After checking out the source, initialize the dependencies using `npm install`.
 
-After making changes, build a development version using `gulp --<chrome/firefox/edge>`. This will create an unpacked extension under `gen/plugin-10000-<browser>` that can then be loaded into Chrome as an unpacked extension.
+After making changes, build a development version using `npm run build:<chrome|firefox|edge>` (e.g. `npm run build:chrome`). This will create an unpacked extension under `gen/plugin-10000-<browser>` that can then be loaded into Chrome as an unpacked extension. Alternatively, run `npm run build` to build for all browsers.
 
-You can also use `gulp watch --<chrome/firefox/edge>` to watch for changes and build new dev versions automatically.
+You can also use `npm run watch` to watch for changes and build new dev versions automatically.
 
-To build the current release version for all browsers, use `gulp release`.
+To build the current release version for all browsers, use `npm run release`.
 
 ## Unit testing
 
-Unit tests can be run using `gulp unit` or `gulp watchunit`.
+Unit tests can be run using `npm test` (or `npm run test:unit`).
 
-A filter can be applied with `gulp unit --filter 'Scrollability'`
+Watch mode can be started with `npm run test:watch`.
+
+A filter can be applied using Vitest arguments, for example: `npx vitest -t 'Scrollability'`.
 
 ## Integration Testing
 
-Tests can be run using `gulp test --<chrome/firefox/edge>`.
+Integration tests can be run using `npm run test:auto`.
 
-Individual test fails can be run using `mocha` directly:
+Individual tests can be run using `mocha` directly:
 
 ```sh
-BROWSER=chrome npx mocha test/auto/google_com_travel.js
+BROWSER=chrome npx mocha test/auto/google_com_travel.mjs
 ```

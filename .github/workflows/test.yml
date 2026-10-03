@@ -14,8 +14,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '25' # Or a version compatible with your project
+          node-version: '22'
       - name: Install dependencies
         run: npm install
       - name: Run unit tests
-        run: gulp unit
+        run: npm test

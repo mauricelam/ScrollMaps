@@ -43,7 +43,7 @@ if ((window as any).SM_INJECT === undefined) {
       let foundSet = new Set(foundImages);
       for (let i = 0; i < 5; i++) {
         // Walk maximum 5 levels to find the common ancestor
-        const parentFoundSet = new Set();
+        const parentFoundSet = new Set<Element>();
         for (const element of foundSet) {
           if (element.parentElement) {
             parentFoundSet.add(element.parentElement);

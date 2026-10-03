@@ -1,15 +1,15 @@
-import Scrollability from "../../src/Scrollability"
-import { sleep } from "../../src/utils";
+import { describe, it, expect, beforeEach } from 'vitest';
+import Scrollability from "../../src/Scrollability";
 
 describe('Scrollability tests', () => {
 
     it('isScrollable null element', () => {
-        expect(Scrollability.isScrollable(null)).toBeFalse();
+        expect(Scrollability.isScrollable(null)).toBe(false);
     });
 
     it('isScrollable elem', () => {
         const elem = document.createElement('div');
-        expect(Scrollability.isScrollable(elem)).toBeFalse();
+        expect(Scrollability.isScrollable(elem)).toBe(false);
     });
 
     let elem: HTMLDivElement;
@@ -20,26 +20,26 @@ describe('Scrollability tests', () => {
         elem.style.overflow = 'scroll';
         elem.style.width = '50px';
         elem.style.height = '50px';
-        child = document.createElement('div')
+        child = document.createElement('div');
         child.style.width = '100px';
         child.style.height = '100px';
-        document.body.appendChild(elem)
-        elem.appendChild(child)
-    })
+        document.body.appendChild(elem);
+        elem.appendChild(child);
+    });
 
     it('isScrollable elem', () => {
-        expect(Scrollability.isScrollable(elem)).toBeTrue();
-        expect(Scrollability.isScrollable(child)).toBeFalse();
+        expect(Scrollability.isScrollable(elem)).toBe(true);
+        expect(Scrollability.isScrollable(child)).toBe(false);
     });
 
     it('hasScrollableParent', () => {
-        expect(Scrollability.hasScrollableParent(elem)).withContext("elem").toBeTrue();
-        expect(Scrollability.hasScrollableParent(child)).withContext("child").toBeTrue();
-        expect(Scrollability.hasScrollableParent(document.documentElement)).withContext("document").toBeFalse();
+        expect(Scrollability.hasScrollableParent(elem)).toBe(true);
+        expect(Scrollability.hasScrollableParent(child)).toBe(true);
+        expect(Scrollability.hasScrollableParent(document.documentElement)).toBe(false);
     });
 
     it('hasScrollableParent fixed position', () => {
         child.style.position = 'fixed';
-        expect(Scrollability.hasScrollableParent(child)).toBeFalse();
+        expect(Scrollability.hasScrollableParent(child)).toBe(false);
     });
 });
