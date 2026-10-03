@@ -1,4 +1,5 @@
-import Permission from "../../src/permission"
+import { describe, it, expect } from 'vitest';
+import Permission from "../../src/permission";
 
 describe('Permission tests', function() {
 
@@ -12,8 +13,8 @@ describe('Permission tests', function() {
     ];
     for (const site of isMapsSite_trueTests) {
         it(`isMapsSite ${site}`, () => {
-            expect(Permission.isMapsSite(site)).toBeTrue();
-        })
+            expect(Permission.isMapsSite(site)).toBe(true);
+        });
     }
 
     const isMapsSite_falseTests = [
@@ -24,7 +25,7 @@ describe('Permission tests', function() {
     ];
     for (const site of isMapsSite_falseTests) {
         it(`isMapsSite ${site}`, () => {
-            expect(Permission.isMapsSite(site)).toBeFalse();
+            expect(Permission.isMapsSite(site)).toBe(false);
         });
     }
 
@@ -32,7 +33,7 @@ describe('Permission tests', function() {
     it('isOwnExtensionPage options page', () => {
         expect(Permission.isOwnExtensionPage(
             'chrome-extension://jifommjndpnefcfplgnbhabocomgdjjg/src/options/options.html',
-        )).toBeTrue()
+        )).toBe(true);
     });
 
     const isOwnExtensionPage_falseTests = [
@@ -42,7 +43,7 @@ describe('Permission tests', function() {
     ];
     for (const site of isOwnExtensionPage_falseTests) {
         it(`isOwnExtensionPage ${site}`, () => {
-            expect(Permission.isOwnExtensionPage(site)).toBeFalse();
+            expect(Permission.isOwnExtensionPage(site)).toBe(false);
         });
     }
 });
