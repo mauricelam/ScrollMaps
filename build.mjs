@@ -7,7 +7,7 @@ import parseArgs from 'minimist';
 
 const BROWSERS = ['chrome', 'firefox', 'edge'];
 
-function getGoogleMapUrls() {
+export function getGoogleMapUrls() {
   const GOOGLE_MAPS_CCTLDS = [
     "at", "au", "be", "br", "ca", "cf", "cg", "ch", "ci", "cl", "cn", "uk", "in", "jp", "th",
     "cz", "dj", "de", "dk", "ee", "es", "fi", "fr", "ga", "gm", "hk", "hr", "hu", "ie", "is",
